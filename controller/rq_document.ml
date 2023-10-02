@@ -63,6 +63,7 @@ let to_completed = function
     { JFleche.CompletionStatus.status = `Yes; range }
   | Stopped range -> { status = `Stopped; range }
   | Failed range -> { status = `Failed; range }
+  | WorkspaceUpdated range -> { status = `Failed; range }
 
 let request ~ast ~goals () ~token ~doc =
   let { Fleche.Doc.uri; version; nodes; completed; _ } = doc in

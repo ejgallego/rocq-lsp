@@ -21,3 +21,7 @@ val make : unit -> t
 
 (** [bump ()] Signal the files have changed *)
 val bump : t -> t
+
+val hash : t -> int
+val compare : t -> t -> int
+val pp : Format.formatter -> t -> unit

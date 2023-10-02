@@ -125,12 +125,34 @@ module Handle = struct
       let handle = { handle with pt_requests = delayed } in
       (handle, pt_ids fullfilled)
     | Failed _ -> (handle, IS.empty)
+    | WorkspaceUpdated _ -> (handle, IS.empty)
 
   (* trigger pending incremental requests *)
   let update_doc_info ~handle ~(doc : Doc.t) =
     let handle, requests = do_requests ~doc ~handle in
     Hashtbl.replace doc_table doc.uri handle;
     requests
+
+  let workspace_update () =
+    let invalid_req = ref IS.empty in
+    let update_doc_env _uri (h : t) =
+      let { doc; cp_requests; pt_requests } = h in
+      invalid_req := IS.union !invalid_req cp_requests;
+      invalid_req :=
+        IS.union !invalid_req (List.map fst pt_requests |> IS.of_list);
+      let { Doc.Env.init; workspace; files } = doc.env in
+      let files = Coq.Files.bump files in
+      let env = Doc.Env.make ~init ~workspace ~files in
+      Some
+        { doc = Doc.update_env ~doc ~env
+        ; cp_requests = IS.empty
+        ; pt_requests = []
+        }
+    in
+    Hashtbl.filter_map_inplace update_doc_env doc_table;
+    (* We forget the old .vo files in the .vo cache too *)
+    Memo.Intern.clear ();
+    !invalid_req
 end
 
 (* This is temporary for 0.1.9 and our ER project, we need to reify this to a
@@ -215,6 +237,7 @@ module Check : sig
     io:Io.CallBack.t -> token:Coq.Limits.Token.t -> (IS.t * Doc.t) option
 
   val set_scheduler_hint : uri:Lang.LUri.File.t -> point:int * int -> unit
+  val clear_schedule : unit -> unit
 end = struct
   let pending = ref []
 
@@ -247,7 +270,7 @@ end = struct
       Option.bind !hint (fun (uri, (l, c)) ->
           if Lang.LUri.File.equal uri doc.uri then
             match doc.completed with
-            | Yes _ | Failed _ -> None
+            | Yes _ | Failed _ | WorkspaceUpdated _ -> None
             | Stopped range when Doc.Target.reached ~range (l, c) -> None
             | Stopped _ -> Some (Doc.Target.Position (l, c))
           else None)
@@ -324,6 +347,11 @@ end = struct
       let reason = Reason.ViewHint in
       schedule ~uri ~reason (* if the hint is set we wanna override it *)
     else if not (Stdlib.Option.is_none !hint) then hint := Some (uri, point)
+
+  (* Clear the schedule queue, for a workspace update *)
+  let clear_schedule () =
+    pending := [];
+    hint := None
 end
 
 let open_ ~io ~token ~env ~uri ~languageId ~raw ~version =
@@ -367,6 +395,10 @@ let close ~uri =
   Check.deschedule ~uri;
   Handle.close ~uri
 
+let workspace_update () =
+  Check.clear_schedule ();
+  Handle.workspace_update ()
+
 module Request = struct
   type request =
     | Immediate
@@ -393,6 +425,7 @@ module Request = struct
       match doc.completed with
       | Yes _ -> true
       | Failed range | Stopped range -> Doc.Target.reached ~range (line, col)
+      | WorkspaceUpdated _ -> false
     in
     let in_range =
       match version with

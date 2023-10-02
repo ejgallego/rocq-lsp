@@ -136,6 +136,10 @@
         "title": "Coq LSP: Free memory"
       },
       {
+        "command": "coq-lsp.workspace_update",
+        "title": "Coq LSP: Request Rocq workspace refresh"
+      },
+      {
         "command": "coq-lsp.sentenceNext",
         "title": "Coq LSP: Try to jump to next Coq sentence"
       },

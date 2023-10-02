@@ -34,6 +34,12 @@
  - [web worker] Add LSP root to Rocq's loadpath, this makes .vo file
    loading work even when no worker FS setup could happen (@ejgallego,
    #1054)
+ - [fleche] New `coq/workspace_update` notification, which tells
+   Flèche that `.vo` files in the workspace may have changed. This
+   will make coq-lsp pick up changes in the filesystem and restart
+   checking of Rocq's `Require`s when needed. The algorithm is not
+   smart at all yet, as it invalidates all the requires for all open
+   files. (@ejgallego, @helguo, #1059)
 
 # coq-lsp 0.2.4: (W)Activation
 ------------------------------
