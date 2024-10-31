@@ -43,8 +43,9 @@ module O : S with module P := Offset
 
 (** We move towards a more modular design here, for preprocessing *)
 module Goals : sig
-  val get_goals_unit : st:Coq.State.t -> (unit, Pp.t) Coq.Goals.reified option
+  val get_goals_unit : st:Pure.State.t -> Pure.Goals.t option
 
+(*
   val get_goals :
        st:Coq.State.t
     -> (Environ.env * Evd.evar_map * EConstr.t, Pp.t) Coq.Goals.reified option
@@ -59,14 +60,13 @@ module Goals : sig
     -> pr:'a printer
     -> st:Coq.State.t
     -> (('a, Pp.t) Coq.Goals.reified option, Loc.t) Coq.Protect.E.t
-
-  val program : st:Coq.State.t -> Declare.OblState.View.t Names.Id.Map.t
+*)
 end
 
 module Completion : sig
   val candidates :
-       token:Coq.Limits.Token.t
-    -> st:Coq.State.t
+       token:Pure.Limits.Token.t
+    -> st:Pure.State.t
     -> string
-    -> (string list option, Loc.t) Coq.Protect.E.t
+    -> (string list option, Pure.Loc.t) Pure.Protect.E.t
 end

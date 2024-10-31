@@ -7,17 +7,9 @@ VENDORED_SETUP:=true
 
 ifdef VENDORED_SETUP
 PKG_SET= \
-vendor/coq/rocq-runtime.install \
-vendor/coq/rocq-core.install \
-vendor/coq/coq-core.install \
-vendor/coq-stdlib/rocq-stdlib.install \
-vendor/coq-stdlib/coq-stdlib.install \
+vendor/lambdapi/lambdapi.install \
 coq-lsp.install
-else
-PKG_SET= coq-lsp.install
 endif
-
-PKG_SET_WEB=$(PKG_SET) vendor/coq-waterproof/coq-waterproof.install
 
 # Get the ocamlformat version from the .ocamlformat file
 OCAMLFORMAT=ocamlformat.$$(awk -F = '$$1 == "version" {print $$2}' .ocamlformat)
@@ -28,11 +20,11 @@ $(OCAMLFORMAT) \
 ocaml-lsp-server
 
 .PHONY: build
-build: coq_boot
+build: lp_boot
 	@dune build $(DUNEOPT) $(PKG_SET)
 
 .PHONY: check
-check: coq_boot
+check: lp_boot
 	dune build $(DUNEOPT) @check
 
 test/server/node_modules: test/server/package.json
@@ -58,7 +50,7 @@ watch: coq_boot
 build-all: coq_boot
 	dune build $(DUNEOPT) @all
 
-vendor/coq:
+vendor/lambdapi:
 	$(error Submodules not initialized, please do "make submodules-init")
 
 COQVM=yes
@@ -66,15 +58,15 @@ COQVM=yes
 # We set -libdir due to a Coq bug on win32, see
 # https://github.com/coq/coq/pull/17289 , this can be removed once we
 # drop support for Coq 8.16
-vendor/coq/config/coq_config.ml: vendor/coq
-	EPATH=$(shell pwd) \
-	&& cd vendor/coq \
-	&& ./configure -no-ask -prefix "$$EPATH/_build/install/default/" \
-	        -libdir "$$EPATH/_build/install/default/lib/coq" \
-	        -bytecode-compiler $(COQVM) \
-		-native-compiler no \
-	&& cp theories/Corelib/dune.disabled theories/Corelib/dune \
-	&& cp theories/Ltac2/dune.disabled theories/Ltac2/dune
+# vendor/lambdapi/config/coq_config.ml: vendor/lambdapi
+	# EPATH=$(shell pwd) \
+	# && cd vendor/lambdapi \
+	# && ./configure -no-ask -prefix "$$EPATH/_build/install/default/" \
+	#         -libdir "$$EPATH/_build/install/default/lib/coq" \
+	#         -bytecode-compiler $(COQVM) \
+	# 	-native-compiler no \
+	# && cp theories/dune.disabled theories/dune \
+	# && cp user-contrib/Ltac2/dune.disabled user-contrib/Ltac2/dune
 
 # We set windows parameters a bit better, note the need to use forward
 # slashed (cygpath -m) due to escaping :( , a conversion to `-w` is
@@ -82,7 +74,7 @@ vendor/coq/config/coq_config.ml: vendor/coq
 .PHONY: winconfig
 winconfig:
 	EPATH=$(shell cygpath -am .) \
-	&& cd vendor/coq \
+	&& cd vendor/lambdapi \
 	&& ./configure -no-ask -prefix "$$EPATH\\_build\\install\\default\\" \
 	        -libdir "$$EPATH\\_build\\install\\default\\lib\\coq\\" \
 		-native-compiler no \
@@ -95,12 +87,12 @@ js: coq_boot
 	dune build --profile=release --display=quiet $(PKG_SET_WEB) lsp-server/jsoo/coq_lsp_worker.bc.cjs
 	mkdir -p editor/code/out/ && cp -a lsp-server/jsoo/coq_lsp_worker.bc.cjs editor/code/out/coq_lsp_worker.bc.js
 
-.PHONY: coq_boot
+.PHONY: lp_boot
 
 ifdef VENDORED_SETUP
-coq_boot: vendor/coq/config/coq_config.ml
+lp_boot: # vendor/coq/config/coq_config.ml
 else
-coq_boot:
+lp_boot:
 endif
 
 .PHONY: clean
@@ -141,11 +133,7 @@ submodules-deinit:
 # Update submodules from upstream
 .PHONY: submodules-update
 submodules-update:
-	(cd vendor/coq && git checkout master && git pull upstream master)
-	(cd vendor/coq-stdlib && git checkout master && git pull upstream master)
-	(cd vendor/coq-waterproof && git checkout coq-master && git pull upstream coq-master)
-# For now we update manually
-# (cd vendor/coq-waterproof && git checkout coq-master && git pull upstream coq-master)
+	(cd vendor/lambdapi && git checkout master && git pull upstream master)
 
 # Build the vscode extension
 WASTUBS=$(addsuffix .wasm,dllcoqrun_stubs dllcoqperf_stubs dllbigstringaf_stubs dlllib_stubs)
@@ -199,8 +187,7 @@ make-fmt: build fmt
 .PHONY: opam-update-and-reinstall
 opam-update-and-reinstall:
 	git pull --recurse-submodules
-	for pkg in rocq-runtime coq-core rocq-core coqide-server; do opam install -y vendor/coq/$$pkg.opam; done
-	for pkg in rocq-stdlib coq-stdlib; do opam install -y vendor/coq-stdlib/$$pkg.opam; done
+	for pkg in lambdapi; do opam install -y vendor/lambdapi/$$pkg.opam; done
 	opam install .
 
 # Used in git clone

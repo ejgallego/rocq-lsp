@@ -80,6 +80,7 @@ module Log = struct
     (* Fixme, use the extra parameter *)
     trace hdr "[%s]: @[%a@]" hdr Yojson.Safe.(pretty_print ~std:false) obj
 
+(*
   let pp_fb fmt (fb : Loc.t Coq.Message.t) =
     let _lvl, { Coq.Message.Payload.msg; _ } = fb in
     Format.fprintf fmt "%a" Pp.pp_with msg
@@ -94,6 +95,15 @@ module Log = struct
       in
       let verbose = Some feedbacks in
       trace "feedback" ?verbose "received in %s" part
+*)
+  let is_empty = function [] -> true | _ -> false
+
+  let feedback part feedback =
+    if not (is_empty feedback) then
+      (* Put feedbacks content here? *)
+      let verbose = None in
+      trace "feedback" ?verbose "received in %s" part
+
 end
 
 module Report = struct

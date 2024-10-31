@@ -2,7 +2,7 @@
  (name layout)
  (public_name coq-lsp.layout-printer)
  (libraries
-  rocq-runtime.interp
-  rocq-runtime.parsing
-  rocq-runtime.printing
+  ; rocq-runtime.interp
+  ; rocq-runtime.parsing
+  ; rocq-runtime.printing
   tyxml))

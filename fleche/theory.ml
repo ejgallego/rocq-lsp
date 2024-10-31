@@ -8,6 +8,10 @@
 (* Flèche => document manager: theories                                 *)
 (************************************************************************)
 
+module Int = struct
+  module Set = Set.Make(Int)
+end
+
 (* Handler for document *)
 module Handle = struct
   type t =
@@ -136,32 +140,32 @@ end
    general structure *)
 module Register : sig
   (** Run an action before a constructing the document root state. *)
-  module InjectRequire : sig
-    type t = io:Io.CallBack.t -> Coq.Workspace.Require.t list
+  (* module InjectRequire : sig *)
+  (*   type t = io:Io.CallBack.t -> Coq.Workspace.Require.t list *)
 
-    val add : t -> unit
-    val fire : io:Io.CallBack.t -> Coq.Workspace.Require.t list
-  end
+  (*   val add : t -> unit *)
+  (*   val fire : io:Io.CallBack.t -> Coq.Workspace.Require.t list *)
+  (* end *)
 
   (** Run an action when a document has completed checking, attention, with or
       without errors. *)
   module Completed : sig
-    type t = io:Io.CallBack.t -> token:Coq.Limits.Token.t -> doc:Doc.t -> unit
+    type t = io:Io.CallBack.t -> token:Pure.Limits.Token.t -> doc:Doc.t -> unit
 
     val add : t -> unit
-    val fire : io:Io.CallBack.t -> token:Coq.Limits.Token.t -> doc:Doc.t -> unit
+    val fire : io:Io.CallBack.t -> token:Pure.Limits.Token.t -> doc:Doc.t -> unit
   end
 end = struct
-  module InjectRequire = struct
-    type t = io:Io.CallBack.t -> Coq.Workspace.Require.t list
+  (* module InjectRequire = struct *)
+  (*   type t = io:Io.CallBack.t -> Pure.Workspace.Require.t list *)
 
-    let callback : t list ref = ref []
-    let add fn = callback := fn :: !callback
-    let fire ~io = List.concat_map (fun f -> f ~io) !callback
-  end
+  (*   let callback : t list ref = ref [] *)
+  (*   let add fn = callback := fn :: !callback *)
+  (*   let fire ~io = List.concat_map (fun f -> f ~io) !callback *)
+  (* end *)
 
   module Completed = struct
-    type t = io:Io.CallBack.t -> token:Coq.Limits.Token.t -> doc:Doc.t -> unit
+    type t = io:Io.CallBack.t -> token:Pure.Limits.Token.t -> doc:Doc.t -> unit
 
     let callback : t list ref = ref []
     let add fn = callback := fn :: !callback
@@ -211,7 +215,7 @@ module Check : sig
   val deschedule : uri:Lang.LUri.File.t -> unit
 
   val maybe_check :
-    io:Io.CallBack.t -> token:Coq.Limits.Token.t -> (Int.Set.t * Doc.t) option
+    io:Io.CallBack.t -> token:Pure.Limits.Token.t -> (Int.Set.t * Doc.t) option
 
   val set_scheduler_hint : uri:Lang.LUri.File.t -> point:int * int -> unit
 end = struct
@@ -326,8 +330,8 @@ end = struct
 end
 
 let open_ ~io ~token ~env ~uri ~languageId ~raw ~version =
-  let extra_requires = Register.InjectRequire.fire ~io in
-  let env = Doc.Env.inject_requires ~extra_requires env in
+  (* let extra_requires = Register.InjectRequire.fire ~io in *)
+  (* let env = Doc.Env.inject_requires ~extra_requires env in *)
   let doc = Doc.create ~token ~env ~uri ~languageId ~raw ~version in
   Handle.create ~uri ~doc;
   let reason = Reason.OpenDocument in

@@ -64,7 +64,7 @@ module Log : sig
   val trace_object : string -> Yojson.Safe.t -> unit
 
   (** For unhandled feedback, for example when running hover, remove eventually? *)
-  val feedback : string -> Loc.t Coq.Message.t list -> unit
+  val feedback : string -> Pure.Loc.t Pure.Message.t list -> unit
 end
 
 module Report : sig

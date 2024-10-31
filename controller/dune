@@ -5,13 +5,12 @@
  (public_name coq-lsp.request)
  (modules request)
  (wrapped false)
- (libraries coq fleche))
+ (libraries fleche))
 
 (library
  (name controller)
  (modules :standard \ request)
  (libraries
-  coq
   fleche
   request
   petanque
