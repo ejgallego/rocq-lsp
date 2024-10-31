@@ -1,4 +1,4 @@
-(library
- (public_name coq-lsp.petanque)
- (name petanque)
- (libraries lang coq fleche request))
+; (library
+;  (public_name coq-lsp.petanque)
+;  (name petanque)
+;  (libraries lang coq fleche request))

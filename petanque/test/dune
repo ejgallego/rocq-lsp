@@ -1,32 +1,32 @@
-(test
- (name basic_api)
- (modules basic_api)
- (deps
-  (package rocq-stdlib)
-  (package coq-lsp)
-  test.v)
- (libraries petanque_shell))
+; (test
+;  (name basic_api)
+;  (modules basic_api)
+;  (deps
+;   (package rocq-stdlib)
+;   (package coq-lsp)
+;   test.v)
+;  (libraries petanque_shell))
 
-(test
- (name json_api)
- (modules json_api)
- (deps
-  (package rocq-stdlib)
-  (package coq-lsp)
-  test.v
-  %{bin:pet})
- (enabled_if
-  (<> %{os_type} "Win32"))
- (libraries petanque petanque_shell fleche_lsp))
+; (test
+;  (name json_api)
+;  (modules json_api)
+;  (deps
+;   (package rocq-stdlib)
+;   (package coq-lsp)
+;   test.v
+;   %{bin:pet})
+;  (enabled_if
+;   (<> %{os_type} "Win32"))
+;  (libraries petanque petanque_shell fleche_lsp))
 
-(test
- (name json_api_failure)
- (modules json_api_failure)
- (deps
-  (package rocq-stdlib)
-  (package coq-lsp)
-  test.v
-  %{bin:pet})
- (enabled_if
-  (<> %{os_type} "Win32"))
- (libraries petanque petanque_shell fleche_lsp))
+; (test
+;  (name json_api_failure)
+;  (modules json_api_failure)
+;  (deps
+;   (package rocq-stdlib)
+;   (package coq-lsp)
+;   test.v
+;   %{bin:pet})
+;  (enabled_if
+;   (<> %{os_type} "Win32"))
+;  (libraries petanque petanque_shell fleche_lsp))

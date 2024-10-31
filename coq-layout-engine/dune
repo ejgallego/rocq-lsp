@@ -1,15 +1,15 @@
-(library
- (name layout)
- (public_name coq-lsp.layout-printer)
- (libraries
-  rocq-runtime.clib
-  rocq-runtime.lib
-  rocq-runtime.kernel
-  rocq-runtime.library
-  rocq-runtime.engine
-  rocq-runtime.pretyping
-  rocq-runtime.interp
-  rocq-runtime.parsing
-  rocq-runtime.printing
-  tyxml.functor
-  tyxml))
+; (library
+;  (name layout)
+;  (public_name coq-lsp.layout-printer)
+;  (libraries
+;   rocq-runtime.clib
+;   rocq-runtime.lib
+;   rocq-runtime.kernel
+;   rocq-runtime.library
+;   rocq-runtime.engine
+;   rocq-runtime.pretyping
+;   rocq-runtime.interp
+;   rocq-runtime.parsing
+;   rocq-runtime.printing
+;   tyxml.functor
+;   tyxml))

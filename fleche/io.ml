@@ -22,7 +22,7 @@ module CallBack = struct
     ; diagnostics :
            uri:Lang.LUri.File.t
         -> version:int
-        -> Coq.Pp_t.t Lang.Diagnostic.t list
+        -> Pure.Pp_t.t Lang.Diagnostic.t list
         -> unit
     ; fileProgress :
         uri:Lang.LUri.File.t -> version:int -> Progress.Info.t list -> unit
@@ -83,11 +83,11 @@ module Log = struct
     (* Fixme, use the extra parameter *)
     trace hdr "[%s]: @[%a@]" hdr Yojson.Safe.(pretty_print ~std:false) obj
 
-  let pp_fb fmt (fb : Coq.Loc_t.t Coq.Message.t) =
-    let _lvl, { Coq.Message.Payload.msg; _ } = fb in
-    Format.fprintf fmt "%a" Coq.Pp_t.pp_with msg
+  let pp_fb fmt (fb : Pure.Loc_t.t Pure.Message.t) =
+    let _lvl, { Pure.Message.Payload.msg; _ } = fb in
+    Format.fprintf fmt "%a" Pure.Pp_t.pp_with msg
 
-  let feedback part feedback =
+  let _feedback part feedback =
     if not (Lang.Compat.List.is_empty feedback) then
       (* We put the feedback contents in the verbose part of the trace
          message. *)
@@ -97,6 +97,15 @@ module Log = struct
       in
       let verbose = Some feedbacks in
       trace "feedback" ?verbose "received in %s" part
+
+  let is_empty = function [] -> true | _ -> false
+
+  let feedback part feedback =
+    if not (is_empty feedback) then
+      (* Put feedbacks content here? *)
+      let verbose = None in
+      trace "feedback" ?verbose "received in %s" part
+
 end
 
 module Report = struct

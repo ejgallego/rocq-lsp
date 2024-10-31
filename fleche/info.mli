@@ -43,32 +43,33 @@ module O : S with module P := Offset
 
 (** We move towards a more modular design here, for preprocessing *)
 module Goals : sig
-  val get_goals_unit :
-    st:Coq.State.t -> (unit, Coq.Pp_t.t) Coq.Goals.reified option
+  val get_goals_unit : st:Pure.State.t -> ('a, 'pp) Pure.Goals.t option
 
+(*
   val get_goals :
-       st:Coq.State.t
-    -> (Environ.env * Evd.evar_map * EConstr.t, Coq.Pp_t.t) Coq.Goals.reified
+       st:Pure.State.t
+    -> (Environ.env * Evd.evar_map * EConstr.t, Pure.Pp_t.t) Pure.Goals.reified
        option
 
   type 'a printer =
-    token:Coq.Limits.Token.t -> Environ.env -> Evd.evar_map -> EConstr.t -> 'a
+    token:Pure.Limits.Token.t -> Environ.env -> Evd.evar_map -> EConstr.t -> 'a
 
-  val to_pp : Coq.Pp_t.t printer
+  val to_pp : Pure.Pp_t.t printer
 
   val goals :
-       token:Coq.Limits.Token.t
+       token:Pure.Limits.Token.t
     -> pr:'a printer
-    -> st:Coq.State.t
-    -> (('a, Coq.Pp_t.t) Coq.Goals.reified option, Coq.Loc_t.t) Coq.Protect.E.t
+    -> st:Pure.State.t
+    -> (('a, Pure.Pp_t.t) Pure.Goals.reified option, Pure.Loc_t.t) Pure.Protect.E.t
 
-  val program : st:Coq.State.t -> Coq.State.Proof.Program.t Names.Id.Map.t
+  val program : st:Pure.State.t -> Pure.State.Proof.Program.t Names.Id.Map.t
+*)
 end
 
 module Completion : sig
   val candidates :
-       token:Coq.Limits.Token.t
-    -> st:Coq.State.t
+       token:Pure.Limits.Token.t
+    -> st:Pure.State.t
     -> string
-    -> (string list option, Coq.Loc_t.t) Coq.Protect.E.t
+    -> (string list option, Pure.Loc_t.t) Pure.Protect.E.t
 end

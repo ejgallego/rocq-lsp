@@ -1,4 +1,4 @@
-(library
- (name Explain_errors)
- (public_name coq-lsp.plugin.explain_errors)
- (libraries coq-lsp.lang coq-lsp.coq coq-lsp.fleche))
+; (library
+;  (name Explain_errors)
+;  (public_name coq-lsp.plugin.explain_errors)
+;  (libraries coq-lsp.lang coq-lsp.coq coq-lsp.fleche))

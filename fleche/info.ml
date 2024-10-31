@@ -140,37 +140,37 @@ module O = Make (Offset)
 module Goals = struct
   let get_goals_unit ~st =
     let ppx _env _sigma _x = () in
-    Coq.State.lemmas ~st |> Option.map (Coq.Goals.reify ~ppx)
+    Pure.State.lemmas ~st |> Option.map (Pure.Goals.reify ~ppx)
 
   let get_goals ~st =
     let ppx env sigma x = (env, sigma, x) in
-    Coq.State.lemmas ~st |> Option.map (Coq.Goals.reify ~ppx)
+    Pure.State.lemmas ~st |> Option.map (Pure.Goals.reify ~ppx)
 
   type 'a printer =
-    token:Coq.Limits.Token.t -> Environ.env -> Evd.evar_map -> EConstr.t -> 'a
+    token:Pure.Limits.Token.t -> Environ.env -> Evd.evar_map -> EConstr.t -> 'a
 
   let to_pp ~token env sigma x =
-    let { Coq.Protect.E.r; feedback } =
-      Coq.Print.pr_letype_env ~token ~goal_concl_style:true env sigma x
+    let { Pure.Protect.E.r; feedback } =
+      Pure.Print.pr_letype_env ~token ~goal_concl_style:true env sigma x
     in
     (* XXX: We ideally want to thread this in the monad too, but it'd be better
        if the printer was more functional *)
     Io.Log.feedback "to_pp" feedback;
     match r with
-    | Coq.Protect.R.Completed (Ok pr) -> pr
-    | Coq.Protect.R.Completed (Error _pr) -> Coq.Pp_t.str "printer failed!"
-    | Interrupted -> Coq.Pp_t.str "printer interrupted!"
+    | Pure.Protect.R.Completed (Ok pr) -> pr
+    | Pure.Protect.R.Completed (Error _pr) -> Pure.Pp_t.str "printer failed!"
+    | Interrupted -> Pure.Pp_t.str "printer interrupted!"
 
   let pr_goal ~token ~pr st =
-    let lemmas = Coq.State.lemmas ~st in
-    Option.map (Coq.Goals.reify ~ppx:(pr ~token)) lemmas
+    let lemmas = Pure.State.lemmas ~st in
+    Option.map (Pure.Goals.reify ~ppx:(pr ~token)) lemmas
 
   (* We need to use [in_state] here due to printing not being pure, but we want
      a better design here eventually *)
   let goals ~token ~pr ~st =
-    Coq.State.in_state ~token ~st ~f:(pr_goal ~token ~pr) st
+    Pure.State.in_state ~token ~st ~f:(pr_goal ~token ~pr) st
 
-  let program ~st = Coq.State.program ~st
+  let program ~st = Pure.State.program ~st
 end
 
 module Completion = struct
@@ -186,9 +186,9 @@ module Completion = struct
 
   let candidates ~token ~st prefix =
     let ( let* ) = Option.bind in
-    Coq.State.in_state ~token ~st prefix ~f:(fun prefix ->
+    Pure.State.in_state ~token ~st prefix ~f:(fun prefix ->
         let* p = to_qualid prefix in
         Nametab.completion_canditates p
-        |> List.map (fun x -> Coq.Pp_t.to_string (pr_extref x))
+        |> List.map (fun x -> Pure.Pp_t.to_string (pr_extref x))
         |> some)
 end

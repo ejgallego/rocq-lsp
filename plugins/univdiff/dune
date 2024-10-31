@@ -1,4 +1,4 @@
-(library
- (name Unidiff_plugin)
- (public_name coq-lsp.plugin.univdiff)
- (libraries coq-lsp.lang coq-lsp.coq coq-lsp.fleche))
+; (library
+;  (name Unidiff_plugin)
+;  (public_name coq-lsp.plugin.univdiff)
+;  (libraries coq-lsp.lang coq-lsp.coq coq-lsp.fleche))

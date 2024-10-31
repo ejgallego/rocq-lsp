@@ -11,6 +11,7 @@
 module CS = Stats
 
 (* XXX: We are missing good error handling here! Fix submitted upstream. *)
+(*
 module Intern = struct
   let hc : (Names.DirPath.t, _) Hashtbl.t = Hashtbl.create 1000
   let use_cache = true
@@ -52,6 +53,8 @@ module Intern = struct
 end
 
 let intern = Intern.intern
+
+*)
 
 (* Regular memo tables *)
 module Stats = struct
@@ -110,15 +113,15 @@ module MemoTable = struct
     val clear : 'a t -> unit
 
     val add_execution :
-         (('a, 'l) Coq.Protect.E.t * 'b) t
+         (('a, 'l) Pure.Protect.E.t * 'b) t
       -> key
-      -> ('a, 'l) Coq.Protect.E.t * 'b
+      -> ('a, 'l) Pure.Protect.E.t * 'b
       -> unit
 
     val add_execution_loc :
-         ('v * ('a, 'l) Coq.Protect.E.t * 'b) t
+         ('v * ('a, 'l) Pure.Protect.E.t * 'b) t
       -> key
-      -> 'v * ('a, 'l) Coq.Protect.E.t * 'b
+      -> 'v * ('a, 'l) Pure.Protect.E.t * 'b
       -> unit
 
     (** sorted *)
@@ -152,19 +155,20 @@ module MemoTable = struct
       to_seq_values count |> List.of_seq
       |> List.sort (fun x y -> -Int.compare x y)
 
-    let add_execution t k (({ Coq.Protect.E.r; _ }, _) as v) =
+    let add_execution t k (({ Pure.Protect.E.r; _ }, _) as v) =
       match r with
-      | Coq.Protect.R.Interrupted -> ()
+      | Pure.Protect.R.Interrupted -> ()
       | _ -> add t k v
 
-    let add_execution_loc t k ((_, { Coq.Protect.E.r; _ }, _) as v) =
+    let add_execution_loc t k ((_, { Pure.Protect.E.r; _ }, _) as v) =
       match r with
-      | Coq.Protect.R.Interrupted -> ()
+      | Pure.Protect.R.Interrupted -> ()
       | _ -> add t k v
   end
 end
 
-(* XXX: Move elsewhere *)
+(* XXX: Move elsewhere, XXX fix for LP *)
+(*
 module Loc_utils : sig
   val adjust_offset :
        stm_loc:Coq.Loc_t.t
@@ -205,8 +209,10 @@ end = struct
   let adjust_offset ~stm_loc ~cached_loc res =
     let offset = loc_offset cached_loc stm_loc in
     let f = loc_apply_offset offset in
-    Coq.Protect.E.map_loc ~f res
+    Pure.Protect.E.map_loc ~f res
 end
+
+*)
 
 module type EvalType = sig
   include Hashtbl.HashedType
@@ -214,7 +220,7 @@ module type EvalType = sig
   type output
 
   val eval :
-    token:Coq.Limits.Token.t -> t -> (output, Coq.Loc_t.t) Coq.Protect.E.t
+    token:Pure.Limits.Token.t -> t -> (output, Pure.Loc_t.t) Pure.Protect.E.t
 
   val input_info : t -> string
 end
@@ -226,13 +232,13 @@ module type S = sig
 
   (** [eval i] Eval an input [i] *)
   val eval :
-    token:Coq.Limits.Token.t -> input -> (output, Coq.Loc_t.t) Coq.Protect.E.t
+    token:Pure.Limits.Token.t -> input -> (output, Pure.Loc_t.t) Pure.Protect.E.t
 
   (** [eval i] Eval an input [i] and produce stats *)
   val evalS :
-       token:Coq.Limits.Token.t
+       token:Pure.Limits.Token.t
     -> input
-    -> (output, Coq.Loc_t.t) Coq.Protect.E.t * Stats.t
+    -> (output, Pure.Loc_t.t) Pure.Protect.E.t * Stats.t
 
   (** [size ()] Return the cache size in words, expensive *)
   val size : unit -> int
@@ -285,7 +291,7 @@ end
 module type LocEvalType = sig
   include EvalType
 
-  val loc_of_input : t -> Coq.Loc_t.t
+  val loc_of_input : t -> Pure.Loc_t.t
 end
 
 module CEval (E : LocEvalType) = struct
@@ -296,7 +302,7 @@ module CEval (E : LocEvalType) = struct
 
   module Result = struct
     (* We store the location as to compute an offset for cached results *)
-    type t = Coq.Loc_t.t * (E.output, Coq.Loc_t.t) Coq.Protect.E.t * CS.t
+    type t = Pure.Loc_t.t * (E.output, Pure.Loc_t.t) Pure.Protect.E.t * CS.t
   end
 
   type cache = Result.t HC.t
@@ -317,10 +323,11 @@ module CEval (E : LocEvalType) = struct
   let evalS ~token i =
     let stm_loc = E.loc_of_input i in
     match in_cache i with
-    | Some (cached_loc, res, stats), { time = time_hash; memory = _ } ->
+    | Some (_cached_loc, res, stats), { time = time_hash; memory = _ } ->
       if Debug.cache then Io.Log.trace "memo" "cache hit";
       GlobalCacheStats.hit ();
-      let res = Loc_utils.adjust_offset ~stm_loc ~cached_loc res in
+      (* XXX Fixme *)
+      (* let res = Loc_utils.adjust_offset ~stm_loc ~cached_loc res in *)
       (res, Stats.make ~stats ~cache_hit:true ~time_hash ())
     | None, { time = time_hash; memory = _ } ->
       if Debug.cache then Io.Log.trace "memo" "cache miss";
@@ -334,83 +341,84 @@ module CEval (E : LocEvalType) = struct
 end
 
 module VernacEval = struct
-  type t = Coq.State.t * Coq.Ast.t
+  type t = Pure.State.t * Pure.Ast.t
 
   (* This crutially relies on our ppx to ignore the CAst location *)
   let equal (st1, v1) (st2, v2) =
-    if Coq.Ast.compare v1 v2 = 0 then
-      if Coq.State.compare st1 st2 = 0 then true else false
+    if Pure.Ast.compare v1 v2 = 0 then
+      if Pure.State.compare st1 st2 = 0 then true else false
     else false
 
-  let hash (st, v) = Hashtbl.hash (Coq.Ast.hash v, Coq.State.hash st)
-  let loc_of_input (_, stm) = Coq.Ast.loc stm |> Option.get
+  let hash (st, v) = Hashtbl.hash (Pure.Ast.hash v, Pure.State.hash st)
+  let loc_of_input (_, stm) = Pure.Ast.loc stm |> Option.get
 
   let input_info (st, v) =
-    Format.asprintf "stm: %d | st %d" (Coq.Ast.hash v) (Hashtbl.hash st)
+    Format.asprintf "stm: %d | st %d" (Pure.Ast.hash v) (Hashtbl.hash st)
 
-  type output = Coq.State.t
+  type output = Pure.State.t
 
-  let eval ~token (st, stm) = Coq.Interp.interp ~token ~intern ~st stm
+  let eval ~token (st, stm) = Pure.Interp.interp ~token ~st stm
 end
 
 module Interp = CEval (VernacEval)
 
+(*
 module RequireEval = struct
-  type t = Coq.State.t * Coq.Files.t * Coq.Ast.Require.t
+  type t = Pure.State.t * Pure.Files.t * Pure.Ast.Require.t
 
   (* This crutially relies on our ppx to ignore the CAst location *)
   let equal (st1, f1, r1) (st2, f2, r2) =
     if
-      Coq.Ast.Require.compare r1 r2 = 0
-      && Coq.Files.compare f1 f2 = 0
-      && Coq.State.compare st1 st2 = 0
+      Pure.Ast.Require.compare r1 r2 = 0
+      && Pure.Files.compare f1 f2 = 0
+      && Pure.State.compare st1 st2 = 0
     then true
     else false
 
   let hash (st, f, v) =
-    Hashtbl.hash (Coq.Ast.Require.hash v, Coq.Files.hash f, Coq.State.hash st)
+    Hashtbl.hash (Pure.Ast.Require.hash v, Pure.Files.hash f, Pure.State.hash st)
 
   let input_info (st, f, v) =
-    Format.asprintf "stm: %d | st %d | f %d" (Coq.Ast.Require.hash v)
-      (Hashtbl.hash st) (Coq.Files.hash f)
+    Format.asprintf "stm: %d | st %d | f %d" (Pure.Ast.Require.hash v)
+      (Hashtbl.hash st) (Pure.Files.hash f)
 
-  let loc_of_input (_, _, stm) = Option.get stm.Coq.Ast.Require.loc
+  let loc_of_input (_, _, stm) = Option.get stm.Pure.Ast.Require.loc
 
-  type output = Coq.State.t
+  type output = Pure.State.t
 
   let eval ~token (st, files, stm) =
-    Coq.Interp.Require.interp ~token ~intern ~st files stm
+    Pure.Interp.Require.interp ~token ~intern ~st files stm
 end
 
 module Require = CEval (RequireEval)
 
 module Admit = SEval (struct
-  include Coq.State
+  include Pure.State
 
-  type output = Coq.State.t
+  type output = Pure.State.t
 
   let input_info st = Format.asprintf "st %d" (Hashtbl.hash st)
-  let eval ~token st = Coq.State.admit ~token ~st
+  let eval ~token st = Pure.State.admit ~token ~st
 end)
 
 module InitEval = struct
-  type t = Coq.State.t * Coq.Workspace.t * Lang.LUri.File.t
+  type t = Pure.State.t * Pure.Workspace.t * Lang.LUri.File.t
 
   let equal (s1, w1, u1) (s2, w2, u2) : bool =
     if Lang.LUri.File.compare u1 u2 = 0 then
-      if Coq.Workspace.compare w1 w2 = 0 then
-        if Coq.State.compare s1 s2 = 0 then true else false
+      if Pure.Workspace.compare w1 w2 = 0 then
+        if Pure.State.compare s1 s2 = 0 then true else false
       else false
     else false
 
   let hash (st, w, uri) =
     Hashtbl.hash
-      (Coq.State.hash st, Coq.Workspace.hash w, Lang.LUri.File.hash uri)
+      (Pure.State.hash st, Pure.Workspace.hash w, Lang.LUri.File.hash uri)
 
-  type output = Coq.State.t
+  type output = Pure.State.t
 
   let eval ~token (root_state, workspace, uri) =
-    Coq.Init.doc_init ~token ~intern ~root_state ~workspace ~uri
+    Pure.Init.doc_init ~token ~intern ~root_state ~workspace ~uri
 
   let input_info (st, ws, file) =
     Format.asprintf "st %d | ws %d | file %s" (Hashtbl.hash st)
@@ -419,6 +427,8 @@ module InitEval = struct
 end
 
 module Init = SEval (InitEval)
+*)
 
 let all_size () =
-  Init.size () + Interp.size () + Require.size () + Admit.size ()
+  Interp.size ()
+  (* Init.size () + Interp.size () + Require.size () + Admit.size () *)

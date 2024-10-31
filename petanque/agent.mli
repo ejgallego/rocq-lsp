@@ -120,7 +120,7 @@ val get_state_at_pos :
     Returns the proof state or error otherwise. [pre_commands] is a string of
     dot-separated Coq commands that will be executed before the proof starts. *)
 val start :
-     token:Coq.Limits.Token.t
+     token:Pure.Limits.Token.t
   -> doc:Fleche.Doc.t
   -> ?opts:Run_opts.t
   -> ?pre_commands:string
@@ -131,7 +131,7 @@ val start :
 (** [run ~token ?opts ~st ~tac] tries to run [tac] over state [st]. [opts]
     controls several parameters of the Fleche execution engine. *)
 val run :
-     token:Coq.Limits.Token.t
+     token:Pure.Limits.Token.t
   -> ?opts:Run_opts.t
   -> st:State.t
   -> tac:string
@@ -142,7 +142,7 @@ val run :
     position [point]. [opts] controls several parameters of the Fleche execution
     engine. *)
 val run_at_pos :
-     token:Coq.Limits.Token.t
+     token:Pure.Limits.Token.t
   -> ?opts:Run_opts.t
   -> doc:Fleche.Doc.t
   -> point:int * int
@@ -152,9 +152,9 @@ val run_at_pos :
 
 (** [goals ~token ~st] return the list of goals for a given [st] *)
 val goals :
-     token:Coq.Limits.Token.t
+     token:Pure.Limits.Token.t
   -> st:State.t
-  -> (string, string) Coq.Goals.reified option R.t
+  -> Pure.Goals.t R.t
 
 module Premise : sig
   module Info : sig
@@ -178,22 +178,22 @@ end
 (** Return the list of defined constants and inductives for a given state. For
     now we just return their fully qualified name, but more options are of
     course possible. *)
-val premises : token:Coq.Limits.Token.t -> st:State.t -> Premise.t list R.t
+val premises : token:Pure.Limits.Token.t -> st:State.t -> Premise.t list R.t
 
 (** Return the ast of a string [text], parsed at state [st] . Returns [None] on
     EOF *)
 val ast :
-     token:Coq.Limits.Token.t
+     token:Pure.Limits.Token.t
   -> st:State.t
   -> text:string
   -> unit
-  -> Coq.Ast.t option Run_result.t R.t
+  -> Pure.Ast.t option Run_result.t R.t
 
 (** Return the ast of a position in the document [doc] at position [point]. Will
     error if there is no node, will return [None], when there is a node at the
     position, but the ast is not available, for example due to parsing error *)
 val ast_at_pos :
-  doc:Fleche.Doc.t -> point:int * int -> unit -> Coq.Ast.t option R.t
+  doc:Fleche.Doc.t -> point:int * int -> unit -> Pure.Ast.t option R.t
 
 (** Petanque version *)
 val version : int

@@ -19,7 +19,7 @@ module Error = struct
   type 'a t =
     { code : int
     ; payload : 'a
-    ; feedback : Lang.Range.t Coq.Message.t list
+    ; feedback : Lang.Range.t Pure.Message.t list
     }
 
   let make ?(feedback = []) code payload = { code; payload; feedback }
@@ -37,13 +37,13 @@ module R = struct
 
   let print_err ~name e =
     match e with
-    | Coq.Protect.Error.Anomaly { msg; _ } | User { msg; _ } ->
-      Format.asprintf "Error in %s request: %a" name Coq.Pp_t.pp_with msg
+    | Pure.Protect.Error.Anomaly { msg; _ } | User { msg; _ } ->
+      Format.asprintf "Error in %s request: %a" name Pure.Pp_t.pp_with msg
 
   let of_execution ~lines ~name ~f x : ('r, string) t =
-    let Coq.Protect.E.{ r; feedback } = f x in
-    let f = Coq.Utils.to_range ~lines in
-    let feedback = List.map (Coq.Message.map ~f) feedback in
+    let Pure.Protect.E.{ r; feedback } = f x in
+    let f = Pure.Utils.to_range ~lines in
+    let feedback = List.map (Pure.Message.map ~f) feedback in
     match r with
     | Interrupted ->
       let payload = name ^ " request interrupted" in
@@ -57,10 +57,10 @@ module R = struct
 end
 
 type ('r, 'e) document =
-  token:Coq.Limits.Token.t -> doc:Fleche.Doc.t -> ('r, 'e) R.t
+  token:Pure.Limits.Token.t -> doc:Fleche.Doc.t -> ('r, 'e) R.t
 
 type ('r, 'e) position =
-     token:Coq.Limits.Token.t
+     token:Pure.Limits.Token.t
   -> doc:Fleche.Doc.t
   -> point:int * int
   -> ('r, 'e) R.t

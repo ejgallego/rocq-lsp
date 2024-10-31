@@ -19,9 +19,9 @@ module Stats : sig
   val zero : t
 end
 
-module Intern : sig
-  val clear : unit -> unit
-end
+(* module Intern : sig *)
+(*   val clear : unit -> unit *)
+(* end *)
 
 (** Flèche memo / cache tables, with some advanced features *)
 module type S = sig
@@ -32,13 +32,13 @@ module type S = sig
 
   (** [eval i] Eval an input [i] *)
   val eval :
-    token:Coq.Limits.Token.t -> input -> (output, Coq.Loc_t.t) Coq.Protect.E.t
+    token:Pure.Limits.Token.t -> input -> (output, Pure.Loc_t.t) Pure.Protect.E.t
 
   (** [eval i] Eval an input [i] and produce stats *)
   val evalS :
-       token:Coq.Limits.Token.t
+       token:Pure.Limits.Token.t
     -> input
-    -> (output, Coq.Loc_t.t) Coq.Protect.E.t * Stats.t
+    -> (output, Pure.Loc_t.t) Pure.Protect.E.t * Stats.t
 
   (** [size ()] Return the cache size in words, expensive *)
   val size : unit -> int
@@ -57,25 +57,25 @@ module type S = sig
 end
 
 (** Document creation cache *)
-module Init :
-  S
-    with type input = Coq.State.t * Coq.Workspace.t * Lang.LUri.File.t
-     and type output = Coq.State.t
+(* module Init : *)
+(*   S *)
+(*     with type input = Pure.State.t * Pure.Workspace.t * Lang.LUri.File.t *)
+(*      and type output = Pure.State.t *)
 
 (** Vernacular evaluation cache, invariant w.r.t. Coq's Ast locations, results
     are repaired. *)
 module Interp :
-  S with type input = Coq.State.t * Coq.Ast.t and type output = Coq.State.t
+  S with type input = Pure.State.t * Pure.Ast.t and type output = Pure.State.t
 
 (** Require evaluation cache, also invariant w.r.t. locations inside
-    [Coq.Ast.Require.t] *)
-module Require :
-  S
-    with type input = Coq.State.t * Coq.Files.t * Coq.Ast.Require.t
-     and type output = Coq.State.t
+    [Pure.Ast.Require.t] *)
+(* module Require : *)
+(*   S *)
+(*     with type input = Pure.State.t * Pure.Files.t * Pure.Ast.Require.t *)
+(*      and type output = Pure.State.t *)
 
 (** Admit evaluation cache *)
-module Admit : S with type input = Coq.State.t and type output = Coq.State.t
+(* module Admit : S with type input = Pure.State.t and type output = Pure.State.t *)
 
 module GlobalCacheStats : sig
   val reset : unit -> unit

@@ -24,7 +24,7 @@ module Util = struct
     | _ :: xs -> last xs
 
   let build_span start_loc end_loc =
-    Coq.Loc_t.
+    Pure.Loc_t.
       { start_loc with
         line_nb_last = end_loc.line_nb_last
       ; bol_pos_last = end_loc.bol_pos_last
@@ -54,10 +54,10 @@ end
 
 module DDebug = struct
   let parsed_sentence ~ast =
-    let loc = Coq.Ast.loc ast |> Option.get in
-    let line = loc.Coq.Loc_t.line_nb - 1 in
-    Io.Log.trace "coq" "parsed sentence: [l: %d] | %a" line Coq.Pp_t.pp_with
-      (Coq.Ast.print ast)
+    let loc = Pure.Ast.loc ast |> Option.get in
+    let line = loc.Pure.Loc_t.line_nb - 1 in
+    Io.Log.trace "coq" "parsed sentence: [l: %d] | %a" line Pure.Pp_t.pp_with
+      (Pure.Ast.print ast)
 
   let resume (last_tok : Lang.Range.t) version =
     Io.Log.trace "check" "resuming [v: %d], from: %d l: %d" version
@@ -69,11 +69,11 @@ end
 module Node = struct
   module Ast = struct
     type t =
-      { v : Coq.Ast.t
+      { v : Pure.Ast.t
       ; ast_info : Lang.Ast.Info.t list option
       }
 
-    let to_coq { v; _ } = Coq.Ast.to_coq v
+    (* let to_coq { v; _ } = Pure.Ast.to_coq v *)
   end
 
   module Info = struct
@@ -119,19 +119,19 @@ module Node = struct
   end
 
   module Message = struct
-    type t = Lang.Range.t Coq.Message.t
+    type t = Lang.Range.t Pure.Message.t
 
     let feedback_to_message ~lines message =
-      let f = Coq.Utils.to_range ~lines in
-      Coq.Message.map ~f message
+      let f = Pure.Utils.to_range ~lines in
+      Pure.Message.map ~f message
   end
 
   type t =
     { range : Lang.Range.t
     ; prev : t option
     ; ast : Ast.t option  (** Ast of node *)
-    ; state : Coq.State.t  (** (Full) State of node *)
-    ; diags : Coq.Pp_t.t Lang.Diagnostic.t list
+    ; state : Pure.State.t  (** (Full) State of node *)
+    ; diags : Pure.Pp_t.t Lang.Diagnostic.t list
     ; messages : Message.t list
     ; info : Info.t
     }
@@ -154,18 +154,18 @@ module Diags : sig
        ?data:Lang.Diagnostic.Data.t
     -> Lang.Range.t
     -> Lang.Diagnostic.Severity.t
-    -> Coq.Pp_t.t
-    -> Coq.Pp_t.t Lang.Diagnostic.t
+    -> Pure.Pp_t.t
+    -> Pure.Pp_t.t Lang.Diagnostic.t
 
   (** Build advanced diagnostic with AST analysis *)
   val error :
        err_range:Lang.Range.t
     -> quickFix:Lang.Range.t Lang.Qf.t list option
-    -> msg:Coq.Pp_t.t
+    -> msg:Pure.Pp_t.t
     -> stm_range:Lang.Range.t (* range for the sentence *)
     -> ?ast:Node.Ast.t
     -> unit
-    -> Coq.Pp_t.t Lang.Diagnostic.t
+    -> Pure.Pp_t.t Lang.Diagnostic.t
 
   (** [of_messages drange msgs] process feedback messages, and convert some to
       diagnostics based on user-config. Default range [drange] is used for
@@ -173,7 +173,7 @@ module Diags : sig
   val of_messages :
        drange:Lang.Range.t
     -> Node.Message.t list
-    -> Coq.Pp_t.t Lang.Diagnostic.t list * Node.Message.t list
+    -> Pure.Pp_t.t Lang.Diagnostic.t list * Node.Message.t list
 end = struct
   let err = Lang.Diagnostic.Severity.error
 
@@ -186,11 +186,11 @@ end = struct
     let failedRequire =
       match
         Option.bind ast (fun (ast : Node.Ast.t) ->
-            Coq.Ast.Require.extract ast.v)
+            Pure.Ast.Require.extract ast.v)
       with
       | Some _ ->
         Some []
-        (* | Some { Coq.Ast.Require.from; mods; _ } -> *)
+        (* | Some { Pure.Ast.Require.from; mods; _ } -> *)
         (* let refs = List.map fst mods in *)
         (* Some [ { Lang.Diagnostic.FailedRequire.prefix = from; refs } ] *)
       | _ -> None
@@ -213,7 +213,7 @@ end = struct
     make ?data err_range Lang.Diagnostic.Severity.error msg
 
   let of_feed ~drange (severity, payload) =
-    let { Coq.Message.Payload.range; quickFix; msg } = payload in
+    let { Pure.Message.Payload.range; quickFix; msg } = payload in
     let range = Stdlib.Option.value ~default:drange range in
     (* Be careful to avoid defining data if quickFix = None *)
     let data =
@@ -282,15 +282,15 @@ end
     document, usually by importing the prelude and other libs implicitly. *)
 module Env = struct
   type t =
-    { init : Coq.State.t
-    ; workspace : Coq.Workspace.t
-    ; files : Coq.Files.t
+    { init : Pure.State.t
+    ; workspace : Pure.Workspace.t
+    ; files : Pure.Files.t
     }
 
   let make ~init ~workspace ~files = { init; workspace; files }
 
   let inject_requires ~extra_requires { init; workspace; files } =
-    let workspace = Coq.Workspace.inject_requires ~extra_requires workspace in
+    let workspace = Pure.Workspace.inject_requires ~extra_requires workspace in
     { init; workspace; files }
 end
 
@@ -308,7 +308,7 @@ type t =
             waiting for some IO / external event *)
   ; toc : Node.t SM.t  (** table of contents *)
   ; env : Env.t  (** External document enviroment *)
-  ; root : Coq.State.t
+  ; root : Pure.State.t
         (** [root] contains the first state document state, obtained by applying
             a workspace to Coq's initial state *)
   ; diags_dirty : bool  (** internal field *)
@@ -344,9 +344,9 @@ let rebuild_toc nodes = List.fold_left update_toc_node SM.empty nodes
 
 let init_fname ~uri =
   let file = Lang.LUri.File.to_string_file uri in
-  Coq.Loc_t.InFile { dirpath = None; file }
+  Pure.Loc_t.InFile { dirpath = None; file }
 
-let init_loc ~uri = Coq.Loc_t.initial (init_fname ~uri)
+let init_loc ~uri = Pure.Loc_t.initial (init_fname ~uri)
 
 (* default range for the node that contains the init feedback errors *)
 let drange ~lines =
@@ -368,7 +368,7 @@ let process_init_feedback ~lines ~stats ~global_stats state feedback =
     [ { Node.range; prev; ast = None; state; diags; messages; info } ]
   else []
 
-(* Memoized call to [Coq.Init.doc_init] *)
+(* Memoized call to [Pure.Init.doc_init] *)
 let mk_doc ~token ~env ~uri =
   Memo.Init.evalS ~token (env.Env.init, env.workspace, uri)
 
@@ -376,7 +376,7 @@ let mk_doc ~token ~env ~uri =
 let empty_doc ~uri ~languageId ~contents ~version ~env ~root ~nodes ~completed =
   let lines = contents.Contents.lines in
   let init_loc = init_loc ~uri in
-  let init_range = Coq.Utils.to_range ~lines init_loc in
+  let init_range = Pure.Utils.to_range ~lines init_loc in
   let toc = SM.empty in
   let diags_dirty = not (Lang.Compat.List.is_empty nodes) in
   let completed = completed init_range in
@@ -393,7 +393,7 @@ let empty_doc ~uri ~languageId ~contents ~version ~env ~root ~nodes ~completed =
   }
 
 let error_doc ~range ~message ~uri ~languageId ~contents ~version ~env =
-  let payload = Coq.Message.Payload.make ?range (Coq.Pp_t.str message) in
+  let payload = Pure.Message.Payload.make ?range (Pure.Pp_t.str message) in
   let feedback = [ (Diags.err, payload) ] in
   let root = env.Env.init in
   let nodes = [] in
@@ -405,8 +405,8 @@ let conv_error_doc ~raw ~uri ~languageId ~version ~env ~root err =
   let contents = Contents.make_raw ~raw in
   let lines = contents.lines in
   let err =
-    let msg = Coq.Pp_t.(str "Error in document conversion: " ++ str err) in
-    (Diags.err, Coq.Message.Payload.make msg)
+    let msg = Pure.Pp_t.(str "Error in document conversion: " ++ str err) in
+    (Diags.err, Pure.Message.Payload.make msg)
   in
   (* No execution to add *)
   let stats = None in
@@ -418,7 +418,7 @@ let conv_error_doc ~raw ~uri ~languageId ~version ~env ~root err =
 let create ~token ~env ~uri ~languageId ~version ~contents =
   let () = Stats.reset () in
   let root, stats = mk_doc ~token ~env ~uri in
-  ( Coq.Protect.E.map root ~f:(fun root ->
+  ( Pure.Protect.E.map root ~f:(fun root ->
         let nodes = [] in
         let completed range = Completion.Stopped range in
         empty_doc ~uri ~languageId ~contents ~version ~env ~root ~nodes
@@ -429,7 +429,7 @@ let create ~token ~env ~uri ~languageId ~version ~contents =
     corresponding errors; for now we refine the contents step as to better setup
     the initial document. *)
 let handle_doc_creation_exec ~token ~env ~uri ~languageId ~version ~contents =
-  let { Coq.Protect.E.r; feedback }, stats =
+  let { Pure.Protect.E.r; feedback }, stats =
     create ~token ~env ~uri ~languageId ~version ~contents
   in
   let doc, extra_feedback =
@@ -441,7 +441,7 @@ let handle_doc_creation_exec ~token ~env ~uri ~languageId ~version ~contents =
     | Completed (Error (User { range; msg = err_msg; quickFix = _ }))
     | Completed (Error (Anomaly { range; msg = err_msg; quickFix = _ })) ->
       let message =
-        Format.asprintf "Doc.create, internal error: @[%a@]" Coq.Pp_t.pp_with
+        Format.asprintf "Doc.create, internal error: @[%a@]" Pure.Pp_t.pp_with
           err_msg
       in
       error_doc ~range ~message ~uri ~languageId ~version ~contents ~env
@@ -527,7 +527,7 @@ let bump_version ~init_range ~version ~contents doc =
 
 let bump_version ~token ~version ~(contents : Contents.t) doc =
   let init_loc = init_loc ~uri:doc.uri in
-  let init_range = Coq.Utils.to_range ~lines:contents.lines init_loc in
+  let init_range = Pure.Utils.to_range ~lines:contents.lines init_loc in
   match doc.completed with
   (* We can do better, but we need to handle the case where the anomaly is when
      restoring / executing the first sentence *)
@@ -583,7 +583,7 @@ let send_execinfo ~io ~uri ~version ~range =
 (* let close_doc _modname = () *)
 
 let parse_stm ~token ~st ps =
-  let f ps = Coq.Parsing.parse ~token ~st ps in
+  let f ps = Pure.Parsing.parse ~token ~st ps in
   Stats.record ~kind:Stats.Kind.Parsing ~f ps
 
 module Recovery_context = struct
@@ -594,7 +594,7 @@ module Recovery_context = struct
     ; nodes : Node.t list
           (** All nodes of the document (to be replaced by the structural
               solution *)
-    ; ast : Coq.Ast.t option
+    ; ast : Pure.Ast.t option
           (** Ast of the sentence that failed, if available *)
     }
 
@@ -613,14 +613,15 @@ module Recovery : sig
   (* This is useful in meta-commands, and other plugins actually! *)
 
   val handle :
-       token:Coq.Limits.Token.t
+       token:Pure.Limits.Token.t
     -> context:Recovery_context.t
-    -> st:Coq.State.t
-    -> Coq.State.t
+    -> st:Pure.State.t
+    -> Pure.State.t
 end = struct
   (* Returns node before / after, will be replaced by the right structure, we
      can also do dynamic by looking at proof state *)
-  let rec find_proof_start nodes =
+  let rec find_proof_start _nodes = None
+    (*
     match nodes with
     | [] -> None
     | { Node.ast = None; _ } :: ns -> find_proof_start ns
@@ -630,21 +631,22 @@ end = struct
       | VernacSynPure (VernacDefinition (_, _, ProveBody _)) ->
         Some (n, Util.hd_opt ns)
       | _ -> find_proof_start ns)
+       *)
 
   let recovery_for_failed_qed ~token ~default nodes =
     match find_proof_start nodes with
-    | None -> Coq.Protect.E.ok (default, None)
-    | Some ({ range; state; _ }, prev) -> (
+    | None -> Pure.Protect.E.ok (default, None)
+    | Some ({ Node.range; state; _ }, prev) -> (
       if !Config.v.admit_on_bad_qed then
         Memo.Admit.eval ~token state
-        |> Coq.Protect.E.map ~f:(fun state -> (state, Some range))
+        |> Pure.Protect.E.map ~f:(fun state -> (state, Some range))
       else
         match prev with
-        | None -> Coq.Protect.E.ok (default, None)
-        | Some { state; range; _ } -> Coq.Protect.E.ok (state, Some range))
+        | None -> Pure.Protect.E.ok (default, None)
+        | Some { state; range; _ } -> Pure.Protect.E.ok (state, Some range))
 
   let log_qed_recovery v =
-    Coq.Protect.E.map ~f:(fun (st, range) ->
+    Pure.Protect.E.map ~f:(fun (st, range) ->
         let loc_msg =
           Stdlib.Option.fold ~some:Lang.Range.to_string ~none:"no loc" range
         in
@@ -673,12 +675,13 @@ end = struct
     | _, _, Some ("Admitted" as txt) ->
       Io.Log.trace "lex recovery" "%s detected" txt;
       recovery_for_failed_qed ~token ~default:st nodes
-      |> Coq.Protect.E.map ~f:fst
-    | _, _, _ -> Coq.Protect.E.ok st
+      |> Pure.Protect.E.map ~f:fst
+    | _, _, _ -> Pure.Protect.E.ok st
 
   (* AST-based heuristics: Qed, bullets, ... *)
+  (*
   let ast_recovery_heuristic ~token last_tok contents nodes st v =
-    match (Coq.Ast.to_coq v).CAst.v.Vernacexpr.expr with
+    match (Pure.Ast.to_coq v).CAst.v.Vernacexpr.expr with
     (* Drop the top proof state if we reach a faulty Qed. *)
     | Vernacexpr.VernacSynPure (VernacEndProof _) ->
       Io.Log.trace "recovery" "qed";
@@ -687,19 +690,24 @@ end = struct
     | Vernacexpr.VernacSynPure (VernacBullet _ | Vernacexpr.VernacEndSubproof)
       ->
       Io.Log.trace "recovery" "bullet";
-      Coq.State.admit_goal ~token ~st
-      |> Coq.Protect.E.bind ~f:(fun st ->
+      Pure.State.admit_goal ~token ~st
+      |> Pure.Protect.E.bind ~f:(fun st ->
              (* We skip the cache here, but likely we don't want to do that. *)
              let intern = Vernacinterp.fs_intern in
-             Coq.Interp.interp ~token ~intern ~st v)
+             Pure.Interp.interp ~token ~intern ~st v)
     | _ ->
       (* Fallback to qed special lex case *)
       lex_recovery_heuristic ~token last_tok contents nodes st
 
+     *)
+
+  let ast_recovery_heuristic ~token:_ _last_tok _contents _nodes st _v =
+    Pure.Protect.E.ok st
+
   (* XXX: This should be refined. *)
   let handle ~token ~context ~st =
     let { Recovery_context.contents; last_tok; nodes; ast } = context in
-    let { Coq.Protect.E.r; feedback } =
+    let { Pure.Protect.E.r; feedback } =
       match ast with
       | None -> lex_recovery_heuristic ~token last_tok contents nodes st
       | Some ast -> ast_recovery_heuristic ~token last_tok contents nodes st ast
@@ -713,7 +721,7 @@ end
 (* end [module Recovery = struct...] *)
 
 let interp_and_info ~token ~st ~files ast =
-  match Coq.Ast.Require.extract ast with
+  match Pure.Ast.Require.extract ast with
   | None -> Memo.Interp.evalS ~token (st, ast)
   | Some ast -> Memo.Require.evalS ~token (st, files, ast)
 
@@ -727,40 +735,40 @@ let search_node ~command ~doc ~st =
   in
   let back_overflow num =
     let ll = List.length doc.nodes in
-    Coq.Pp_t.(
+    Pure.Pp_t.(
       str "not enough nodes: [" ++ int num ++ str " > " ++ int ll
       ++ str "] available document nodes")
   in
   match command with
-  | Coq.Ast.Meta.Command.Back num -> (
-    match List.nth_opt doc.nodes num with
+  | Pure.Ast.Meta.Command.Back num -> (
+    match List.nth doc.nodes num with
     | None ->
       let message = back_overflow num in
-      (Coq.Protect.E.error message, nstats None)
-    | Some node -> (Coq.Protect.E.ok node.state, nstats (Some node)))
+      (Pure.Protect.E.error message, nstats None)
+    | Some node -> (Pure.Protect.E.ok node.state, nstats (Some node)))
   | Restart -> (
     match Recovery.find_proof_start doc.nodes with
     | None ->
-      (Coq.Protect.E.error Coq.Pp_t.(str "no proof to restart"), Memo.Stats.zero)
-    | Some (node, _) -> (Coq.Protect.E.ok node.state, nstats None))
+      (Pure.Protect.E.error Pure.Pp_t.(str "no proof to restart"), Memo.Stats.zero)
+    | Some (node, _) -> (Pure.Protect.E.ok node.state, nstats None))
   | ResetName id -> (
     let toc = doc.toc in
     let id = Names.Id.to_string id.v in
     match SM.find_opt id toc with
     | None ->
-      ( Coq.Protect.E.error
-          Coq.Pp_t.(str "identifier " ++ str id ++ str " not found")
+      ( Pure.Protect.E.error
+          Pure.Pp_t.(str "identifier " ++ str id ++ str " not found")
       , Memo.Stats.zero )
     | Some node ->
       let node = Stdlib.Option.value ~default:node node.prev in
-      (Coq.Protect.E.ok node.state, nstats (Some node)))
-  | ResetInitial -> (Coq.Protect.E.ok doc.root, nstats None)
+      (Pure.Protect.E.ok node.state, nstats (Some node)))
+  | ResetInitial -> (Pure.Protect.E.ok doc.root, nstats None)
   | AbortAll ->
-    let st = Coq.State.drop_all_proofs ~st in
-    (Coq.Protect.E.ok st, nstats None)
+    let st = Pure.State.drop_all_proofs ~st in
+    (Pure.Protect.E.ok st, nstats None)
 
 let interp_and_info ~token ~st ~files ~doc ast =
-  match Coq.Ast.Meta.extract ast with
+  match Pure.Ast.Meta.extract ast with
   | None -> interp_and_info ~token ~st ~files ast
   | Some { command; loc = _; attrs = _; control = _ } ->
     (* That's an interesting point, for now we don't measure time Flèche is
@@ -780,25 +788,25 @@ type parse_action =
   | Skip of
       Lang.Range.t
       * Lang.Range.t (* span of the skipped sentence + last valid token *)
-  | Process of Coq.Ast.t (* success! *)
+  | Process of Pure.Ast.t (* success! *)
 
 (* Returns parse_action, diags, parsing_time *)
 let parse_action ~token ~lines ~st last_tok doc_handle =
-  let start_loc = Coq.Parsing.(Parsable.loc doc_handle |> Lexer.after) in
+  let start_loc = Pure.Parsing.(Parsable.loc doc_handle |> Lexer.after) in
   let parse_res, stats = parse_stm ~token ~st doc_handle in
-  let f = Coq.Utils.to_range ~lines in
-  let { Coq.Protect.E.r; feedback } = Coq.Protect.E.map_loc ~f parse_res in
+  let f = Pure.Utils.to_range ~lines in
+  let { Pure.Protect.E.r; feedback } = Pure.Protect.E.map_loc ~f parse_res in
   let { Stats.time; memory = _ } = stats in
   match r with
-  | Coq.Protect.R.Interrupted -> (EOF (Stopped last_tok), [], feedback, time)
-  | Coq.Protect.R.Completed res -> (
+  | Pure.Protect.R.Interrupted -> (EOF (Stopped last_tok), [], feedback, time)
+  | Pure.Protect.R.Completed res -> (
     match res with
     | Ok None ->
       (* We actually need to fix Coq to return the location of the true file
          EOF, the below trick seems to work tho. Coq fix involves updating the
          type of `Pcoq.main_entry` *)
-      let last_tok = Coq.Parsing.Parsable.loc doc_handle in
-      let last_tok = Coq.Utils.to_range ~lines last_tok in
+      let last_tok = Pure.Parsing.Parsable.loc doc_handle in
+      let last_tok = Pure.Utils.to_range ~lines last_tok in
       (EOF (Yes last_tok), [], feedback, time)
     | Ok (Some ast) ->
       let () = if Debug.parsing then DDebug.parsed_sentence ~ast in
@@ -813,11 +821,11 @@ let parse_action ~token ~lines ~st last_tok doc_handle =
       in
       (EOF (Failed last_tok), parse_diags, feedback, time)
     | Error (User { range = Some err_range; quickFix; msg }) ->
-      Coq.Parsing.discard_to_dot doc_handle;
-      let last_tok = Coq.Parsing.Parsable.loc doc_handle in
-      let last_tok_range = Coq.Utils.to_range ~lines last_tok in
+      Pure.Parsing.discard_to_dot doc_handle;
+      let last_tok = Pure.Parsing.Parsable.loc doc_handle in
+      let last_tok_range = Pure.Utils.to_range ~lines last_tok in
       let span_loc = Util.build_span start_loc last_tok in
-      let span_range = Coq.Utils.to_range ~lines span_loc in
+      let span_range = Pure.Utils.to_range ~lines span_loc in
       let parse_diags =
         [ Diags.error ~err_range ~quickFix ~msg ~stm_range:span_range () ]
       in
@@ -827,7 +835,7 @@ let parse_action ~token ~lines ~st last_tok doc_handle =
 type document_action =
   | Stop of Completion.t * Node.t
   | Continue of
-      { state : Coq.State.t
+      { state : Pure.State.t
       ; last_tok : Lang.Range.t
       ; node : Node.t
       }
@@ -859,7 +867,7 @@ let parsed_node ~range ~prev ~ast ~state ~parsing_diags ~parsing_feedback ~diags
   { Node.range; prev; ast = Some ast; diags; messages; state; info }
 
 let strategy_of_coq_err ~node ~state ~last_tok = function
-  | Coq.Protect.Error.Anomaly _ -> Stop (Failed last_tok, node)
+  | Pure.Protect.Error.Anomaly _ -> Stop (Failed last_tok, node)
   | User _ -> Continue { state; last_tok; node }
 
 let node_of_coq_result ~token ~doc ~range ~prev ~ast ~st ~parsing_diags
@@ -872,7 +880,7 @@ let node_of_coq_result ~token ~doc ~range ~prev ~ast ~st ~parsing_diags
     in
     Continue { state; last_tok; node }
   | Error
-      (Coq.Protect.Error.Anomaly { range = err_range; quickFix; msg } as coq_err)
+      (Pure.Protect.Error.Anomaly { range = err_range; quickFix; msg } as coq_err)
   | Error (User { range = err_range; quickFix; msg } as coq_err) ->
     let err_range = Stdlib.Option.value ~default:range err_range in
     let err_diags =
@@ -916,27 +924,29 @@ let document_action ~token ~io ~st ~parsing_diags ~parsing_feedback
   | Process ast -> (
     (* Prepare the Ast range and send execinfo *)
     let lines, files = (doc.contents.lines, doc.env.files) in
-    let ast_loc = Coq.Ast.loc ast |> Option.get in
-    let ast_range = Coq.Utils.to_range ~lines ast_loc in
+    let ast_loc = Pure.Ast.loc ast |> Option.get in
+    let ast_range = Pure.Utils.to_range ~lines ast_loc in
     send_execinfo ~io ~uri:doc.uri ~version:doc.version ~range:ast_range;
     (* Execute the command *)
     let process_res, info =
       interp_and_info ~token ~parsing_time ~st ~files ~doc ast
     in
-    let f = Coq.Utils.to_range ~lines in
-    let { Coq.Protect.E.r; feedback } = Coq.Protect.E.map_loc ~f process_res in
+    let f = Pure.Utils.to_range ~lines in
+    let { Pure.Protect.E.r; feedback } = Pure.Protect.E.map_loc ~f process_res in
     match r with
-    | Coq.Protect.R.Interrupted ->
+    | Pure.Protect.R.Interrupted ->
       (* Exit *)
       Interrupted last_tok
-    | Coq.Protect.R.Completed res ->
+    | Pure.Protect.R.Completed res ->
+      let ast_loc = Pure.Ast.loc ast |> Option.get in
+      let ast_range = Pure.Utils.to_range ~lines ast_loc in
       let ast =
-        Node.Ast.{ v = ast; ast_info = Coq.Ast.make_info ~lines ~st ast }
+        Node.Ast.{ v = ast; ast_info = Pure.Ast.make_info ~lines ~st ast }
       in
       (* The evaluation by Coq fully completed, then we can resume checking from
          this point then, hence the new last valid token last_tok_new *)
-      let last_tok_new = Coq.Parsing.Parsable.loc doc_handle in
-      let last_tok_new = Coq.Utils.to_range ~lines last_tok_new in
+      let last_tok_new = Pure.Parsing.Parsable.loc doc_handle in
+      let last_tok_new = Pure.Utils.to_range ~lines last_tok_new in
       node_of_coq_result ~token ~doc ~range:ast_range ~prev ~ast ~st
         ~parsing_diags ~parsing_feedback ~feedback ~info last_tok_new res)
 
@@ -965,7 +975,7 @@ let log_beyond_target last_tok target =
   Io.Log.trace "beyond_target" "target is %a" Target.pp target
 
 let max_errors_node ~state ~range ~prev =
-  let msg = Coq.Pp_t.str "Maximum number of errors reached" in
+  let msg = Pure.Pp_t.str "Maximum number of errors reached" in
   let parsing_diags = [ Diags.make range Diags.err msg ] in
   unparseable_node ~range ~prev ~parsing_diags ~parsing_feedback:[] ~state
     ~parsing_time:0.0
@@ -1069,7 +1079,7 @@ let loc_after ~lines ~uri (r : Lang.Range.t) =
     Lang.Utf.utf8_offset_of_utf16_offset ~line ~offset:r.end_.character
   in
   let bol_pos_last = r.end_.offset - end_index in
-  { Coq.Loc_t.fname = init_fname ~uri
+  { Pure.Loc_t.fname = init_fname ~uri
   ; line_nb = line_nb_last
   ; bol_pos = bol_pos_last
   ; line_nb_last
@@ -1084,7 +1094,7 @@ let resume_check ~io ~token ~(last_tok : Lang.Range.t) ~doc ~target =
   (* Compute resume point, basically [CLexer.after] + stream setup *)
   let lines = doc.contents.lines in
   let resume_loc = loc_after ~lines ~uri last_tok in
-  let offset = resume_loc.Coq.Loc_t.bp in
+  let offset = resume_loc.Pure.Loc_t.bp in
   let pcontent_len = contents.last.offset in
   match Util.safe_sub contents.text offset (pcontent_len - offset) with
   | None ->
@@ -1093,7 +1103,7 @@ let resume_check ~io ~token ~(last_tok : Lang.Range.t) ~doc ~target =
     set_completion ~completed doc
   | Some processed_content ->
     let handle =
-      Coq.Parsing.(
+      Pure.Parsing.(
         Parsable.make ~loc:resume_loc
           Stream.(of_string ~offset processed_content))
     in
@@ -1115,6 +1125,7 @@ let check ~io ~token ~target ~doc () =
     Util.print_stats ();
     doc
 
+(*
 let save ~token ~doc =
   match doc.completed with
   | Yes _ ->
@@ -1122,40 +1133,43 @@ let save ~token ~doc =
       Util.last doc.nodes |> Stdlib.Option.fold ~some:Node.state ~none:doc.root
     in
     let uri = doc.uri in
-    let ldir = Coq.Workspace.dirpath_of_uri ~uri in
+    let ldir = Pure.Workspace.dirpath_of_uri ~uri in
     let in_file = Lang.LUri.File.to_string_file uri in
-    Coq.State.in_stateM ~token ~st
-      ~f:(fun () -> Coq.Save.save_vo ~token ~st ~ldir ~in_file)
+    Pure.State.in_stateM ~token ~st
+      ~f:(fun () -> Pure.Save.save_vo ~token ~st ~ldir ~in_file)
       ()
   | _ ->
-    let error = Coq.Pp_t.(str "Can't save document that failed to check") in
-    Coq.Protect.E.error error
+    let error = Pure.Pp_t.(str "Can't save document that failed to check") in
+    Pure.Protect.E.error error
 
 (* run api, experimental *)
 
 (* Adaptor, should be supported in memo directly *)
 let eval_no_memo ~token (st, cmd) =
-  Coq.Interp.interp ~token ~intern:Vernacinterp.fs_intern ~st cmd
+  Pure.Interp.interp ~token ~intern:Vernacinterp.fs_intern ~st cmd
 
 (* TODO, what to do with feedback, what to do with errors *)
 let rec parse_execute_loop ~token ~memo pa st =
-  let open Coq.Protect.E.O in
+  let open Pure.Protect.E.O in
   let eval = if memo then Memo.Interp.eval else eval_no_memo in
-  let* ast = Coq.Parsing.parse ~token ~st pa in
+  let* ast = Pure.Parsing.parse ~token ~st pa in
   match ast with
-  | Some ast ->
-    let* st = eval ~token (st, ast) in
-    parse_execute_loop ~token ~memo pa st
+  | Some ast -> (
+    match eval ~token (st, ast) with
+    | Pure.Protect.E.{ r = Pure.Protect.R.Completed (Ok st); feedback = _ } ->
+      parse_execute_loop ~token ~memo pa st
+    | res -> res)
   (* On EOF we return the previous state, the command was the empty string or a
      comment *)
-  | None -> Coq.Protect.E.ok st
+  | None -> Pure.Protect.E.ok st
 
 let parse_and_execute_in ~token ~loc tac st =
-  let str = Coq.Parsing.Stream.of_string tac in
-  let pa = Coq.Parsing.Parsable.make ?loc str in
+  let str = Pure.Parsing.Stream.of_string tac in
+  let pa = Pure.Parsing.Parsable.make ?loc str in
   parse_execute_loop ~token pa st
 
 let run ~token ?loc ?(memo = true) ~st cmds =
-  Coq.State.in_stateM ~token ~st
+  Pure.State.in_stateM ~token ~st
     ~f:(parse_and_execute_in ~token ~loc ~memo cmds)
     st
+*)

@@ -13,10 +13,10 @@ module Error : sig
   type 'a t =
     { code : int
     ; payload : 'a
-    ; feedback : Lang.Range.t Coq.Message.t list
+    ; feedback : Lang.Range.t Pure.Message.t list
     }
 
-  val make : ?feedback:Lang.Range.t Coq.Message.t list -> int -> 'a -> 'a t
+  val make : ?feedback:Lang.Range.t Pure.Message.t list -> int -> 'a -> 'a t
 end
 
 module R : sig
@@ -30,7 +30,7 @@ module R : sig
   val of_execution :
        lines:string Array.t
     -> name:string
-    -> f:('a -> (('r, string) t, Coq.Loc_t.t) Coq.Protect.E.t)
+    -> f:('a -> (('r, string) t, Pure.Loc_t.t) Pure.Protect.E.t)
     -> 'a
     -> ('r, string) t
 end
@@ -38,10 +38,10 @@ end
 (* We could classify the requests that don't need to call-back Coq (and thus
    don't need the interruption token; but it is not worth it. *)
 type ('r, 'e) document =
-  token:Coq.Limits.Token.t -> doc:Fleche.Doc.t -> ('r, 'e) R.t
+  token:Pure.Limits.Token.t -> doc:Fleche.Doc.t -> ('r, 'e) R.t
 
 type ('r, 'e) position =
-     token:Coq.Limits.Token.t
+     token:Pure.Limits.Token.t
   -> doc:Fleche.Doc.t
   -> point:int * int
   -> ('r, 'e) R.t
@@ -73,5 +73,5 @@ module Data : sig
     ('r, 'e) t -> Lang.LUri.File.t * bool * Fleche.Theory.Request.request
 
   val serve :
-    token:Coq.Limits.Token.t -> doc:Fleche.Doc.t -> ('r, 'e) t -> ('r, 'e) R.t
+    token:Pure.Limits.Token.t -> doc:Fleche.Doc.t -> ('r, 'e) t -> ('r, 'e) R.t
 end

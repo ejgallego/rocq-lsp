@@ -47,7 +47,7 @@ module Message : sig
     }
   [@@deriving yojson]
 
-  val of_coq_message : Lang.Range.t Coq.Message.t -> Coq.Pp_t.t t
+  val of_coq_message : Lang.Range.t Pure.Message.t -> Pure.Pp_t.t t
   val map : f:('a -> 'b) -> 'a t -> 'b t
 end
 
@@ -57,7 +57,8 @@ module GoalsAnswer : sig
     ; position : Lang.Point.t
     ; range : Lang.Range.t option [@default None]
     ; goals : ('goals, 'pp) JCoq.Goals.reified option [@default None]
-    ; program : JCoq.State.Proof.Program.t Names.Id.Map.t option [@default None]
+    (* ; program : JCoq.State.Proof.Program.t Names.Id.Map.t option [@default None] *)
+    ; program : JCoq.State.Proof.Program.t option [@default None]
     ; messages : 'pp Message.t list
     ; error : 'pp option [@default None]
     }
@@ -76,7 +77,7 @@ end
 module RangedSpan : sig
   type ('goals, 'pp) t =
     { range : Lang.Range.t
-    ; ast : Coq.Ast.t option [@default None]
+    ; ast : Pure.Ast.t option [@default None]
     ; goals : ('goals, 'pp) GoalsAnswer.t option [@default None]
     }
   [@@deriving yojson]

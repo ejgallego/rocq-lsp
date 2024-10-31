@@ -5,20 +5,20 @@
  (public_name coq-lsp.request)
  (modules request)
  (wrapped false)
- (libraries coq lang fleche))
+ (libraries lambdapi.pure lang fleche))
 
 (library
  (name controller)
  (modules :standard \ request)
  (libraries
-  ppx_deriving_yojson.runtime
-  yojson
-  lang
-  coq
+  ; ppx_deriving_yojson.runtime
+  ; yojson
+  ; lang
+  ; coq
   fleche
   request
-  petanque
-  petanque_json
+  ; petanque
+  ; petanque_json
   fleche_lsp
-  layout
+  ; layout
   dune-build-info))

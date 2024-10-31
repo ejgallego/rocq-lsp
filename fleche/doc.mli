@@ -13,7 +13,7 @@ module SM = Lang.Compat.String.Map
 module Node : sig
   module Ast : sig
     type t =
-      { v : Coq.Ast.t
+      { v : Pure.Ast.t
       ; ast_info : Lang.Ast.Info.t list option
       }
   end
@@ -29,15 +29,15 @@ module Node : sig
   end
 
   module Message : sig
-    type t = Lang.Range.t Coq.Message.t
+    type t = Lang.Range.t Pure.Message.t
   end
 
   type t = private
     { range : Lang.Range.t
     ; prev : t option
     ; ast : Ast.t option  (** Ast of node *)
-    ; state : Coq.State.t  (** (Full) State of node *)
-    ; diags : Coq.Pp_t.t Lang.Diagnostic.t list
+    ; state : Pure.State.t  (** (Full) State of node *)
+    ; diags : Pure.Pp_t.t Lang.Diagnostic.t list
           (** Diagnostics associated to the node *)
     ; messages : Message.t list
     ; info : Info.t
@@ -45,8 +45,8 @@ module Node : sig
 
   val range : t -> Lang.Range.t
   val ast : t -> Ast.t option
-  val state : t -> Coq.State.t
-  val diags : t -> Coq.Pp_t.t Lang.Diagnostic.t list
+  val state : t -> Pure.State.t
+  val diags : t -> Pure.Pp_t.t Lang.Diagnostic.t list
   val messages : t -> Message.t list
   val info : t -> Info.t
 end
@@ -65,15 +65,19 @@ end
     document, usually by importing the prelude and other libs implicitly. *)
 module Env : sig
   type t = private
-    { init : Coq.State.t
-    ; workspace : Coq.Workspace.t
-    ; files : Coq.Files.t
+    { init : Pure.State.t
+    ; workspace : Pure.Workspace.t
+    ; files : Pure.Files.t
     }
 
   val make :
-    init:Coq.State.t -> workspace:Coq.Workspace.t -> files:Coq.Files.t -> t
+    init:Pure.State.t -> workspace:Pure.Workspace.t -> files:Pure.Files.t -> t
 
-  val inject_requires : extra_requires:Coq.Workspace.Require.t list -> t -> t
+  (* val inject_requires : extra_requires:Pure.Workspace.Require.t list -> t -> t *)
+end
+
+module CString : sig
+  module Map : Map.S with type key = string
 end
 
 (** A Flèche document is basically a [node list], which is a crude form of a
@@ -90,7 +94,7 @@ type t = private
             waiting for some IO / external event *)
   ; toc : Node.t SM.t  (** table of contents *)
   ; env : Env.t  (** External document enviroment *)
-  ; root : Coq.State.t
+  ; root : Pure.State.t
         (** [root] contains the first state document state, obtained by applying
             a workspace to Coq's initial state *)
   ; diags_dirty : bool  (** internal field *)
@@ -103,13 +107,13 @@ val asts : t -> Node.Ast.t list
 val lines : t -> string Array.t
 
 (** Return the list of all diags in the doc *)
-val diags : t -> Coq.Pp_t.t Lang.Diagnostic.t list
+val diags : t -> Pure.Pp_t.t Lang.Diagnostic.t list
 
 (** Create a new Coq document, this is cached! Note that this operation always
     suceeds, but the document could be created in a `Failed` state if problems
     arise. *)
 val create :
-     token:Coq.Limits.Token.t
+     token:Pure.Limits.Token.t
   -> env:Env.t
   -> uri:Lang.LUri.File.t
   -> languageId:string
@@ -121,7 +125,7 @@ val create :
     incremental checking. If the operation fails, the document will be left in
     `Failed` state. *)
 val bump_version :
-  token:Coq.Limits.Token.t -> version:int -> raw:string -> t -> t
+  token:Pure.Limits.Token.t -> version:int -> raw:string -> t -> t
 
 (** Checking targets, this specifies what we expect check to reach *)
 module Target : sig
@@ -141,7 +145,7 @@ end
     in the [io] record, used to send partial updates. *)
 val check :
      io:Io.CallBack.t
-  -> token:Coq.Limits.Token.t
+  -> token:Pure.Limits.Token.t
   -> target:Target.t
   -> doc:t
   -> unit
@@ -150,8 +154,9 @@ val check :
 (** [save ~doc] will save [doc] .vo file. It will fail if proofs are open, or if
     the document completion status is not [Yes] *)
 val save :
-  token:Coq.Limits.Token.t -> doc:t -> (unit, Coq.Loc_t.t) Coq.Protect.E.t
+  token:Pure.Limits.Token.t -> doc:t -> (unit, Pure.Loc_t.t) Pure.Protect.E.t
 
+(*
 (** [run ~token ?loc ?memo ~st cmds] run commands [cmds] starting on state [st],
     without commiting changes to the document. [loc] can be used to seed an
     initial location if desired, if not the locations will be considered
@@ -163,9 +168,10 @@ val save :
     and goals], the API is expected to change as to better adapt
     to users. *)
 val run :
-     token:Coq.Limits.Token.t
-  -> ?loc:Coq.Loc_t.t
+     token:Pure.Limits.Token.t
+  -> ?loc:Pure.Loc_t.t
   -> ?memo:bool
-  -> st:Coq.State.t
+  -> st:Pure.State.t
   -> string
-  -> (Coq.State.t, Coq.Loc_t.t) Coq.Protect.E.t
+  -> (Pure.State.t, Pure.Loc_t.t) Pure.Protect.E.t
+*)

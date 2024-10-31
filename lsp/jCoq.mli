@@ -9,22 +9,22 @@
 (** This module contains the serialization functions for some Rocq's types *)
 
 module Pp_t : sig
-  type t = Coq.Pp_t.t [@@deriving yojson]
+  type t = Pure.Pp_t.t [@@deriving yojson]
 end
 
 module Goals : sig
-  type ('a, 'pp) t = ('a, 'pp) Coq.Goals.t [@@deriving yojson]
-  type ('a, 'pp) reified = ('a, 'pp) Coq.Goals.reified [@@deriving yojson]
+  type ('a, 'pp) t = ('a, 'pp) Pure.Goals.t [@@deriving yojson]
+  type ('a, 'pp) reified = ('a, 'pp) Pure.Goals.reified [@@deriving yojson]
 end
 
 module Ast : sig
-  type t = Coq.Ast.t [@@deriving yojson]
+  type t = Pure.Ast.t [@@deriving yojson]
 end
 
 module State : sig
   module Proof : sig
     module Program : sig
-      type t = Coq.State.Proof.Program.t [@@deriving yojson]
+      type t = Pure.State.Proof.Program.t [@@deriving yojson]
     end
   end
 end
