@@ -54,6 +54,9 @@
  - [petanque] New methods `proof_info` and `proof_info_at_pos` that
    return information about the current proof. As of today they return
    the proof name, text, range, ... (@DikieDick, @ejgallego, #1051)
+ - [petanque] New method `list_notations_in_statement` which returns
+   an analysis of notations appearing inside a Rocq statement
+   (@JulesViennotFranca, @ejgallego, #1017)
 
 # coq-lsp 0.2.4: (W)Activation
 ------------------------------

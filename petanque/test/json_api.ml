@@ -90,7 +90,7 @@ let run (ic, oc) =
   (* Will this work on Windows? *)
   let root, uri = prepare_paths () in
   let* () = S.set_workspace { debug; root } in
-  (* Check run_at_pos *)
+  (* Test for run_at_pos *)
   let* { Petanque.Agent.Run_result.feedback; _ } =
     (* harcoded in shell.ml *)
     let version = 0 in
@@ -101,6 +101,7 @@ let run (ic, oc) =
     let command = "About rev_snoc_cons." in
     S.run_at_pos { textDocument; opts = None; position; command }
   in
+  let* _ = run_at_pos_test feedback in
   (* Check proof_info_at_pos *)
   let* pi =
     (* harcoded in shell.ml *)
@@ -124,7 +125,20 @@ let run (ic, oc) =
   let* { st; _ } =
     S.start { uri; opts = None; pre_commands = None; thm = "rev_snoc_cons" }
   in
-  let* _ = run_at_pos_test feedback in
+  (* List notations test *)
+  let* { Petanque.Agent.Run_result.st = not_analysis; _ } =
+    let statement = "Lemma ttt (n m : nat) : n + m = m + n." in
+    S.list_notations_in_statement { st; statement }
+  in
+  let debug_ln = false in
+  (if debug_ln then
+     let pp_not fmt { Coq.Notation_analysis.Info.notation; _ } =
+       Format.fprintf fmt "%s" notation
+     in
+     Format.(
+       eprintf "list_notations_in_statement: @[<v>%a@]@\n%!"
+         (pp_print_list pp_not) not_analysis));
+  assert (List.length not_analysis = 3);
   (* Check get_at_pos works, note that LSP positions start at 0 ! *)
   let position = Lang.Point.{ line = 13; character = 0; offset = -1 } in
   let* st' = S.get_state_at_pos { uri; opts = None; position } in

@@ -404,6 +404,39 @@ module StateProofHash = struct
   end
 end
 
+module ListNotations = struct
+  let method_ = "petanque/list_notations_in_statement"
+
+  module Params = struct
+    type t =
+      { st : int
+      ; statement : string
+      }
+    [@@deriving yojson]
+  end
+
+  module Response = struct
+    type t = Notation_analysis.Info.t list Run_result.t [@@deriving yojson]
+  end
+
+  module Handler = struct
+    module Params = struct
+      type t =
+        { st : State.t
+        ; statement : string
+        }
+      [@@deriving yojson]
+    end
+
+    module Response = Response
+
+    let handler =
+      HType.Immediate
+        (fun ~token { Params.st; statement } ->
+          Agent.list_notations_in_statement ~token ~st ~statement ())
+  end
+end
+
 module PetAst = struct
   let method_ = "petanque/ast"
 
