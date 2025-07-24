@@ -114,3 +114,11 @@ module State = struct
     end
   end
 end
+
+module Notation_analysis = struct
+  module Info = struct
+    type t =
+      [%import: (Coq.Notation_analysis.Info.t[@with Coq.Loc_t.t := Loc_t.t])]
+    [@@deriving yojson]
+  end
+end

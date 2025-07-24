@@ -42,3 +42,5 @@ module Premise = struct
 
   type t = [%import: Petanque.Agent.Premise.t] [@@deriving yojson]
 end
+
+module Notation_analysis = Fleche_lsp.JCoq.Notation_analysis
