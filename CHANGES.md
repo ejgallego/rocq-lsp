@@ -3,6 +3,9 @@
 
  - [build] [wasm] [code] bump esbuild from 0.16 to 0.25, miscellaneous
    npm dependencies bump (@ejgallego, #1033)
+ - [meta] Coq -> Rocq documentation rename (@ejgallego, #1034)
+ - [fleche] Support `\begin{rocq}` in literate Tex files (@ejgallego,
+   #1034)
 
 # coq-lsp 0.2.4: (W)Activation
 ------------------------------
