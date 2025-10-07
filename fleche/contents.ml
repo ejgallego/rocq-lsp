@@ -70,8 +70,12 @@ module LaTeX = struct
     | [] -> []
     | l :: ls ->
       (* opening vs closing a markdown block *)
-      let code_marker = if coq then "\\end{coq}" else "\\begin{coq}" in
-      if String.equal code_marker l then gen l :: tex_map_lines (not coq) ls
+      let code_marker =
+        if coq then [ "\\end{rocq}"; "\\end{coq}" ]
+        else [ "\\begin{rocq}"; "\\begin{coq}" ]
+      in
+      let check l c = List.exists (String.equal c) l in
+      if check code_marker l then gen l :: tex_map_lines (not coq) ls
       else (if coq then l else gen l) :: tex_map_lines coq ls
 
   let process text =
