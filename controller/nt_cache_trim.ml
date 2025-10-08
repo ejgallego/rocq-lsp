@@ -45,10 +45,14 @@ let caches () =
   ; ("require", M.Require.all_freqs ())
   ]
 
+let firstn n l =
+  let num = Stdlib.Int.min n (List.length l) in
+  CList.firstn num l
+
 let pp_cache fmt (name, freqs) =
   let zsum = List.filter (Int.equal 0) freqs in
   let pp_zsum fmt l = Format.fprintf fmt "{ 0-entries: %d }" (List.length l) in
-  let fsum = CList.firstn 20 freqs in
+  let fsum = firstn 20 freqs in
   let pp_sep fmt () = Format.fprintf fmt ",@," in
   let pp_fsum = Format.(pp_print_list ~pp_sep pp_print_int) in
   Format.fprintf fmt "@[%s: %d | %a @[(%a)@]@]" name (List.length freqs) pp_zsum
