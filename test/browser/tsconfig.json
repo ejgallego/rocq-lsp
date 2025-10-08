@@ -1,0 +1,8 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "lib": ["dom", "ESNext"],
+    "esModuleInterop": true,
+    "noEmit": true
+  }
+}
