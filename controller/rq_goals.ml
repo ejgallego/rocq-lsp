@@ -63,6 +63,11 @@ let pp ~pp_format ~token env evd x =
     let pp = layout_term env evd x in
     `List [ `String "box"; `String pp ]
 
+let pp_msgs ~pp_format =
+  match pp_format with
+  | Str | Box -> fun x -> `String (Pp.string_of_ppcmds x)
+  | Pp -> fun x -> Lsp.JCoq.Pp.to_yojson x
+
 let run_pretac ~token ~loc ~st pretac =
   match pretac with
   | None -> Coq.Protect.E.ok st
@@ -107,10 +112,11 @@ let goals ~pp_format ~mode ~pretac () ~token ~doc ~point =
     get_goal_info ~pp_format ~token ~doc ~point ~mode ~pretac ()
   in
   let range, messages, error = get_node_info ~doc ~point ~mode in
+  let pp_msg = pp_msgs ~pp_format in
   Lsp.JFleche.GoalsAnswer.(
     to_yojson
       (fun x -> x)
-      (fun x -> Lsp.JCoq.Pp.to_yojson x)
+      pp_msg
       { textDocument; position; range; goals; program; messages; error })
   |> Result.ok
 
