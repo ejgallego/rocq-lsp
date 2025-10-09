@@ -12,6 +12,7 @@
    didn't respect the `pp_format` setting, introduced in
    #668. (@ejgallego, #1037, fixes #1030, thanks to Will Thomas for
    the report)
+ - [opam] Require memprof-limits in OCaml >= 5.3 (@ejgallego, #1038)
 
 # coq-lsp 0.2.4: (W)Activation
 ------------------------------
