@@ -6,6 +6,8 @@
  - [meta] Coq -> Rocq documentation rename (@ejgallego, #1034)
  - [fleche] Support `\begin{rocq}` in literate Tex files (@ejgallego,
    #1034)
+ - [fleche] Fix crash in `coq/trimCaches` notification (#1035,
+   @ejgallego, reported by @gbdrt)
 
 # coq-lsp 0.2.4: (W)Activation
 ------------------------------
