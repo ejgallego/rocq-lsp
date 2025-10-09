@@ -40,7 +40,7 @@ export function openExample(filename: string) {
   );
 }
 
-export interface LanguageServer extends rpc.MessageConnection {
+export interface LanguageServer extends Protocol.MessageConnection {
   initialize(
     initializeParameters?: Partial<Protocol.InitializeParams>,
   ): Promise<void>;
@@ -54,7 +54,7 @@ export function start(): LanguageServer {
       OCAMLPATH: ocamlPath,
     },
   });
-  let connection = rpc.createMessageConnection(
+  let connection = Protocol.createMessageConnection(
     new rpc.StreamMessageReader(childProcess.stdout!),
     new rpc.StreamMessageWriter(childProcess.stdin!),
   );
