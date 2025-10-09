@@ -8,6 +8,10 @@
    #1034)
  - [fleche] Fix crash in `coq/trimCaches` notification (#1035,
    @ejgallego, reported by @gbdrt)
+ - [controller] [goals] Fix a couple of bugs where goal printing
+   didn't respect the `pp_format` setting, introduced in
+   #668. (@ejgallego, #1037, fixes #1030, thanks to Will Thomas for
+   the report)
 
 # coq-lsp 0.2.4: (W)Activation
 ------------------------------

@@ -374,6 +374,7 @@ let get_pp_format params =
   match ostring_field "pp_format" params with
   | Some "Pp" -> Rq_goals.Pp
   | Some "Str" -> Rq_goals.Str
+  | Some "Box" -> Rq_goals.Box
   | Some v ->
     L.trace "get_pp_format" "error in parameter: %s" v;
     get_pp_format_from_config ()
