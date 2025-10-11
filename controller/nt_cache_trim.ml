@@ -46,7 +46,7 @@ let caches () =
   ]
 
 let firstn n l =
-  let num = Stdlib.Int.min n (List.length l) in
+  let num = min n (List.length l) in
   CList.firstn num l
 
 let pp_cache fmt (name, freqs) =
