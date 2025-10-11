@@ -187,3 +187,9 @@ incremental engine.
 
 Using `Reset Initial`, you can effectively partition the document on
 `N` parts! This is pretty cool for some use cases!
+
+## Version support
+
+`rocq-lsp` supports Rocq 9.1, Rocq 9.0, Coq 8.20, and Rocq's `master`
+branch. Code for each Rocq version can be found in the corresponding
+branch. We support OCaml 4.14, 5.3, and 5.4.

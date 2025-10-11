@@ -13,6 +13,8 @@
    #668. (@ejgallego, #1037, fixes #1030, thanks to Will Thomas for
    the report)
  - [opam] Require memprof-limits in OCaml >= 5.3 (@ejgallego, #1038)
+ - [ocaml] Support for OCaml 5.4, drop support for OCaml 5.0, 5.1, and
+   5.2, drop support for Coq 8.17, 8.18, 8.19 (@ejgallego, #1039)
 
 # coq-lsp 0.2.4: (W)Activation
 ------------------------------
