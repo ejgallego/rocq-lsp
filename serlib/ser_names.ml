@@ -218,7 +218,6 @@ module MutInd = struct
   include SerType.Biject(BijectSpec)
 end
 
-module Mindmap = Ser_cMap.Make(Mindmap)(MutInd)
 module Mindmap_env = Ser_cMap.Make(Mindmap_env)(MutInd)
 
 type 'a tableKey =

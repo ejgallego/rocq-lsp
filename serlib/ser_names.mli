@@ -62,7 +62,6 @@ module Cmap_env : Ser_cMap.ExtS with type key = Constant.t and type 'a t = 'a Cm
 
 module MutInd : SerType.SJHC with type t = MutInd.t
 
-module Mindmap : Ser_cMap.ExtS with type key = MutInd.t and type 'a t = 'a Mindmap.t
 module Mindmap_env : Ser_cMap.ExtS with type key = MutInd.t and type 'a t = 'a Mindmap_env.t
 
 module Indset_env : Ser_cSet.ExtS with type elt = inductive and type t = Indset_env.t
