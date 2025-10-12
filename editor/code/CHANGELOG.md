@@ -154,7 +154,7 @@
    checking the document until a request has been made. This means
    users can now switch between continuous and on-demand modes. (#629,
    cc: #24, @ejgallego)
- - display the continous/on-request checking mode in the status bar,
+ - display the continuous/on-request checking mode in the status bar,
    allow to change it by clicking on it (@ejgallego, #721)
  - new Coq Language Status Item that display server status, version,
    and memory use. We recommend the users to pin it.

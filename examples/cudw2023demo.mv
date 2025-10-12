@@ -22,7 +22,7 @@ $$
 f : A \to B \quad g : B \to C \quad g \circ f : A \to C
 $$
 
-### Continous Checking and goal display
+### Continuous Checking and goal display
 
 ```coq
 From Coq Require Import List.

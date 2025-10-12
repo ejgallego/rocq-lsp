@@ -113,7 +113,7 @@
       },
       {
         "command": "coq-lsp.toggle_mode",
-        "title": "Coq LSP: Toggle checking mode between continous / on-demand"
+        "title": "Coq LSP: Toggle checking mode between continuous / on-demand"
       },
       {
         "command": "coq-lsp.goals",

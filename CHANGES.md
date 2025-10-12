@@ -456,7 +456,7 @@
    user navigates proofs (@Alidra @ejgallego, #722, #725)
  - `fcc`: new option `--diags_level` to control whether Coq's notice
    and info messages appear as diagnostics
- - [code] Display the continous/on-request checking mode in the status bar,
+ - [code] Display the continuous/on-request checking mode in the status bar,
    allow to change it by clicking on it (@ejgallego, #721)
  - Add an example of multiple workspaces (@ejgallego, @Blaisorblade,
    #611)

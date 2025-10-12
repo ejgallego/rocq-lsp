@@ -287,13 +287,13 @@ export function activateCoqLSP(
   // switches between the different status of the server
   const toggle = async () => {
     if (client && client.isRunning() && !serverConfig.check_only_on_request) {
-      // Server on, and in continous mode, set lazy
+      // Server on, and in continuous mode, set lazy
       await toggle_lazy_checking().then(updateStatusBar);
     } else if (client && client.isRunning()) {
       // Server on, and in lazy mode, stop
       await stop();
     } else {
-      // Server is off, set continous mode and start
+      // Server is off, set continuous mode and start
       await toggle_lazy_checking().then(start);
     }
   };
@@ -502,7 +502,7 @@ export function activateCoqLSP(
         lspStatusItem.backgroundColor = undefined;
         lspStatusItem.tooltip = "coq-lsp is running. Click to disable.";
       } else {
-        lspStatusItem.text = "$(check) coq-lsp (continous checking)";
+        lspStatusItem.text = "$(check) coq-lsp (continuous checking)";
         lspStatusItem.backgroundColor = undefined;
         lspStatusItem.tooltip = "coq-lsp is running. Click to disable.";
       }
