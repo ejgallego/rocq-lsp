@@ -80,23 +80,6 @@ end
 
 module DPmap = DirPath.Map
 
-module Label = struct
-
-  (* Label.t: private *)
-  module Label_= struct
-    type t = [%import: Names.Label.t]
-
-    (* XXX: This will miss the tag *)
-    type _t = Id.t
-    [@@deriving sexp,yojson,hash,compare]
-
-    let to_t = Label.of_id
-    let of_t = Label.to_id
-  end
-
-  include SerType.Biject(Label_)
-end
-
 module MBId = struct
 
   (* MBId.t: private *)
@@ -135,7 +118,7 @@ module KerName = struct
   module Self = struct
     type t = [%import: Names.KerName.t]
 
-    type _t = KerName of ModPath.t * Label.t
+    type _t = KerName of ModPath.t * Id.t
     [@@deriving sexp,yojson,hash,compare]
 
     let _t_put kn              =
@@ -263,7 +246,7 @@ module Projection = struct
         ; proj_relevant : bool
         ; proj_npars : int
         ; proj_arg : int
-        ; proj_name : Label.t
+        ; proj_name : Id.t
         } [@@deriving sexp,yojson,hash,compare]
     end
     include SerType.Pierce(PierceSpec)
