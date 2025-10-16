@@ -23,7 +23,7 @@ let const_handler
     (fn : Names.Constant.t -> Decls.logical_kind -> Constr.t -> unit) prefix
     (id, obj) =
   let open Names in
-  let kn = KerName.make prefix.Libobject.obj_mp (Label.of_id id) in
+  let kn = KerName.make prefix.Libobject.obj_mp id in
   let cst = Global.constant_of_delta_kn kn in
   let gr = GlobRef.ConstRef cst in
   let env = Global.env () in
@@ -43,7 +43,7 @@ let iter_constructors indsp u fn env nconstr =
 
 let ind_handler fn prefix (id, (_obj : DeclareInd.Internal.inductive_obj)) =
   let open Names in
-  let kn = KerName.make prefix.Libobject.obj_mp (Label.of_id id) in
+  let kn = KerName.make prefix.Libobject.obj_mp id in
   let mind = Global.mind_of_delta_kn kn in
   let mib = Global.lookup_mind mind in
   let env = Global.env () in

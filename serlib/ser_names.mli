@@ -35,7 +35,6 @@ module DirPath : sig
 end
 module DPmap = DirPath.Map
 
-module Label   : SerType.SJHC with type t = Label.t
 module MBId    : SerType.SJHC with type t = MBId.t
 module ModPath : sig
   include SerType.SJHC with type t = ModPath.t
