@@ -416,6 +416,17 @@ module type RType = sig
   val fold_pair : a * a -> a
 end
 
+module type S = sig
+  type a
+  type ('raw, 'glb, 'top) t =
+    { raw : 'raw -> a
+    ; glb : 'glb -> a
+    ; top : 'top -> a
+    }
+  val register : ('raw, 'glb, 'top) Genarg.genarg_type -> ('raw, 'glb, 'top) t -> unit
+  val analyze : 'a Genarg.generic_argument -> a
+end
+
 (* Ast analizers, Ast -> a *)
 module Analyzer = struct
 
@@ -487,3 +498,36 @@ module Analyzer = struct
   end
 
 end
+
+module CI = struct
+
+  type t = { range : Loc.t; color: string }
+
+  let make range color = { range; color }
+
+  let pp fmt { range; color } =
+    let range = Loc.pr range in
+    Format.fprintf fmt "{ range: %a; color: %s }" Pp.pp_with range color
+
+end
+
+module Color_analysis = struct
+
+  type a = CI.t list
+
+  let name = "color_analysis"
+  let default pname =
+    let range = Loc.initial ToplevelInput in
+    Some [CI.{ range; color = pname }]
+
+  let fold_list = List.concat
+
+  let fold_option = function
+    | Some x -> x
+    | None -> []
+
+  let fold_pair (n1, n2) = n1 @ n2
+end
+
+(* Color Info Analyzer *)
+module CIA = Analyzer.Make (Color_analysis)
