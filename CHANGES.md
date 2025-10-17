@@ -25,8 +25,8 @@
    #1050)
  - [layout-engine] Add background color for each box kind (@ejgallego,
    #1050)
- - [compiler] Fix handling of literate files (@ejgallego, #, reported
-   by @jim-portegies)
+ - [compiler] Fix handling of literate files (@ejgallego, #1056,
+   reported by @jim-portegies)
  - [rocq] Create output directory on .vo file save if it doesn't
    exists. This is very useful in the web context where we don't yet
    have a proper virtual FS setup, thus making the "Save .vo file"
@@ -62,6 +62,10 @@
  - [plugins] New demo plugin "baseline", that tries to proof existing
    lemmas using a set of pre-fixed tactics (@ejgallego, Shachar
    Itzhaky, Eytan Singher, #799)
+ - [tools] New tool `checkdecls` for Coq blueprint, inspired by the
+   Lean version (#785, @ejgallego, Andrej Bauer)
+ - [lsp] [rocq] Example of Ltac2 AST analysis using serlib's Analzyer
+   infra (@ejgallego, @jim-portegies, @DikieDick, #1058)
 
 # coq-lsp 0.2.4: (W)Activation
 ------------------------------
