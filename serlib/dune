@@ -29,4 +29,5 @@
   rocq-runtime.proofs
   rocq-runtime.printing
   rocq-runtime.vernac
-  sexplib))
+  sexplib
+  lang))

@@ -25,8 +25,8 @@
    #1050)
  - [layout-engine] Add background color for each box kind (@ejgallego,
    #1050)
- - [compiler] Fix handling of literate files (@ejgallego, #, reported
-   by @jim-portegies)
+ - [compiler] Fix handling of literate files (@ejgallego, #1056,
+   reported by @jim-portegies)
  - [rocq] Create output directory on .vo file save if it doesn't
    exists. This is very useful in the web context where we don't yet
    have a proper virtual FS setup, thus making the "Save .vo file"
@@ -34,6 +34,8 @@
  - [web worker] Add LSP root to Rocq's loadpath, this makes .vo file
    loading work even when no worker FS setup could happen (@ejgallego,
    #1054)
+ - [lsp] [rocq] Semantic tokens support for Rocq and Ltac2
+   (@ejgallego, @jim-portegies, @DikieDick, #, c.f. #)
 
 # coq-lsp 0.2.4: (W)Activation
 ------------------------------
