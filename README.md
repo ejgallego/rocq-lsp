@@ -266,11 +266,11 @@ recommended client is the Visual Studio Code Extension, but we aim to fully
 support other clients officially and will do so once their authors consider them
 ready.
 
-### 🏘️ Supported Rocq Versions
+### 🏘️ Supported Rocq and OCaml Versions
 
-`rocq-lsp` supports Rocq 9.1, Rocq 9.0, Coq 8.20, Coq 8.19, Coq 8.18, Coq 8.17, and Rocq's
-`master` branch.  Code for each Rocq version can be found in the corresponding
-branch.
+`rocq-lsp` supports Rocq 9.1, Rocq 9.0, Coq 8.20, and Rocq's `master`
+branch. Code for each Rocq version can be found in the corresponding branch. We
+support OCaml 4.14, 5.3, and 5.4.
 
 We recommended using Rocq 9.1 or `master` version. For other Rocq versions, we
 recommend users to install the custom Rocq tree as detailed in [Rocq Upstream
