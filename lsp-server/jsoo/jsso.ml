@@ -36,12 +36,12 @@ let rec obj_to_json (cobj : < .. > Js.t) : Yojson.Safe.t =
       |> fun al -> `Assoc al
     else if Js.Opt.(strict_equals (some cobj) null) then `Null
     else if Js.Optdef.(strict_equals (def cobj) undefined) then (
-      Firebug.console##info "undefined branch!!!!";
+      Console.console##info "undefined branch!!!!";
       `Null)
     else (
-      Firebug.console##error "failure in coq_lsp_worker:obj_to_json";
-      Firebug.console##error cobj;
-      Firebug.console##error (Json.output cobj);
+      Console.console##error "failure in coq_lsp_worker:obj_to_json";
+      Console.console##error cobj;
+      Console.console##error (Json.output cobj);
       raise (Failure "coq_lsp_worker:obj_to_json"))
 
 (* Old code, which is only useful for debug *)
