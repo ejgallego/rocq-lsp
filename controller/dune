@@ -5,7 +5,7 @@
  (public_name coq-lsp.request)
  (modules request)
  (wrapped false)
- (libraries coq fleche))
+ (libraries coq lang fleche))
 
 (library
  (name controller)

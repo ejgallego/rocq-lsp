@@ -129,7 +129,7 @@ module Node = struct
     ; prev : t option
     ; ast : Ast.t option  (** Ast of node *)
     ; state : Coq.State.t  (** (Full) State of node *)
-    ; diags : Lang.Diagnostic.t list
+    ; diags : Pp.t Lang.Diagnostic.t list
     ; messages : Message.t list
     ; info : Info.t
     }
@@ -153,7 +153,7 @@ module Diags : sig
     -> Lang.Range.t
     -> Lang.Diagnostic.Severity.t
     -> Pp.t
-    -> Lang.Diagnostic.t
+    -> Pp.t Lang.Diagnostic.t
 
   (** Build advanced diagnostic with AST analysis *)
   val error :
@@ -163,7 +163,7 @@ module Diags : sig
     -> stm_range:Lang.Range.t (* range for the sentence *)
     -> ?ast:Node.Ast.t
     -> unit
-    -> Lang.Diagnostic.t
+    -> Pp.t Lang.Diagnostic.t
 
   (** [of_messages drange msgs] process feedback messages, and convert some to
       diagnostics based on user-config. Default range [drange] is used for
@@ -171,7 +171,7 @@ module Diags : sig
   val of_messages :
        drange:Lang.Range.t
     -> Node.Message.t list
-    -> Lang.Diagnostic.t list * Node.Message.t list
+    -> Pp.t Lang.Diagnostic.t list * Node.Message.t list
 end = struct
   let err = Lang.Diagnostic.Severity.error
 
@@ -186,9 +186,11 @@ end = struct
         Option.bind ast (fun (ast : Node.Ast.t) ->
             Coq.Ast.Require.extract ast.v)
       with
-      | Some { Coq.Ast.Require.from; mods; _ } ->
-        let refs = List.map fst mods in
-        Some [ { Lang.Diagnostic.FailedRequire.prefix = from; refs } ]
+      | Some _ ->
+        Some []
+      (* | Some { Coq.Ast.Require.from; mods; _ } -> *)
+        (* let refs = List.map fst mods in *)
+        (* Some [ { Lang.Diagnostic.FailedRequire.prefix = from; refs } ] *)
       | _ -> None
     in
     Some { Lang.Diagnostic.Data.sentenceRange; failedRequire; quickFix }

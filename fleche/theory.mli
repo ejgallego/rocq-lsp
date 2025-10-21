@@ -13,7 +13,7 @@ module Check : sig
       [Some rqs] the list of requests ready to execute after the check. Sends
       progress and diagnostics notifications using output function [ofn]. *)
   val maybe_check :
-    io:Io.CallBack.t -> token:Coq.Limits.Token.t -> (Int.Set.t * Doc.t) option
+    io:Io.CallBack.t -> token:Coq.Limits.Token.t -> (Coq.Utils.IntSet.t * Doc.t) option
 
   val set_scheduler_hint : uri:Lang.LUri.File.t -> point:int * int -> unit
 end
@@ -36,7 +36,7 @@ val change :
   -> uri:Lang.LUri.File.t
   -> version:int
   -> raw:string
-  -> Int.Set.t
+  -> Coq.Utils.IntSet.t
 
 (** Close a document *)
 val close : uri:Lang.LUri.File.t -> unit

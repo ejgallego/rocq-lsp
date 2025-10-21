@@ -4,10 +4,14 @@
 (* Written by: Emilio J. Gallego Arias                                  *)
 (************************************************************************)
 
+module QualId = struct
+  type t = string list
+end
+
 module FailedRequire = struct
   type t =
-    { prefix : Libnames.qualid option
-    ; refs : Libnames.qualid list
+    { prefix : QualId.t option
+    ; refs : QualId.t list
     }
 end
 
@@ -28,10 +32,10 @@ module Severity = struct
   let hint = 4
 end
 
-type t =
+type 'a t =
   { range : Range.t
   ; severity : Severity.t
-  ; message : Pp.t
+  ; message : 'a
   ; data : Data.t option [@default None]
   }
 

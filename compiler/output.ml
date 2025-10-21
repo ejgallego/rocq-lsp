@@ -1,6 +1,6 @@
 module Lsp = Fleche_lsp
 
-let pp_diag fmt (d : Lang.Diagnostic.t) =
+let pp_diag fmt (d : Pp.t Lang.Diagnostic.t) =
   Format.fprintf fmt "@[%a@]"
     (Yojson.Safe.pretty_print ~std:true)
     (Lsp.JLang.Diagnostic.to_yojson d)

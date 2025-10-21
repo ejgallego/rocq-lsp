@@ -25,3 +25,6 @@ val with_control :
   -> control:Vernacexpr.control_flag list
   -> st:State.t
   -> unit
+
+module IntSet : Set.S with type elt = Int.t
+module StringMap : Map.S with type key = String.t

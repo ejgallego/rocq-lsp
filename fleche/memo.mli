@@ -32,13 +32,13 @@ module type S = sig
 
   (** [eval i] Eval an input [i] *)
   val eval :
-    token:Coq.Limits.Token.t -> input -> (output, Loc.t) Coq.Protect.E.t
+    token:Coq.Limits.Token.t -> input -> (output, Coq.Loc_t.t) Coq.Protect.E.t
 
   (** [eval i] Eval an input [i] and produce stats *)
   val evalS :
        token:Coq.Limits.Token.t
     -> input
-    -> (output, Loc.t) Coq.Protect.E.t * Stats.t
+    -> (output, Coq.Loc_t.t) Coq.Protect.E.t * Stats.t
 
   (** [size ()] Return the cache size in words, expensive *)
   val size : unit -> int

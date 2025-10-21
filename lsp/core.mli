@@ -128,7 +128,7 @@ module PublishDiagnosticsParams : sig
   type t =
     { uri : JLang.LUri.File.t
     ; version : int
-    ; diagnostics : JLang.Diagnostic.t list
+    ; diagnostics : JCoq.Pp.t JLang.Diagnostic.t list
     }
   [@@deriving to_yojson]
 end
@@ -137,7 +137,7 @@ end
 val mk_diagnostics :
      uri:Lang.LUri.File.t
   -> version:int
-  -> Lang.Diagnostic.t list
+  -> Pp.t Lang.Diagnostic.t list
   -> Base.Notification.t
 
 (** Pull Diagnostics *)
@@ -156,7 +156,7 @@ module FullDocumentDiagnosticReport : sig
   type t =
     { kind : string
     ; resultId : string option [@default None]
-    ; items : JLang.Diagnostic.t list
+    ; items : JCoq.Pp.t JLang.Diagnostic.t list
           (* relatedDocuments to be added in 0.2.x *)
     }
   [@@deriving to_yojson]
@@ -184,7 +184,7 @@ end
 (* CodeAction *)
 module CodeActionContext : sig
   type t =
-    { diagnostics : Lang.Diagnostic.t list
+    { diagnostics : Pp.t Lang.Diagnostic.t list
     ; only : string option [@default None]
     ; triggerKind : int option [@default None]
     }
@@ -204,7 +204,7 @@ module CodeAction : sig
   type t =
     { title : string
     ; kind : string option [@default None]
-    ; diagnostics : Lang.Diagnostic.t list [@default []]
+    ; diagnostics : Pp.t Lang.Diagnostic.t list [@default []]
     ; isPreferred : bool option [@default None]
     ; edit : Workspace.WorkspaceEdit.t option [@default None]
     }

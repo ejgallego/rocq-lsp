@@ -99,7 +99,9 @@ module Diagnostic = struct
     let set v = default := v
   end
 
-  module Libnames = Serlib.Ser_libnames
+  module QualId = struct
+    type t = [%import: Lang.Diagnostic.QualId.t] [@@deriving yojson]
+  end
 
   module FailedRequire = struct
     type t = [%import: Lang.Diagnostic.FailedRequire.t] [@@deriving yojson]
@@ -137,19 +139,19 @@ module Diagnostic = struct
       { Lang.Diagnostic.range; severity; message; data }
   end
 
-  type t = [%import: (Lang.Diagnostic.t[@with Lang.Range.t := Range.t])]
+  type t = [%import: ('a Lang.Diagnostic.t[@with Lang.Range.t := Range.t])]
   [@@deriving yojson]
 
-  let of_yojson json =
+  let of_yojson pp json =
     let open Ppx_deriving_yojson_runtime in
     match !Mode.default with
     | String -> DiagnosticString.(of_yojson json >|= vnoc)
-    | Pp -> of_yojson json
+    | Pp -> of_yojson pp json
 
-  let to_yojson p =
+  let to_yojson pp p =
     match !Mode.default with
     | String -> DiagnosticString.(to_yojson (conv p))
-    | Pp -> to_yojson p
+    | Pp -> to_yojson pp p
 end
 
 module Stdlib = JStdlib

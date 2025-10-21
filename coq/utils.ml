@@ -58,3 +58,6 @@ let with_control ~fn ~control ~st =
       Vernacstate.unfreeze_full_state (State.to_coq st))
   in
   ()
+
+module IntSet = Set.Make(Int)
+module StringMap = Map.Make(String)

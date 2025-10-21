@@ -47,7 +47,7 @@ module Diagnostic : sig
     val set : t -> unit
   end
 
-  type t = Lang.Diagnostic.t [@@deriving yojson]
+  type 'a t = 'a Lang.Diagnostic.t [@@deriving yojson]
 end
 
 module Ast : sig
