@@ -23,10 +23,27 @@ module Proof : sig
   val equal : t -> t -> bool
   val hash : t -> int
   val to_coq : t -> Vernacstate.LemmaStack.t
+
+  module Program : sig
+    module Obl : sig
+      type t = Declare.OblState.View.Obl.t = private
+        { name : Names.Id.t
+        ; loc : Loc_t.t option
+        ; status : bool * Evar_kinds.obligation_definition_status
+        ; solved : bool
+        }
+    end
+
+    type t = Declare.OblState.View.t = private
+      { opaque : bool
+      ; remaining : int
+      ; obligations : Obl.t array
+      }
+  end
 end
 
 val lemmas : st:t -> Proof.t option
-val program : st:t -> Declare.OblState.View.t Names.Id.Map.t
+val program : st:t -> Proof.Program.t Names.Id.Map.t
 
 (** Execute a command in state [st]. Unfortunately this can produce anomalies as
     Coq state setting is imperative, so we need to wrap it in protect. *)

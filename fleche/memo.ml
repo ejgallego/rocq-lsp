@@ -167,12 +167,12 @@ end
 (* XXX: Move elsewhere *)
 module Loc_utils : sig
   val adjust_offset :
-       stm_loc:Loc.t
-    -> cached_loc:Loc.t
-    -> ('a, Loc.t) Coq.Protect.E.t
-    -> ('a, Loc.t) Coq.Protect.E.t
+       stm_loc:Coq.Loc_t.t
+    -> cached_loc:Coq.Loc_t.t
+    -> ('a, Coq.Loc_t.t) Coq.Protect.E.t
+    -> ('a, Coq.Loc_t.t) Coq.Protect.E.t
 end = struct
-  let loc_offset (l1 : Loc.t) (l2 : Loc.t) =
+  let loc_offset (l1 : Coq.Loc_t.t) (l2 : Coq.Loc_t.t) =
     let line_offset = l2.line_nb - l1.line_nb in
     let bol_offset = l2.bol_pos - l1.bol_pos in
     let line_last_offset = l2.line_nb_last - l1.line_nb_last in
@@ -192,7 +192,7 @@ end = struct
       , line_last_offset
       , bol_last_offset
       , bp_offset
-      , ep_offset ) (loc : Loc.t) =
+      , ep_offset ) (loc : Coq.Loc_t.t) =
     { loc with
       line_nb = loc.line_nb + line_offset
     ; bol_pos = loc.bol_pos + bol_offset
@@ -213,7 +213,9 @@ module type EvalType = sig
 
   type output
 
-  val eval : token:Coq.Limits.Token.t -> t -> (output, Loc.t) Coq.Protect.E.t
+  val eval :
+    token:Coq.Limits.Token.t -> t -> (output, Coq.Loc_t.t) Coq.Protect.E.t
+
   val input_info : t -> string
 end
 
@@ -224,13 +226,13 @@ module type S = sig
 
   (** [eval i] Eval an input [i] *)
   val eval :
-    token:Coq.Limits.Token.t -> input -> (output, Loc.t) Coq.Protect.E.t
+    token:Coq.Limits.Token.t -> input -> (output, Coq.Loc_t.t) Coq.Protect.E.t
 
   (** [eval i] Eval an input [i] and produce stats *)
   val evalS :
        token:Coq.Limits.Token.t
     -> input
-    -> (output, Loc.t) Coq.Protect.E.t * Stats.t
+    -> (output, Coq.Loc_t.t) Coq.Protect.E.t * Stats.t
 
   (** [size ()] Return the cache size in words, expensive *)
   val size : unit -> int
@@ -283,7 +285,7 @@ end
 module type LocEvalType = sig
   include EvalType
 
-  val loc_of_input : t -> Loc.t
+  val loc_of_input : t -> Coq.Loc_t.t
 end
 
 module CEval (E : LocEvalType) = struct
@@ -294,7 +296,7 @@ module CEval (E : LocEvalType) = struct
 
   module Result = struct
     (* We store the location as to compute an offset for cached results *)
-    type t = Loc.t * (E.output, Loc.t) Coq.Protect.E.t * CS.t
+    type t = Coq.Loc_t.t * (E.output, Coq.Loc_t.t) Coq.Protect.E.t * CS.t
   end
 
   type cache = Result.t HC.t

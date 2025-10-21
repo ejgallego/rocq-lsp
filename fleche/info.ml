@@ -158,8 +158,8 @@ module Goals = struct
     Io.Log.feedback "to_pp" feedback;
     match r with
     | Coq.Protect.R.Completed (Ok pr) -> pr
-    | Coq.Protect.R.Completed (Error _pr) -> Pp.str "printer failed!"
-    | Interrupted -> Pp.str "printer interrupted!"
+    | Coq.Protect.R.Completed (Error _pr) -> Coq.Pp_t.str "printer failed!"
+    | Interrupted -> Coq.Pp_t.str "printer interrupted!"
 
   let pr_goal ~token ~pr st =
     let lemmas = Coq.State.lemmas ~st in
@@ -189,6 +189,6 @@ module Completion = struct
     Coq.State.in_state ~token ~st prefix ~f:(fun prefix ->
         let* p = to_qualid prefix in
         Nametab.completion_canditates p
-        |> List.map (fun x -> Pp.string_of_ppcmds (pr_extref x))
+        |> List.map (fun x -> Coq.Pp_t.to_string (pr_extref x))
         |> some)
 end

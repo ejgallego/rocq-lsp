@@ -39,8 +39,9 @@ let rec process_queue ~delay ~io ~ofn ~state : unit =
 
 let concise_cb ofn =
   let diagnostics ~uri ~version diags =
+    let pp msg = `String (Coq.Pp_t.to_string msg) in
     if List.length diags > 0 then
-      Lsp.Core.mk_diagnostics ~uri ~version diags |> ofn
+      Lsp.Core.mk_diagnostics ~uri ~version ~pp diags |> ofn
   in
   Fleche.Io.CallBack.
     { trace = (fun _hdr ?verbose:_ _msg -> ())

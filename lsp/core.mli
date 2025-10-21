@@ -5,8 +5,7 @@
 (* Written by: Emilio J. Gallego Arias                                  *)
 (************************************************************************)
 
-(** Core LSP protocoal and language types *)
-
+(** Core LSP protocol and language types *)
 module Location : sig
   type t =
     { uri : Lang.LUri.File.t
@@ -125,10 +124,10 @@ end
 
 (** Publish Diagnostics params *)
 module PublishDiagnosticsParams : sig
-  type t =
+  type 'a t =
     { uri : JLang.LUri.File.t
     ; version : int
-    ; diagnostics : JLang.Diagnostic.t list
+    ; diagnostics : 'a JLang.Diagnostic.t list
     }
   [@@deriving to_yojson]
 end
@@ -137,7 +136,8 @@ end
 val mk_diagnostics :
      uri:Lang.LUri.File.t
   -> version:int
-  -> Lang.Diagnostic.t list
+  -> pp:('a -> Yojson.Safe.t)
+  -> 'a Lang.Diagnostic.t list
   -> Base.Notification.t
 
 (** Pull Diagnostics *)
@@ -153,10 +153,10 @@ module DocumentDiagnosticParams : sig
 end
 
 module FullDocumentDiagnosticReport : sig
-  type t =
+  type 'a t =
     { kind : string
     ; resultId : string option [@default None]
-    ; items : JLang.Diagnostic.t list
+    ; items : 'a JLang.Diagnostic.t list
           (* relatedDocuments to be added in 0.2.x *)
     }
   [@@deriving to_yojson]
@@ -174,17 +174,17 @@ end
     followed by n DocumentDiagnosticReportPartialResult literals defined as
     follows: *)
 module DocumentDiagnosticReportPartialResult : sig
-  type t =
+  type 'a t =
     { relatedDocuments :
-        (Lang.LUri.File.t * FullDocumentDiagnosticReport.t) list
+        (Lang.LUri.File.t * 'a FullDocumentDiagnosticReport.t) list
     }
   [@@deriving to_yojson]
 end
 
 (* CodeAction *)
 module CodeActionContext : sig
-  type t =
-    { diagnostics : Lang.Diagnostic.t list
+  type 'a t =
+    { diagnostics : 'a Lang.Diagnostic.t list
     ; only : string option [@default None]
     ; triggerKind : int option [@default None]
     }
@@ -192,19 +192,19 @@ module CodeActionContext : sig
 end
 
 module CodeActionParams : sig
-  type t =
+  type 'a t =
     { textDocument : Doc.TextDocumentIdentifier.t
     ; range : Lang.Range.t
-    ; context : CodeActionContext.t
+    ; context : 'a CodeActionContext.t
     }
   [@@deriving to_yojson]
 end
 
 module CodeAction : sig
-  type t =
+  type 'a t =
     { title : string
     ; kind : string option [@default None]
-    ; diagnostics : Lang.Diagnostic.t list [@default []]
+    ; diagnostics : 'a Lang.Diagnostic.t list [@default []]
     ; isPreferred : bool option [@default None]
     ; edit : Workspace.WorkspaceEdit.t option [@default None]
     }

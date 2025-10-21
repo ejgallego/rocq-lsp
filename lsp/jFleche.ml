@@ -16,7 +16,7 @@
 (* Written by: Emilio J. Gallego Arias                                  *)
 (************************************************************************)
 
-module Pp = JCoq.Pp
+module Pp_t = JCoq.Pp_t
 module Ast = JCoq.Ast
 module Lang = JLang
 module Names = Serlib.Ser_names
@@ -101,8 +101,7 @@ module GoalsAnswer = struct
     ; position : Lang.Point.t
     ; range : Lang.Range.t option [@default None]
     ; goals : ('goals, 'pp) JCoq.Goals.reified option [@default None]
-    ; program : JCoq.Declare.OblState.View.t Names.Id.Map.t option
-          [@default None]
+    ; program : JCoq.State.Proof.Program.t Names.Id.Map.t option [@default None]
     ; messages : 'pp Message.t list
     ; error : 'pp option [@default None]
     }

@@ -11,7 +11,8 @@ let of_execution ~io ~what (v : (_, _) Coq.Protect.E.t) =
     | Coq.Protect.R.Completed (Error (Anomaly { msg; _ }))
     | Coq.Protect.R.Completed (Error (User { msg; _ })) ->
       let lvl = Io.Level.Error in
-      Io.Report.msg ~io ~lvl "error when retrieving %s: %a" what Pp.pp_with msg;
+      Io.Report.msg ~io ~lvl "error when retrieving %s: %a" what
+        Coq.Pp_t.pp_with msg;
       None
     | Coq.Protect.R.Interrupted -> None)
 
@@ -43,7 +44,7 @@ module AstGoals = struct
 end
 
 let pp_json pp fmt (astgoal : _ AstGoals.t) =
-  AstGoals.to_yojson pp (fun x -> Lsp.JCoq.Pp.to_yojson x) astgoal
+  AstGoals.to_yojson pp (fun x -> Lsp.JCoq.Pp_t.to_yojson x) astgoal
   |> Yojson.Safe.pretty_print fmt
 
 (* For now we have not added sexp serialization, but we can easily do so *)
@@ -66,7 +67,8 @@ let dump_goals ~io ~token ~out_file ~(doc : Doc.t) pp =
 let pp d =
   (* Set to true to output Pp-formatted goals *)
   let output_pp = false in
-  if output_pp then Lsp.JCoq.Pp.to_yojson d else `String (Pp.string_of_ppcmds d)
+  if output_pp then Lsp.JCoq.Pp_t.to_yojson d
+  else `String (Coq.Pp_t.to_string d)
 
 let dump_ast ~io ~token ~(doc : Doc.t) =
   let uri = doc.uri in

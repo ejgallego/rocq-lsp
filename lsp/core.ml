@@ -126,18 +126,18 @@ end
 
 (** Publish Diagnostics params *)
 module PublishDiagnosticsParams = struct
-  type t =
+  type 'a t =
     { uri : JLang.LUri.File.t
     ; version : int
-    ; diagnostics : JLang.Diagnostic.t list
+    ; diagnostics : 'a JLang.Diagnostic.t list
     }
   [@@deriving to_yojson]
 end
 
-let mk_diagnostics ~uri ~version diagnostics : Base.Notification.t =
+let mk_diagnostics ~uri ~version ~pp diagnostics : Base.Notification.t =
   let params =
     PublishDiagnosticsParams.(
-      { uri; version; diagnostics } |> to_yojson |> Yojson.Safe.Util.to_assoc)
+      { uri; version; diagnostics } |> to_yojson pp |> Yojson.Safe.Util.to_assoc)
   in
   Base.Notification.make ~method_:"textDocument/publishDiagnostics" ~params ()
 
@@ -154,10 +154,10 @@ module DocumentDiagnosticParams = struct
 end
 
 module FullDocumentDiagnosticReport = struct
-  type t =
+  type 'a t =
     { kind : string
     ; resultId : string option [@default None]
-    ; items : JLang.Diagnostic.t list
+    ; items : 'a JLang.Diagnostic.t list
     }
   [@@deriving to_yojson]
 end
@@ -171,17 +171,17 @@ module UnchangedDocumentDiagnosticReport = struct
 end
 
 module DocumentDiagnosticReportPartialResult = struct
-  type t =
+  type 'a t =
     { relatedDocuments :
-        (JLang.LUri.File.t * FullDocumentDiagnosticReport.t) list
+        (JLang.LUri.File.t * 'a FullDocumentDiagnosticReport.t) list
     }
   [@@deriving to_yojson]
 end
 
 (* CodeAction *)
 module CodeActionContext = struct
-  type t =
-    { diagnostics : Lang.Diagnostic.t list
+  type 'a t =
+    { diagnostics : 'a Lang.Diagnostic.t list
     ; only : string option [@default None]
     ; triggerKind : int option [@default None]
     }
@@ -189,19 +189,19 @@ module CodeActionContext = struct
 end
 
 module CodeActionParams = struct
-  type t =
+  type 'a t =
     { textDocument : Doc.TextDocumentIdentifier.t
     ; range : Lang.Range.t
-    ; context : CodeActionContext.t
+    ; context : 'a CodeActionContext.t
     }
   [@@deriving to_yojson]
 end
 
 module CodeAction = struct
-  type t =
+  type 'a t =
     { title : string
     ; kind : string option [@default None]
-    ; diagnostics : Lang.Diagnostic.t list [@default []]
+    ; diagnostics : 'a Lang.Diagnostic.t list [@default []]
     ; isPreferred : bool option [@default None]
     ; edit : Workspace.WorkspaceEdit.t option [@default None]
     }

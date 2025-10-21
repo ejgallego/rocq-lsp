@@ -6,22 +6,22 @@ let msg_info ~io = Io.(Report.msg ~io ~lvl:Info)
 
 let pp_goals ~token ~st =
   match Coq.State.lemmas ~st with
-  | None -> Pp.str "no goals"
+  | None -> Coq.Pp_t.str "no goals"
   | Some proof -> (
     match Coq.Print.pr_goals ~token ~proof with
     | { Coq.Protect.E.r = Completed (Ok goals); _ } -> goals
     | { Coq.Protect.E.r =
           Completed (Error (User { msg; _ } | Anomaly { msg; _ }))
       ; _
-      } -> Pp.(str "error when printing goals: " ++ msg)
+      } -> Coq.Pp_t.(str "error when printing goals: " ++ msg)
     | { Coq.Protect.E.r = Interrupted; _ } ->
-      Pp.str "goal printing was interrupted")
+      Coq.Pp_t.str "goal printing was interrupted")
 
 module Error_info = struct
   type t =
-    { error : Pp.t
+    { error : Coq.Pp_t.t
     ; command : string
-    ; goals : Pp.t
+    ; goals : Coq.Pp_t.t
     }
 
   let print ~io { error; command; goals } =
@@ -34,12 +34,12 @@ module Error_info = struct
        @\n\
       \ @[%s@]@\n\
        for goals:@\n\
-      \ @[%a@]" Pp.pp_with error command Pp.pp_with goals
+      \ @[%a@]" Coq.Pp_t.pp_with error command Coq.Pp_t.pp_with goals
 end
 
 let extract_errors ~token ~root ~contents (node : Doc.Node.t) =
   let errors = List.filter Lang.Diagnostic.is_error node.diags in
-  let st = Option.cata Doc.Node.state root node.prev in
+  let st = Stdlib.Option.fold ~some:Doc.Node.state ~none:root node.prev in
   let command = Contents.extract_raw ~contents ~range:node.range in
   let goals = pp_goals ~token ~st in
   List.map
