@@ -39,6 +39,7 @@ import {
   GoalAnswer,
   PpString,
   DocumentPerfParams,
+  AstAtPosParams,
   ViewRangeParams,
   BoxString,
 } from "../lib/types";
@@ -412,6 +413,36 @@ export function activateCoqLSP(
     heatMap.toggle();
   };
 
+  // AST at point request setup, improve the type so the Pp format is matched
+  const astReq = new RequestType<AstAtPosParams, any, void>(
+    "petanque/ast_at_pos"
+  );
+
+  const getSentence = (editor: TextEditor) => {
+    let uri = editor.document.uri;
+    let version = editor.document.version;
+    let position = editor.selection.active;
+
+    // EJGA: We should maybe pass the version here.
+    let params: AstAtPosParams = { uri: uri.toString(), position };
+
+    client.sendRequest(astReq, params).then((fd) => {
+      // EJGA: uri_result could be used to set the suggested save path
+      // for the new editor, however we need to see how to do that
+      // and set `content` too for the new editor.
+      let path = `${uri.fsPath}-${version}.json`;
+      let uri_result = Uri.file(path).with({ scheme: "untitled" });
+
+      let open_options = {
+        language: "json",
+        content: JSON.stringify(fd, null, 2),
+      };
+      workspace.openTextDocument(open_options).then((document) => {
+        window.showTextDocument(document);
+      });
+    });
+  };
+
   // Document request setup, improve the type so the Pp format is matched
   const docReq = new RequestType<
     FlecheDocumentParams,
@@ -536,6 +567,7 @@ export function activateCoqLSP(
   coqCommand("toggle_mode", toggle_lazy_checking);
 
   coqEditorCommand("goals", goals);
+  coqEditorCommand("sentence", getSentence);
   coqEditorCommand("document", getDocument);
   coqEditorCommand("save", saveDocument);
 
