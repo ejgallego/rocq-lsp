@@ -97,6 +97,8 @@ module Run_result = struct
     ; proof_finished : bool
     ; feedback : (int * string) list
     }
+
+  let map ~f r = { r with st = f r.st }
 end
 
 let find_thm ~(doc : Fleche.Doc.t) ~thm =
@@ -199,7 +201,7 @@ let get_root_state ?opts ~doc () =
   Ok (analyze_after_run ~hash state [])
 
 let get_state_at_pos ?opts ~doc ~point () =
-  match Fleche.Info.(LC.node ~doc ~point Exact) with
+  match Fleche.Info.(LC.node ~doc ~point PrevIfEmpty) with
   | Some { Fleche.Doc.Node.state; _ } ->
     let opts = default_opts opts in
     let hash = opts.hash in
@@ -231,6 +233,17 @@ let run ~token ?opts ~st ~tac () : (_ Run_result.t, Error.t) Request.R.t =
     analyze_after_run ~hash st
   in
   protect_to_result execution
+
+(* Use a trans *)
+let run_at_pos ~token ?opts ~doc ~point ~command () :
+    (_ Run_result.t, Error.t) Request.R.t =
+  match Fleche.Info.(LC.node ~doc ~point PrevIfEmpty) with
+  | Some { Fleche.Doc.Node.state = st; _ } ->
+    let open Coq.Compat.Result.O in
+    let+ res = run ~token ?opts ~st ~tac:command () in
+    (* Return more info eventually? *)
+    Run_result.map ~f:(fun _ -> ()) res
+  | None -> Error (Error.make_request No_node_at_point)
 
 let goals ~token ~st =
   let f goals =

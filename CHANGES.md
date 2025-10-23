@@ -16,7 +16,11 @@
  - [ocaml] Support for OCaml 5.4, drop support for OCaml 5.0, 5.1, and
    5.2, drop support for Coq 8.17, 8.18, 8.19 (@ejgallego, #1039)
  - [vscode] New command "Serialize Sentence at Point" that will print
-   the AST of the Rocq sentence at point (@ejgallego, #)
+   the AST of the Rocq sentence at point (@ejgallego, #1048)
+ - [petanque] New request `petanque/run_at_pos` (@ejgallego, #1049)
+ - [petanque] `petanque/get_state_at_pos` will default to the previous
+   node state if there is no Rocq node at the current point
+   (@ejgallego, #1049)
 
 # coq-lsp 0.2.4: (W)Activation
 ------------------------------
