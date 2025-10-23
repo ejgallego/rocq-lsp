@@ -31,6 +31,7 @@
     * [`petanque/get_state_at_pos`](#petanqueget_state_at_pos)
     * [`petanque/start`](#petanquestart)
     * [`petanque/run`](#petanquerun)
+    * [`petanque/run_at_pos`](#petanquerunatpos)
     * [`petanque/goals`](#petanquegoals)
     * [`petanque/premises`](#petanquepremises)
     * [`petanque/state/eq`](#petanquestateeq)
@@ -426,6 +427,9 @@ utils for those interested in richer printing formats.
 <!-- TOC --><a name="changelog"></a>
 #### Changelog
 
+- v0.2.5:
+  + `petanque/get_state_at_pos` will not error if there is no node at point
+  + new method `petanque/run_at_pos`
 - v0.2.4:
   + behavior of `messages`, `error`, and `range` can now be
     controlled by the `messages_follow_goal` global setting
@@ -800,10 +804,13 @@ Preliminary documentation for `pétanque` is provided below:
 ### Pétanque basics
 
 The basic operating mode of petanque is to first get a **Rocq state**
-from a document, this can be done either by position, or via a lemma
-name. Once you have a state at hand, you can use `petanque/run` to
-execute a Rocq command, `petanque/goals` to obtain goals from it, and
-a variety of other operations.
+from a document, this can be done either by position
+(`petanque/get_state_at_pos`), or via a lemma name
+(`petanque/start`). Once you have a state at hand, you can use
+`petanque/run` to execute a Rocq command, `petanque/goals` to obtain
+goals from it, and a variety of other operations. You can also use the
+different `*_at_pos` requests (for example `petanque/run_at_pos`) if
+your request is a one-shot query.
 
 <!-- TOC --><a name="common-types"></a>
 ### Common types
@@ -870,6 +877,10 @@ interface Response = Run_result<int>
 }
 ```
 
+If the position has no corresponding Rocq code attached (for example,
+empty space between two commands), the state returned will be the one
+of the previous node.
+
 <!-- TOC --><a name="petanquestart"></a>
 ### `petanque/start`
 
@@ -912,6 +923,31 @@ interface Response = Run_result<int>
 ```
 
 If the execution fails, the JSON-RPC request will fail.
+
+<!-- TOC --><a name="petanquerunatpos"></a>
+### `petanque/run_at_pos`
+
+Runs Rocq commands (either tactics or a full commands) at a particular document point. It admits
+multiple commands, separated by the usual `.`. It returns the generated Rocq messages.
+
+```typescript
+interface Params =
+    { opts?: Run_opts
+    ; textDocument: VersionedTextDocumentIdentifier
+    ; position: Position
+    ; command: string
+    }
+```
+
+```typescript
+interface Response = Run_result<unit>
+```
+
+If the execution fails, the JSON-RPC request will fail.
+
+If the position has no corresponding Rocq code attached (for example,
+empty space between two commands), the state returned will be the one
+of the previous node.
 
 <!-- TOC --><a name="petanquegoals"></a>
 ### `petanque/goals`

@@ -25,6 +25,7 @@ module S (C : Chans) : sig
 
   val start : Start.Params.t -> (Start.Response.t, string) result
   val run : RunTac.Params.t -> (RunTac.Response.t, string) result
+  val run_at_pos : RunAtPoint.Params.t -> (RunAtPoint.Response.t, string) result
   val goals : Goals.Params.t -> (Goals.Response.t, string) result
   val premises : Premises.Params.t -> (Premises.Response.t, string) result
 
