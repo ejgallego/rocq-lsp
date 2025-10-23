@@ -124,6 +124,10 @@
         "title": "Coq LSP: Serialize document to JSON"
       },
       {
+        "command": "coq-lsp.sentence",
+        "title": "Coq LSP: Serialize sentence at point to JSON"
+      },
+      {
         "command": "coq-lsp.save",
         "title": "Coq LSP: Save .vo file for the current buffer"
       },
