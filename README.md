@@ -339,6 +339,10 @@ maintained by Josselin Poiret with contributions by Arthur Azevedo de Amorim.
 - Interact programmatically with Rocq files by using the [Coqpyt](https://github.com/sr-lab/coqpyt)
   by Pedro Carrott and Nuno Saavedra.
 
+### OCaml
+
+- [`rocq-lsp-client`](https://github.com/proof-ninja/rocq-lsp-client) by [Yoshihiro Imai](https://yoshihiro503.github.io/home_en.html)/[Proof Ninja](https://proof-ninja.co.jp/).
+
 ## ⇨ `rocq-lsp` users and extensions
 
 The below projects are using `rocq-lsp`, we recommend you try them!
