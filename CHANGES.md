@@ -21,6 +21,10 @@
  - [petanque] `petanque/get_state_at_pos` will default to the previous
    node state if there is no Rocq node at the current point
    (@ejgallego, #1049)
+ - [layout-engine] Support for notations with binders (@ejgallego,
+   #1050)
+ - [layout-engine] Add background color for each box kind (@ejgallego,
+   #1050)
 
 # coq-lsp 0.2.4: (W)Activation
 ------------------------------
