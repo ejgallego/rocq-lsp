@@ -37,7 +37,7 @@ end
 (** Output Layout Box model, designed to be embedded in DOM almost directly, and
     to replace Pp.t *)
 type t =
-  | Variable of t Variable.t  (** Variable *)
+  | Variable of t option Variable.t  (** Variable *)
   | Constant of string  (** Constant (lexical) *)
   | Identifier of t Id.t  (** Identifier *)
   | Sort of string list  (** Sort *)
@@ -88,8 +88,8 @@ module Render = struct
     match b with
     | Variable { name; typ } ->
       let name = span "name" [ id_to_html name ] in
-      let typ = span "type" [ to_html typ ] in
-      span "variable" [ name; typ ]
+      span "variable" @@ [ name ]
+      @ Option.cata (fun typ -> [ span "type" [ to_html typ ] ]) [] typ
     | Constant c -> span "constant" [ H.txt c ]
     | Identifier { relative; absolute; typ } ->
       span "reference"

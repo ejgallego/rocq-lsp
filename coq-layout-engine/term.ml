@@ -97,20 +97,35 @@ let _debug = ref false
 let env = ref Environ.empty_env
 let sigma = ref Evd.empty
 
-let rec ly_hunks unp args =
+let rec ly_hunks unp args bl =
   let open Ppextend in
   match unp with
   | [] -> []
   | UnpMetaVar _ :: l ->
     let la = List.hd args in
-    let lr = ly_hunks l (List.tl args) in
+    let lr = ly_hunks l (List.tl args) bl in
     la :: lr
-  | UnpTerminal s :: l -> BM.Constant s :: ly_hunks l args
+  | UnpTerminal s :: l -> BM.Constant s :: ly_hunks l args bl
   | UnpBox (_, l1) :: l ->
     let l1 = List.map (fun (_, l) -> l) l1 in
-    ly_hunks (l1 @ l) args
-  | (UnpCut _ as unp) :: l -> ly_hunks l args
-  | _ -> [ xxx "not_printer" ]
+    ly_hunks (l1 @ l) args bl
+  | (UnpCut _ as unp) :: l -> ly_hunks l args bl
+  | UnpBinderMetaVar (ntn_entry_r_lvl, _pquote_style) :: l ->
+    let kind = BM.Lam in
+    let { notation_subentry; _ } = ntn_entry_r_lvl in
+    let b, bl = (List.hd bl, List.tl bl) in
+    let name = Ppconstr.pr_cases_pattern_expr (fst b) |> Pp.string_of_ppcmds in
+    let typ = None in
+    let b_var = BM.Variable { name; typ } in
+    b_var :: ly_hunks l args bl
+    (* We'd like to introduce a binder here, kind of...? Maybe it is better to
+       support that in the notation box natively *)
+    (* [ Abs { kind; binderl; v } ] *)
+  | UnpListMetaVar (_ntn_entry_r_lvl, _upl) :: l -> [ xxx "UnpListMetaVar" ]
+  | UnpBinderListMetaVar (_open_binder, _quote_print, _upl) :: l ->
+    [ xxx "UnpListMetaVar" ]
+
+(* | _ -> [ xxx "not_printer" ] *)
 
 let lname_to_string =
   CAst.with_val (function
@@ -220,9 +235,9 @@ and layout t =
        constr_notation_substitution *)
     | CNotation (oscope, ntn, ntn_subst) ->
       let ntn_entry, key = ntn in
-      let args, _, _, _ = ntn_subst in
+      let args, _, bl, _bll = ntn_subst in
       let args = List.map layout args in
-      let pretty = ly_notation (ntn_entry, key) args in
+      let pretty = ly_notation (ntn_entry, key) args bl in
       let raw =
         Coq_util.notation_raw !env !sigma t
         |> Option.cata layout (xxx "raw notation failed [binders usually]")
