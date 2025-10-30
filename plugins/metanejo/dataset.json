@@ -1,0 +1,23 @@
+egdes:
+  "from": "Stdlib.Real.cos", "to": "_ + _", attrs: {}, "label": "USESNOTATION"
+
+nodes:
+  "id": "Stdlib.Real.cos", attrs : {}
+  "id": "_ + _", attrs : {}
+
+node_labels:
+  "Stdlib.Real.cos", "Definition"
+  "id": "_ + _", attrs : {}
+
+
+{"graph":
+ {"edges": [{"from": "184009", "to": "184168", "attrs": {}, "label": "ISLOCATEDIN"},
+            {"from": "184009", "to": "188569", "attrs": {}, "label": "HASCREATOR"}
+           ],
+  "nodes": [{"id": "184009", "attrs":
+             {"imageFile": {"type": "FiniteSet", "data": ["photo68719478099.jpg"]}, "postId": {"type": "FiniteSet", "data": [68719478099]}, "creationDate": {"type": "FiniteSet", "data": ["2010-03-21T08:19:22.931+0000"]}}},
+            {"id": "184010", "attrs":
+             {"imageFile": {"type": "FiniteSet", "data": ["photo68719478100.jpg"]}, "postId": {"type": "FiniteSet", "data": [68719478100]}, "creationDate": {"type": "FiniteSet", "data": ["2010-03-21T08:19:23.931+0000"]}}}]
+ }
+ "node_labels": {"188563": "Person", "188536": "Person" }
+}

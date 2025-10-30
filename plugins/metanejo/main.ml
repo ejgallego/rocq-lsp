@@ -1,6 +1,14 @@
 module Lsp = Fleche_lsp
 open Fleche
 
+(* TODO:
+
+  - new edge "defined_in" object file
+  - new edge "uses" for Require
+  - new attributes "uses" "in_body" / "in_type"
+
+*)
+
 (* Put these in an utility function for plugins *)
 (* Duplicated with rq_document *)
 let _of_execution ~io ~what (v : (_, _) Coq.Protect.E.t) =
@@ -24,6 +32,14 @@ module Kind = struct
     | Unknown
     | Lemma
   [@@deriving to_yojson]
+
+  let to_string = function
+    | Notation -> "Notation"
+    | Definition -> "Definition"
+    | Theorem -> "Theorem"
+    | Other s -> "Other(" ^ s ^ ")"
+    | Unknown -> "Unknown"
+    | Lemma -> "Lemma"
 
   let of_rocq_logic_kind = function
     | Decls.Theorem -> Theorem
@@ -61,7 +77,8 @@ module Kind = struct
 end
 
 (* extract refs and notations *)
-let rec analyze_constr_expr_acc () depl (e : Constrexpr.constr_expr) : string list =
+let rec analyze_constr_expr_acc () depl (e : Constrexpr.constr_expr) :
+    string list =
   let open Constrexpr in
   (match e.v with
   | CRef (qid, _) -> [ Libnames.string_of_qualid qid ]
@@ -84,13 +101,15 @@ let rec analyze_constr_expr_acc () depl (e : Constrexpr.constr_expr) : string li
   | CEvar (_, _) -> []
   | CSort _ -> []
   | CCast (_, _, _) -> []
-  | CNotation (_, (_, ntn_key), (l,ll,_,_)) ->
-    (* Constrexpr_ops.fold_constr_expr_with_binders doesn't recurse properly here *)
-    let f = Constrexpr_ops.fold_constr_expr_with_binders
-                (fun _ () -> ())
-                analyze_constr_expr_acc () [] in
-    [ ntn_key ] @
-    List.concat_map f (l @ List.flatten ll)
+  | CNotation (_, (_, ntn_key), (l, ll, _, _)) ->
+    (* Constrexpr_ops.fold_constr_expr_with_binders doesn't recurse properly
+       here *)
+    let f =
+      Constrexpr_ops.fold_constr_expr_with_binders
+        (fun _ () -> ())
+        analyze_constr_expr_acc () []
+    in
+    [ ntn_key ] @ List.concat_map f (l @ List.flatten ll)
   | CGeneralization (_, _) -> []
   | CPrim _ -> []
   | CDelimiters (_, _, _) -> []
@@ -231,7 +250,7 @@ let analyze (node : Doc.Node.t) =
 
 (* We output a record for each object we can recognize in the document, linear
    order. *)
-module Meta = struct
+module Node_info = struct
   (* Just to bring the serializers in scope *)
   module Lang = Lsp.JLang
   module Coq = Lsp.JCoq
@@ -260,17 +279,88 @@ module Meta = struct
       let deps = List.sort_uniq String.compare deps in
       let raw = Fleche.Contents.extract_raw ~contents ~range in
       Some { uri; range; kind; name; raw; deps }
+end
 
-  let pp fmt meta =
-    Format.fprintf fmt "@[%a@]@\n"
-      (Yojson.Safe.pretty_print ~std:true)
-      (to_yojson meta)
+module GDB = struct
+  (* Object identifier *)
+  module Id = struct
+    type t = string [@@deriving to_yojson]
+  end
+
+  module Attr = struct
+    type t = string list [@@deriving to_yojson]
+  end
+
+  module Node = struct
+    type t =
+      { id : Id.t
+      ; attrs : Attr.t
+      }
+    [@@deriving to_yojson]
+  end
+
+  module Edge = struct
+    type t =
+      { from : Id.t
+      ; to_ : Id.t [@key "to"]
+      ; attrs : Attr.t
+      ; label : string
+      }
+    [@@deriving to_yojson]
+  end
+
+  module Labels = struct
+    type t = (Id.t * string) list
+
+    let to_yojson l =
+      let f (id, label) = (id, `String label) in
+      let fields = List.map f l in
+      `Assoc fields
+  end
+end
+
+module Meta = struct
+  open GDB
+
+  type t = Node.t list * Edge.t list * Labels.t
+
+  let mk_edges ~from ~deps ~attrs =
+    let f to_ = { Edge.from; to_; attrs; label = "USES" } in
+    List.map f deps
+
+  let rec to_graph_db (nl, el, ll) (l : Node_info.t list) : t =
+    match l with
+    | [] -> (List.rev nl, List.rev el, List.rev ll)
+    | n :: l ->
+      let { Node_info.uri = _; range = _; kind; name; raw = _; deps } = n in
+      let nn = { Node.id = name; attrs = () } in
+      let ne = mk_edges ~from:name ~deps in
+      let nll = (name, Kind.to_string kind) in
+      to_graph_db (nn :: nl, ne @ el, nll :: ll) l
+
+  let to_graph_db (l : Node_info.t list) : t = to_graph_db ([], [], []) l
+
+  (* Create nodes for orphan deps in the graph *)
+  let to_graph_db l =
+    let nl, el, ll = to_graph_db l in
+    (nl, el, ll)
+
+  let pp fmt (nl, el, l) =
+    let nl = `List (List.map Node.to_yojson nl) in
+    let el = `List (List.map Edge.to_yojson el) in
+    let l = Labels.to_yojson l in
+    let obj = `Assoc [ ("edges", el); ("nodes", nl); ("node_labels", l) ] in
+    let obj = `Assoc [ ("graph", obj) ] in
+    Format.fprintf fmt "@[%a@]@\n" (Yojson.Safe.pretty_print ~std:true) obj
 end
 
 let dump_meta ~io ~token ~out_file ~(doc : Doc.t) =
   let uri, contents = (doc.uri, doc.contents) in
-  let ll = List.filter_map (Meta.of_node ~io ~token ~uri ~contents) doc.nodes in
-  let f fmt meta = List.iter (Meta.pp fmt) meta in
+  let ll =
+    List.filter_map (Node_info.of_node ~io ~token ~uri ~contents) doc.nodes
+  in
+  let ll = Meta.to_graph_db ll in
+  let f fmt meta = Meta.pp fmt meta in
   Coq.Compat.format_to_file ~file:out_file ~f ll
 
 let dump_meta ~io ~token ~(doc : Doc.t) =
@@ -278,7 +368,7 @@ let dump_meta ~io ~token ~(doc : Doc.t) =
   let uri_str = Lang.LUri.File.to_string_uri uri in
   let lvl = Io.Level.Info in
   Io.Report.msg ~io ~lvl "[metanejo plugin] dumping metadata for %s ..." uri_str;
-  let out_file_j = Lang.LUri.File.to_string_file uri ^ ".meta.jsonl" in
+  let out_file_j = Lang.LUri.File.to_string_file uri ^ ".meta.json" in
   let () = dump_meta ~io ~token ~out_file:out_file_j ~doc in
   (* let out_file_s = Lang.LUri.File.to_string_file uri ^ ".sexp.goaldump" in *)
   (* let () = dump_goals ~out_file:out_file_s ~doc pp_sexp in *)

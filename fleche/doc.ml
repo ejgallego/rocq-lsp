@@ -991,9 +991,48 @@ module Stop_cond = struct
     else Continue
 end
 
+let prev_tod = ref 0.0
+let mtr, mte, mot = (ref 0.0, ref 0.0, ref 0.0)
+
+module Stm_stats = struct
+  type t =
+    { total_time : float
+    ; interp_time : float
+    ; cache_hit : bool
+    }
+end
+
 (* main interpretation loop *)
 let process_and_parse ~io ~token ~target ~uri ~version doc last_tok doc_handle =
   let rec stm doc st (last_tok : Lang.Range.t) prev acc_errors =
+    let now = Unix.gettimeofday () in
+    let total_time = now -. !prev_tod in
+    prev_tod := now;
+    mtr := !mtr +. total_time;
+    let interp_time, rtt, cache_hit =
+      match prev with
+      | Some
+          { Node.info =
+              { parsing_time
+              ; stats =
+                  Some
+                    { stats = { time; memory = _ }; cache_hit; time_hash = _ }
+              ; global_stats = _
+              }
+          ; _
+          } ->
+        let t = time +. parsing_time in
+        if cache_hit then (t, 0.0, cache_hit) else (t, t, cache_hit)
+      | _ -> (0.0, 0.0, false)
+    in
+    let _stats = { Stm_stats.total_time; interp_time; cache_hit } in
+    mte := !mte +. interp_time;
+    let ot = total_time -. rtt in
+    mot := !mot +. ot;
+    let ratio = total_time /. ot in
+    Io.Report.msg ~io ~lvl:Info
+      "full time: %f/%f (%f/%f) %f/%f {ratio: %f} (%b)" total_time !mtr
+      interp_time !mte ot !mot ratio cache_hit;
     (* Reporting of progress and diagnostics (if dirty) *)
     let doc = send_eager_diagnostics ~io ~uri ~version ~doc in
     report_progress ~io ~doc last_tok;
@@ -1040,6 +1079,7 @@ let process_and_parse ~io ~token ~target ~uri ~version doc last_tok doc_handle =
   in
   (* Set the document to "internal" mode, stm expects the node list to be in
      reversed order *)
+  prev_tod := Unix.gettimeofday ();
   let doc = { doc with nodes = List.rev doc.nodes } in
   (* Note that nodes and diags are in reversed order here *)
   let last_node, st, stats =
