@@ -51,6 +51,9 @@
  - [hover] New debug option `show_pr_vernac_on_hover`, that will
    re-print the sentence under point using the Rocq printer
    (@ejgallego, alexJ, #1070)
+ - [petanque] New methods `proof_info` and `proof_info_at_pos` that
+   return information about the current proof. As of today they return
+   the proof name, text, range, ... (@DikieDick, @ejgallego, #1051)
 
 # coq-lsp 0.2.4: (W)Activation
 ------------------------------
