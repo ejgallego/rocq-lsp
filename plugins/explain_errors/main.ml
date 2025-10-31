@@ -4,11 +4,19 @@ open Fleche
 
 let msg_info ~io = Io.(Report.msg ~io ~lvl:Info)
 
+let pr_goals ~token ~proof =
+  let proof =
+    Coq.State.Proof.to_coq proof
+    |> Vernacstate.LemmaStack.get_top |> Declare.Proof.get
+  in
+  let f = Printer.pr_open_subgoals in
+  Coq.Protect.eval ~token ~f proof
+
 let pp_goals ~token ~st =
   match Coq.State.lemmas ~st with
   | None -> Coq.Pp_t.str "no goals"
   | Some proof -> (
-    match Coq.Print.pr_goals ~token ~proof with
+    match pr_goals ~token ~proof with
     | { Coq.Protect.E.r = Completed (Ok goals); _ } -> goals
     | { Coq.Protect.E.r =
           Completed (Error (User { msg; _ } | Anomaly { msg; _ }))

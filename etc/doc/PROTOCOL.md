@@ -39,7 +39,9 @@
     * [`petanque/state/proof/equal`](#petanquestateproofequal)
     * [`petanque/state/proof/hash`](#petanquestateproofhash)
     * [`petanque/ast`](#petanqueast)
-    * [`petanque/ast_at_post`](#petanqueastatpos)
+    * [`petanque/ast_at_pos`](#petanqueastatpos)
+    * [`petanque/proof_info`](#petanqueproofinfo)
+    * [`petanque/proof_info_at_pos`](#petanqueproofinfoatpos)
 
 <!-- TOC end -->
 
@@ -430,6 +432,7 @@ utils for those interested in richer printing formats.
 - v0.2.5:
   + `petanque/get_state_at_pos` will not error if there is no node at point
   + new method `petanque/run_at_pos`
+  + new methods `petanque/proof_info` and `petanque/proof_info_at_pos`
 - v0.2.4:
   + behavior of `messages`, `error`, and `range` can now be
     controlled by the `messages_follow_goal` global setting
@@ -922,7 +925,10 @@ interface Params =
 interface Response = Run_result<int>
 ```
 
-If the execution fails, the JSON-RPC request will fail.
+If the execution fails, the JSON-RPC request will fail. You can
+recover messages generated during the failed execution using
+[`rocq-lsp`'s specific error data
+field](#implementation-specific-data-error-field)
 
 <!-- TOC --><a name="petanquerunatpos"></a>
 ### `petanque/run_at_pos`
@@ -943,7 +949,10 @@ interface Params =
 interface Response = Run_result<unit>
 ```
 
-If the execution fails, the JSON-RPC request will fail.
+If the execution fails, the JSON-RPC request will fail. You can
+recover messages generated during the failed execution using
+[`rocq-lsp`'s specific error data
+field](#implementation-specific-data-error-field)
 
 If the position has no corresponding Rocq code attached (for example,
 empty space between two commands), the state returned will be the one
@@ -1062,3 +1071,13 @@ interface Params = { uri: string; position : Position }
 ```typescript
 interface Response = Option<Ast>
 ```
+
+<!-- TOC --><a name="petanqueproofinfo"></a>
+### `petanque/proof_info`
+
+TODO
+
+<!-- TOC --><a name="petanqueproofinfoatpos"></a>
+### `petanque/proof_info_at_pos`
+
+TODO

@@ -195,5 +195,27 @@ val ast :
 val ast_at_pos :
   doc:Fleche.Doc.t -> point:int * int -> unit -> Coq.Ast.t option R.t
 
+module Proof_info : sig
+  type t =
+    { name : string
+    ; statements : string list
+    ; range : Lang.Range.t option
+    }
+end
+
+(** Returns the proof name for a given [st], if a proof is open. If no proof is
+    open, returns [None]. *)
+val proof_info :
+  token:Coq.Limits.Token.t -> st:State.t -> unit -> Proof_info.t option R.t
+
+(** Returns the proof name for a given [point], in document [doc] if a proof is
+    open. If no proof is open, returns [None]. *)
+val proof_info_at_pos :
+     token:Coq.Limits.Token.t
+  -> doc:Fleche.Doc.t
+  -> point:int * int
+  -> unit
+  -> Proof_info.t option R.t
+
 (** Petanque version *)
 val version : int

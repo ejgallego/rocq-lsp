@@ -45,7 +45,7 @@ const petRunReq = new RequestType<PetRunParams, any, void>("petanque/run");
 
 export const petanqueRun = (editor: TextEditor) => {
   // XXX Read from user
-  let params: PetRunParams = { st: 1, tac: "idtac." };
+  let params: PetRunParams = { st: 1, tac: "Fail Search plus." };
   client
     .sendRequest(petRunReq, params)
     .then((answer: any) => {

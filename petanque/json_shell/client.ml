@@ -133,4 +133,12 @@ module S (C : Chans) = struct
   let ast_at_pos =
     let module M = Wrap (AstAtPos) (C) in
     M.call
+
+  let proof_info =
+    let module M = Wrap (ProofInfo) (C) in
+    M.call
+
+  let proof_info_at_pos =
+    let module M = Wrap (ProofInfoAtPos) (C) in
+    M.call
 end

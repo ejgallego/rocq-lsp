@@ -42,4 +42,8 @@ module S (C : Chans) : sig
 
   val ast : PetAst.Params.t -> (PetAst.Response.t, string) result
   val ast_at_pos : AstAtPos.Params.t -> (AstAtPos.Response.t, string) result
+  val proof_info : ProofInfo.Params.t -> (ProofInfo.Response.t, string) result
+
+  val proof_info_at_pos :
+    ProofInfoAtPos.Params.t -> (ProofInfoAtPos.Response.t, string) result
 end

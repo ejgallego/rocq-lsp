@@ -34,6 +34,9 @@
  - [web worker] Add LSP root to Rocq's loadpath, this makes .vo file
    loading work even when no worker FS setup could happen (@ejgallego,
    #1054)
+ - [petanque] New methods `proof_info` and `proof_info_at_pos` that
+   return information about the current proof. As of today they return
+   the proof name, text, range, ... (@DikieDick, @ejgallego, #1051)
 
 # coq-lsp 0.2.4: (W)Activation
 ------------------------------
