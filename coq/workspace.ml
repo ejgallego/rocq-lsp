@@ -147,7 +147,7 @@ let mk_require_from (from, library) =
   let flags = Some (Lib.Import, None) in
   { Require.library; from; flags }
 
-let make ~cmdline ~implicit ~kind ~debug =
+let make ~add_dir ~cmdline ~implicit ~kind ~debug =
   let { CmdLine.coqlib
       ; findlib_config
       ; ocamlpath
@@ -179,7 +179,16 @@ let make ~cmdline ~implicit ~kind ~debug =
     in
     List.map mk_require_from rq_list
   in
+  let add_path unix_path =
+    mk_lp ~coq_path:Names.DirPath.empty ~unix_path ~implicit:true
+      ~installed:false
+  in
   let vo_load_path = dft_vo_load_path @ vo_load_path in
+  let vo_load_path =
+    match add_dir with
+    | Some dir -> add_path dir :: vo_load_path
+    | None -> vo_load_path
+  in
   { coqlib
   ; findlib_config
   ; ocamlpath
@@ -359,25 +368,26 @@ let workspace_from_coqproject ~cmdline ~debug cp_file : t =
   in
   let implicit = true in
   let kind = cp_file in
-  make ~cmdline ~implicit ~kind ~debug
+  make ~add_dir:None ~cmdline ~implicit ~kind ~debug
 
-let workspace_from_cmdline ~debug ~cmdline =
+let workspace_from_cmdline ~add_dir ~debug ~cmdline =
   let kind = "Command-line arguments" in
   let implicit = true in
-  make ~cmdline ~implicit ~kind ~debug
+  make ~add_dir ~cmdline ~implicit ~kind ~debug
 
-let guess ~debug ~cmdline ~dir () =
+let guess ~add_root ~debug ~cmdline ~dir () =
+  let add_dir = if add_root then Some dir else None in
   let cp_file = Filename.concat dir "_CoqProject" in
   let rp_file = Filename.concat dir "_RocqProject" in
   if Sys.file_exists rp_file then
     workspace_from_coqproject ~cmdline ~debug rp_file
   else if Sys.file_exists cp_file then
     workspace_from_coqproject ~cmdline ~debug cp_file
-  else workspace_from_cmdline ~debug ~cmdline
+  else workspace_from_cmdline ~add_dir ~debug ~cmdline
 
-let guess ~token ~debug ~cmdline ~dir =
+let guess ~token ?(add_root = false) ~debug ~cmdline ~dir () =
   let { Protect.E.r; feedback } =
-    Protect.eval ~token ~f:(guess ~debug ~cmdline ~dir) ()
+    Protect.eval ~token ~f:(guess ~add_root ~debug ~cmdline ~dir) ()
   in
   ignore feedback;
   match r with
@@ -387,4 +397,5 @@ let guess ~token ~debug ~cmdline ~dir =
     Error (Format.asprintf "Workspace Scanning Errored: %a" Pp.pp_with msg)
   | Protect.R.Completed (Ok workspace) -> Ok workspace
 
-let default ~debug ~cmdline = workspace_from_cmdline ~debug ~cmdline
+let default ~debug ~cmdline =
+  workspace_from_cmdline ~add_dir:None ~debug ~cmdline

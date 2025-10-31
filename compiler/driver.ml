@@ -58,11 +58,8 @@ let go ~int_backend args =
   let () = Coq.Limits.select_best int_backend in
   let () = Coq.Limits.start () in
   let token = Coq.Limits.Token.create () in
-  let workspaces =
-    List.map
-      (fun dir -> (dir, Coq.Workspace.guess ~token ~cmdline ~debug ~dir))
-      roots
-  in
+  let make_ws dir = (dir, Coq.Workspace.guess ~token ~cmdline ~debug ~dir ()) in
+  let workspaces = List.map make_ws roots in
   List.iter (log_workspace ~io) workspaces;
   let () = apply_config ~max_errors in
   let cc = Cc.{ root_state; workspaces; default; io; token } in
