@@ -39,10 +39,11 @@ let rec obj_to_json (cobj : < .. > Js.t) : Yojson.Safe.t =
       Firebug.console##info "undefined branch!!!!";
       `Null)
     else (
-      Firebug.console##error "failure in coq_lsp_worker:obj_to_json";
-      Firebug.console##error cobj;
-      Firebug.console##error (Json.output cobj);
-      raise (Failure "coq_lsp_worker:obj_to_json"))
+      (Firebug.console##error "failure in coq_lsp_worker:obj_to_json";
+       Firebug.console##error cobj;
+       Firebug.console##error (Json.output cobj);
+       raise (Failure "coq_lsp_worker:obj_to_json"))
+      [@alert "-deprecated"])
 
 (* Old code, which is only useful for debug *)
 (* let json_string = Js.to_string (Json.output cobj) in *)

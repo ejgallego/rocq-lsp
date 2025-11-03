@@ -7,3 +7,8 @@
 
 (name coq-lsp)
 
+; (implicit_transitive_deps false)
+
+; This requires Dune 3.20, let's keep it off for now until we
+; understand the impact
+; (implicit_transitive_deps false-if-hidden-includes-supported)

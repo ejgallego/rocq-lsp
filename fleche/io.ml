@@ -20,7 +20,10 @@ module CallBack = struct
     { trace : string -> ?verbose:string -> string -> unit
     ; message : lvl:Level.t -> message:string -> unit
     ; diagnostics :
-        uri:Lang.LUri.File.t -> version:int -> Lang.Diagnostic.t list -> unit
+           uri:Lang.LUri.File.t
+        -> version:int
+        -> Coq.Pp_t.t Lang.Diagnostic.t list
+        -> unit
     ; fileProgress :
         uri:Lang.LUri.File.t -> version:int -> Progress.Info.t list -> unit
     ; perfData : uri:Lang.LUri.File.t -> version:int -> Perf.t -> unit
@@ -80,12 +83,12 @@ module Log = struct
     (* Fixme, use the extra parameter *)
     trace hdr "[%s]: @[%a@]" hdr Yojson.Safe.(pretty_print ~std:false) obj
 
-  let pp_fb fmt (fb : Loc.t Coq.Message.t) =
+  let pp_fb fmt (fb : Coq.Loc_t.t Coq.Message.t) =
     let _lvl, { Coq.Message.Payload.msg; _ } = fb in
-    Format.fprintf fmt "%a" Pp.pp_with msg
+    Format.fprintf fmt "%a" Coq.Pp_t.pp_with msg
 
   let feedback part feedback =
-    if not (CList.is_empty feedback) then
+    if not (Lang.Compat.List.is_empty feedback) then
       (* We put the feedback contents in the verbose part of the trace
          message. *)
       let pp_sep = Format.pp_print_cut in

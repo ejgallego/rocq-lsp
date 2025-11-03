@@ -11,10 +11,10 @@ module Payload : sig
   type 'l t =
     { range : 'l option
     ; quickFix : 'l Lang.Qf.t list option
-    ; msg : Pp.t
+    ; msg : Pp_t.t
     }
 
-  val make : ?range:'l -> ?quickFix:'l Lang.Qf.t list -> Pp.t -> 'l t
+  val make : ?range:'l -> ?quickFix:'l Lang.Qf.t list -> Pp_t.t -> 'l t
   val map : f:('l -> 'm) -> 'l t -> 'm t
 end
 

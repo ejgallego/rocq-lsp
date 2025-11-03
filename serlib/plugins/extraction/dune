@@ -9,4 +9,9 @@
    ppx_deriving_yojson
    ppx_hash
    ppx_compare))
- (libraries rocq-runtime.plugins.extraction serlib))
+ (libraries
+  ; base
+  rocq-runtime.pretyping
+  rocq-runtime.plugins.extraction
+  sexplib
+  serlib))

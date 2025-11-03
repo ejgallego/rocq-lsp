@@ -30,7 +30,7 @@ module R : sig
   val of_execution :
        lines:string Array.t
     -> name:string
-    -> f:('a -> (('r, string) t, Loc.t) Coq.Protect.E.t)
+    -> f:('a -> (('r, string) t, Coq.Loc_t.t) Coq.Protect.E.t)
     -> 'a
     -> ('r, string) t
 end

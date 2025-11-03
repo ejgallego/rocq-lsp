@@ -10,8 +10,13 @@
    ppx_hash
    ppx_compare))
  (libraries
-  rocq-runtime.plugins.ssreflect
+  ; base
+  sexplib
+  rocq-runtime.engine
+  rocq-runtime.pretyping
   serlib
+  rocq-runtime.plugins.ltac
   serlib_ltac
+  rocq-runtime.plugins.ssrmatching
   serlib_ssrmatching
-  sexplib))
+  rocq-runtime.plugins.ssreflect))

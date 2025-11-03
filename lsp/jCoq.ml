@@ -1,10 +1,18 @@
+(*************************************************************************)
+(* Copyright 2015-2019 MINES ParisTech -- Dual License LGPL 2.1+ / GPL3+ *)
+(* Copyright 2019-2024 Inria           -- Dual License LGPL 2.1+ / GPL3+ *)
+(* Copyright 2024-2025 Emilio J. Gallego Arias  -- LGPL 2.1+ / GPL3+     *)
+(* Copyright 2025      CNRS                     -- LGPL 2.1+ / GPL3+     *)
+(* Written by: Emilio J. Gallego Arias & coq-lsp contributors            *)
+(*************************************************************************)
+
 module Loc = Serlib.Ser_loc
 module Names = Serlib.Ser_names
 module Evar = Serlib.Ser_evar
 module Evar_kinds = Serlib.Ser_evar_kinds
 
 let rec pp_opt d =
-  let open Pp in
+  let open Coq.Pp_t in
   let rec flatten_glue l =
     match l with
     | [] -> []
@@ -23,12 +31,13 @@ let rec pp_opt d =
     | Ppcmd_tag (t, d) -> Ppcmd_tag (t, pp_opt d)
     | d -> d)
 
-module Pp = struct
+module Loc_t = struct
+  include Serlib.Ser_loc
+end
+
+module Pp_t = struct
   include Serlib.Ser_pp
 
-  let str = Pp.str
-  let string_of_ppcmds = Pp.string_of_ppcmds
-  let to_string = Pp.string_of_ppcmds
   let to_yojson x = to_yojson (pp_opt x)
 end
 
@@ -83,18 +92,22 @@ module Ast = struct
     |> Result.map Coq.Ast.of_coq
 end
 
-module Declare = struct
-  module OblState = struct
-    module View = struct
+module State = struct
+  module Proof = struct
+    module Program = struct
       module Obl = struct
-        type t = [%import: Declare.OblState.View.Obl.t] [@@deriving to_yojson]
+        type t =
+          [%import:
+            (Coq.State.Proof.Program.Obl.t[@with Coq.Loc_t.t := Loc_t.t])]
+        [@@deriving to_yojson]
 
-        let of_yojson obj =
+        (* Not needed below *)
+        let _of_yojson obj =
           Serlib.Serlib_base.opaque_of_yojson ~typ:"Declare.OblState.View.Obl.t"
             obj
       end
 
-      type t = [%import: Declare.OblState.View.t] [@@deriving to_yojson]
+      type t = [%import: Coq.State.Proof.Program.t] [@@deriving to_yojson]
 
       let of_yojson obj =
         Serlib.Serlib_base.opaque_of_yojson ~typ:"Declare.OblState.View.t" obj

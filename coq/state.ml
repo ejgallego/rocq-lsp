@@ -98,6 +98,16 @@ module Proof = struct
   let hash x =
     let meaningful, total = (128, 256) in
     Hashtbl.hash_param meaningful total x
+
+  module Program = struct
+    module Obl = Declare.OblState.View.Obl
+
+    type t = Declare.OblState.View.t = private
+      { opaque : bool
+      ; remaining : int
+      ; obligations : Obl.t array
+      }
+  end
 end
 
 let lemmas ~st = st.Vernacstate.interp.lemmas

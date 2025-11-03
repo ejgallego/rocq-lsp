@@ -5,12 +5,15 @@
  (public_name coq-lsp.request)
  (modules request)
  (wrapped false)
- (libraries coq fleche))
+ (libraries coq lang fleche))
 
 (library
  (name controller)
  (modules :standard \ request)
  (libraries
+  ppx_deriving_yojson.runtime
+  yojson
+  lang
   coq
   fleche
   request

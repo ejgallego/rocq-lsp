@@ -4,4 +4,14 @@
  (synopsis "Serialization Library for Coq Setoid Newring Plugin")
  (preprocess
   (staged_pps ppx_import ppx_sexp_conv ppx_hash ppx_compare))
- (libraries rocq-runtime.plugins.ring serlib serlib_ltac sexplib))
+ (libraries
+  ; base
+  ; ppx_base
+  ; base.base_internalhash_types
+  ; ppx_hash.runtime-lib
+  ; ppx_compare.runtime-lib
+  rocq-runtime.pretyping
+  rocq-runtime.plugins.ring
+  serlib
+  serlib_ltac
+  sexplib))

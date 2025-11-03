@@ -8,6 +8,14 @@
 (* Rocq Language Server Protocol: Rocq parsing API                       *)
 (*************************************************************************)
 
+module Lexer : sig
+  val after : Loc_t.t -> Loc_t.t
+end
+
+module Stream : sig
+  val of_string : ?offset:int -> string -> (unit, char) Gramlib.Stream.t
+end
+
 module Parsable : sig
   type t
 
