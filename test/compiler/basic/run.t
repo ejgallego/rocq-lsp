@@ -25,6 +25,7 @@ Compile a single file, don't generate a `.vo` file:
   a.diags
   a.v
   b.v
+  c.mv
 
 Compile a single file, generate a .vo file
   $ fcc --root proj1 proj1/a.v
@@ -41,6 +42,7 @@ Compile a single file, generate a .vo file
   a.v
   a.vo
   b.v
+  c.mv
 
 Compile a single file, silent
   $ fcc --display=quiet --root proj1 proj1/a.v
@@ -62,6 +64,7 @@ Compile a dependent file
   b.diags
   b.v
   b.vo
+  c.mv
 
 Compile both files
   $ rm proj1/*.vo
@@ -82,6 +85,31 @@ Compile both files
   b.diags
   b.v
   b.vo
+  c.mv
+
+Compile both files and a markdown file
+  $ rm proj1/*.vo
+  $ fcc --root proj1 proj1/a.v proj1/b.v proj1/c.mv
+  [message] Configuration loaded from Command-line arguments
+   - findlib: [TEST_PATH]
+     + findlib config: [TEST_PATH]
+     + findlib default location: [TEST_PATH]
+   - coqlib is at: [TEST_PATH]
+     + 2 Coq path directory bindings in scope
+     + Modules [Corelib.Init.Prelude] will be loaded by default
+  [message] compiling file proj1/a.v
+  [message] compiling file proj1/b.v
+  [message] compiling file proj1/c.mv
+  $ ls proj1
+  a.diags
+  a.v
+  a.vo
+  b.diags
+  b.v
+  b.vo
+  c.diags
+  c.mv
+  c.vo
 
 Compile a dependent file without the dep being built
   $ rm proj1/*.vo
@@ -100,6 +128,8 @@ Compile a dependent file without the dep being built
   b.diags
   b.v
   b.vo
+  c.diags
+  c.mv
   $ cat proj1/a.diags
   $ cat proj1/b.diags
   {
