@@ -1,0 +1,9 @@
+# This is a sample file to test the compiler for .mv files
+
+```rocq
+Definition c1 := Type.
+```
+
+```coq
+Definition c2 := Type.
+```

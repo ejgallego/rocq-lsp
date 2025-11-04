@@ -25,6 +25,8 @@
    #1050)
  - [layout-engine] Add background color for each box kind (@ejgallego,
    #1050)
+ - [compiler] Fix handling of literate files (@ejgallego, #, reported
+   by @jim-portegies)
 
 # coq-lsp 0.2.4: (W)Activation
 ------------------------------
