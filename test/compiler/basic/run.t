@@ -9,6 +9,7 @@ Describe the project
      + findlib default location: [TEST_PATH]
    - coqlib is at: [TEST_PATH]
      + 2 Coq path directory bindings in scope
+     + 0 Coq modules (.v files) known from Command-line arguments listing
      + Modules [Corelib.Init.Prelude] will be loaded by default
 
 Compile a single file, don't generate a `.vo` file:
@@ -19,6 +20,7 @@ Compile a single file, don't generate a `.vo` file:
      + findlib default location: [TEST_PATH]
    - coqlib is at: [TEST_PATH]
      + 2 Coq path directory bindings in scope
+     + 0 Coq modules (.v files) known from Command-line arguments listing
      + Modules [Corelib.Init.Prelude] will be loaded by default
   [message] compiling file proj1/a.v
   $ ls proj1
@@ -35,6 +37,7 @@ Compile a single file, generate a .vo file
      + findlib default location: [TEST_PATH]
    - coqlib is at: [TEST_PATH]
      + 2 Coq path directory bindings in scope
+     + 0 Coq modules (.v files) known from Command-line arguments listing
      + Modules [Corelib.Init.Prelude] will be loaded by default
   [message] compiling file proj1/a.v
   $ ls proj1
@@ -55,6 +58,7 @@ Compile a dependent file
      + findlib default location: [TEST_PATH]
    - coqlib is at: [TEST_PATH]
      + 2 Coq path directory bindings in scope
+     + 0 Coq modules (.v files) known from Command-line arguments listing
      + Modules [Corelib.Init.Prelude] will be loaded by default
   [message] compiling file proj1/b.v
   $ ls proj1
@@ -75,6 +79,7 @@ Compile both files
      + findlib default location: [TEST_PATH]
    - coqlib is at: [TEST_PATH]
      + 2 Coq path directory bindings in scope
+     + 0 Coq modules (.v files) known from Command-line arguments listing
      + Modules [Corelib.Init.Prelude] will be loaded by default
   [message] compiling file proj1/a.v
   [message] compiling file proj1/b.v
@@ -120,6 +125,7 @@ Compile a dependent file without the dep being built
      + findlib default location: [TEST_PATH]
    - coqlib is at: [TEST_PATH]
      + 2 Coq path directory bindings in scope
+     + 0 Coq modules (.v files) known from Command-line arguments listing
      + Modules [Corelib.Init.Prelude] will be loaded by default
   [message] compiling file proj1/b.v
   $ ls proj1
@@ -158,6 +164,7 @@ Compile a file with all messages:
      + findlib default location: [TEST_PATH]
    - coqlib is at: [TEST_PATH]
      + 2 Coq path directory bindings in scope
+     + 0 Coq modules (.v files) known from Command-line arguments listing
      + Modules [Corelib.Init.Prelude] will be loaded by default
   [message] compiling file proj1/a.v
   $ cat proj1/a.diags
@@ -168,6 +175,7 @@ Compile a file with all messages:
      + findlib default location: [TEST_PATH]
    - coqlib is at: [TEST_PATH]
      + 2 Coq path directory bindings in scope
+     + 0 Coq modules (.v files) known from Command-line arguments listing
      + Modules [Corelib.Init.Prelude] will be loaded by default
   [message] compiling file proj1/a.v
   $ cat proj1/a.diags
@@ -197,6 +205,7 @@ Use two workspaces
      + findlib default location: [TEST_PATH]
    - coqlib is at: [TEST_PATH]
      + 2 Coq path directory bindings in scope
+     + 0 Coq modules (.v files) known from Command-line arguments listing
      + Modules [Corelib.Init.Prelude] will be loaded by default
   [message] Configuration loaded from Command-line arguments
    - findlib: [TEST_PATH]
@@ -204,6 +213,7 @@ Use two workspaces
      + findlib default location: [TEST_PATH]
    - coqlib is at: [TEST_PATH]
      + 2 Coq path directory bindings in scope
+     + 0 Coq modules (.v files) known from Command-line arguments listing
      + Modules [Corelib.Init.Prelude] will be loaded by default
   [message] compiling file proj1/a.v
   [message] compiling file proj2/b.v
@@ -220,6 +230,7 @@ Load the example plugin
      + findlib default location: [TEST_PATH]
    - coqlib is at: [TEST_PATH]
      + 2 Coq path directory bindings in scope
+     + 0 Coq modules (.v files) known from Command-line arguments listing
      + Modules [Corelib.Init.Prelude] will be loaded by default
   [message] compiling file proj1/a.v
   [message] [example plugin] file checking for proj1/a.v was completed
@@ -232,6 +243,7 @@ Load the astdump plugin
      + findlib default location: [TEST_PATH]
    - coqlib is at: [TEST_PATH]
      + 2 Coq path directory bindings in scope
+     + 0 Coq modules (.v files) known from Command-line arguments listing
      + Modules [Corelib.Init.Prelude] will be loaded by default
   [message] compiling file proj1/a.v
   [message] [ast plugin] dumping ast for proj1/a.v ...
@@ -256,6 +268,7 @@ We do the same for the goaldump plugin:
      + findlib default location: [TEST_PATH]
    - coqlib is at: [TEST_PATH]
      + 2 Coq path directory bindings in scope
+     + 0 Coq modules (.v files) known from Command-line arguments listing
      + Modules [Corelib.Init.Prelude] will be loaded by default
   [message] compiling file proj1/a.v
   [message] [goaldump plugin] dumping goals for proj1/a.v ...
