@@ -379,5 +379,37 @@ let ast_at_pos ~doc ~point () =
     Ok (Option.map (fun ast -> ast.Fleche.Doc.Node.Ast.v) ast)
   | None -> Error (Error.make_request No_node_at_point)
 
+module Proof_info = struct
+  (** Take into account that there may be a mutual proof open. *)
+  type t =
+    { name : string
+    ; statements : string list
+    ; range : Lang.Range.t option
+    }
+end
+
+let proof_info ~token ~st () : Proof_info.t option R.t =
+  match Coq.State.lemmas ~st with
+  | Some pst ->
+    let name = Coq.State.Proof.name pst in
+    let execution =
+      let open Coq.Protect.E.O in
+      let+ statements = Coq.State.Proof.statements ~token pst in
+      fun _feedback -> Some { Proof_info.name; statements; range = None }
+    in
+    protect_to_result execution
+  | None -> Ok None
+
+(* Flèche / petanque invariant, when this function is called, [doc] has the
+   metadata ready for [point] *)
+let proof_info_at_pos ~token ~doc ~point () =
+  (* XXX: Better information is possible by looking at doc! *)
+  (* let nodes = doc.nodes before point in *)
+  (* let _proof_start_node_before, after = find_proof_start nodes in *)
+  (* { name = after.info.name; statements = after.raw; range = after.range } *)
+  match Fleche.Info.(LC.node ~doc ~point PrevIfEmpty) with
+  | Some { Fleche.Doc.Node.state; _ } -> proof_info ~token ~st:state ()
+  | None -> Error (Error.make_request No_node_at_point)
+
 (* See PROTOCOL.md for details on versioning *)
 let version = 2

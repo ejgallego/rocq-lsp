@@ -91,4 +91,8 @@ let handle_request ~(do_handle : 'a handle) ~unhandled ~token ~method_ ~params =
     do_handle ~token (do_request (module PetAst) ~params)
   | s when String.equal AstAtPos.method_ s ->
     do_handle ~token (do_request (module AstAtPos) ~params)
+  | s when String.equal ProofInfo.method_ s ->
+    do_handle ~token (do_request (module ProofInfo) ~params)
+  | s when String.equal ProofInfoAtPos.method_ s ->
+    do_handle ~token (do_request (module ProofInfoAtPos) ~params)
   | _ -> unhandled ~token ~method_

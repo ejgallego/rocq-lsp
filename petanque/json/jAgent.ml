@@ -42,3 +42,7 @@ module Premise = struct
 
   type t = [%import: Petanque.Agent.Premise.t] [@@deriving yojson]
 end
+
+module Proof_info = struct
+  type t = [%import: Petanque.Agent.Proof_info.t] [@@deriving yojson]
+end

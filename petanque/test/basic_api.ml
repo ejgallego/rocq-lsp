@@ -116,6 +116,14 @@ let run_at_pos_test ~token ~doc =
       (Agent.Error.make_request
          (System "unexpected feedback on run_at_pos test"))
 
+let get_proof_test ~token ~doc =
+  let open Coq.Compat.Result.O in
+  let point = (17, 0) in
+  let* pi = Agent.proof_info_at_pos ~token ~doc ~point () in
+  assert (not (Option.is_empty pi));
+  assert (String.equal (Option.get pi).name "rev_snoc_cons");
+  Ok None
+
 let main () =
   let open Coq.Compat.Result.O in
   let token = Coq.Limits.create_atomic () in
@@ -125,7 +133,8 @@ let main () =
   let* g3 = multi_shot_test ~token ~doc in
   let* g4 = fake_start_test ~token ~doc in
   let* g5 = run_at_pos_test ~token ~doc in
-  Ok [ g1; g2; g3; g4; g5 ]
+  let* g6 = get_proof_test ~token ~doc in
+  Ok [ g1; g2; g3; g4; g5; g6 ]
 
 let max = List.fold_left max min_int
 

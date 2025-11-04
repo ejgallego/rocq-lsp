@@ -23,6 +23,8 @@ module Proof : sig
   val equal : t -> t -> bool
   val hash : t -> int
   val to_coq : t -> Vernacstate.LemmaStack.t
+  val name : t -> string
+  val statements : token:Limits.Token.t -> t -> (string list, Loc.t) Protect.E.t
 
   module Program : sig
     module Obl : sig

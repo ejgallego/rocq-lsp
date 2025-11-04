@@ -91,6 +91,24 @@ let run (ic, oc) =
     let command = "About rev_snoc_cons." in
     S.run_at_pos { textDocument; opts = None; position; command }
   in
+  (* Check proof_info_at_pos *)
+  let* pi =
+    (* harcoded in shell.ml *)
+    let version = 0 in
+    let textDocument =
+      { Fleche_lsp.Doc.VersionedTextDocumentIdentifier.uri; version }
+    in
+    let position = Lang.Point.{ line = 17; character = 0; offset = -1 } in
+    S.proof_info_at_pos { textDocument; position }
+  in
+  assert (not (Option.is_empty pi));
+  if false then Format.eprintf "proof_info: %s@\n%!" (Option.get pi).name;
+  (if true then
+     Format.(
+       eprintf "proof_info: @[%a@]@\n%!"
+         (pp_print_list pp_print_string)
+         (Option.get pi).statements));
+  assert (String.equal (Option.get pi).name "rev_snoc_cons");
   (* Petanque + start tests *)
   let* { st; _ } =
     S.start { uri; opts = None; pre_commands = None; thm = "rev_snoc_cons" }
