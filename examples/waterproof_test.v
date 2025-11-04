@@ -9,10 +9,10 @@ Require Import Waterproof.Tactics.
 Require Import Waterproof.Util.Assertions.
 
 (** Test 0: works with existence statement*)
-Goal (exists n : nat, n + 1 = n)%nat -> False.
+Goal (exists n m : nat, n + 1 = m)%nat -> False.
 Proof.
-  intro H.
-  Obtain such an n.
+  intro  H.
+  Obtain n, m according to (i).
 Abort.
 
 (* -------------------------------------------------------------------------- *)

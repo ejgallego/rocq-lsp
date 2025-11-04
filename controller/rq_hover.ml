@@ -363,6 +363,31 @@ module State_hash : HoverProvider = struct
   let h = Handler.WithNode h
 end
 
+module CI = Serlib.Ser_genarg.CI
+module CIA = Serlib.Ser_genarg.CIA
+
+let build_ci (ast : Vernacexpr.vernac_control) =
+  let CAst.{ loc = _; v } = ast in
+  match v.expr with
+  | VernacSynterp (VernacExtend (ename, args)) ->
+    let i1 = Format.asprintf "plugin ast: %s" ename.ext_plugin in
+    let an = List.concat_map CIA.analyze args in
+    let i2 =
+      List.map (fun ci -> Format.asprintf "@[%a@]" CI.pp ci) an
+      |> String.concat "\n"
+    in
+    Some (String.concat "\n" [ i1; i2 ])
+  | _ -> Some "no color info"
+
+module Color_info : HoverProvider = struct
+  let h ~token:_ ~contents:_ ~point:_ ~(node : Fleche.Doc.Node.t) =
+    match node.ast with
+    | Some { v; _ } -> build_ci (Coq.Ast.to_coq v)
+    | None -> None
+
+  let h = Handler.WithNode h
+end
+
 module Register = struct
   let handlers : Handler.t list ref = ref []
   let add fn = handlers := fn :: !handlers
@@ -389,6 +414,7 @@ let () =
     ; InputHelp.h
     ; UniDiff.h
     ; State_hash.h
+    ; Color_info.h
     ]
 
 let hover ~token ~(doc : Fleche.Doc.t) ~point =
