@@ -79,5 +79,5 @@ let request ~ast ~goals () ~token ~doc =
   let completed = to_completed completed in
   JFleche.FlecheDocument.(
     { spans; completed }
-    |> to_yojson (fun x -> x) (fun x -> Fleche_lsp.JCoq.Pp.to_yojson x))
+    |> to_yojson (fun x -> x) (fun x -> Fleche_lsp.JCoq.Pp_t.to_yojson x))
   |> Result.ok

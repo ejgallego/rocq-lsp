@@ -29,7 +29,7 @@ ocaml-lsp-server
 
 .PHONY: build
 build: coq_boot
-	dune build $(DUNEOPT) $(PKG_SET)
+	@dune build $(DUNEOPT) $(PKG_SET)
 
 .PHONY: check
 check: coq_boot
@@ -148,27 +148,44 @@ submodules-update:
 # (cd vendor/coq-waterproof && git checkout coq-master && git pull upstream coq-master)
 
 # Build the vscode extension
-.PHONY: wasm-bin
 WASTUBS=$(addsuffix .wasm,dllcoqrun_stubs dllcoqperf_stubs dllbigstringaf_stubs dlllib_stubs)
 WAFILES=$(addprefix lsp-server/wasm/,wacoq_worker.bc $(WASTUBS))
 WASM_NODE=lsp-server/wasm/node_modules/
 OUTDIR=editor/code/wasm-bin/
 OUTDIR_NODE=editor/code/wasm-bin/node_modules
+
+# Use to debug the extensions / wasm build
+# ESBUILD_DEBUG=1
+
+ifdef ESBUILD_DEBUG
+NPM_TARGET=esbuild
+NPM_OPTS=
+else
+NPM_TARGET=vscode:prepublish
+NPM_OPTS=--silent
+endif
+
+.PHONY: wasm-bin
 wasm-bin:
-	dune build $(WAFILES)
-	mkdir -p $(OUTDIR)
-	cp -af _build/default/lsp-server/wasm/wacoq_worker.bc $(OUTDIR)
-	cp -af _build/default/lsp-server/wasm/*.wasm $(OUTDIR)
-	cd lsp-server/wasm/ && npm i && npm run vscode:prepublish
-	cp -af lsp-server/wasm/out/wacoq_worker.js $(OUTDIR)
-	mkdir -p $(OUTDIR_NODE)/ocaml-wasm/                        && cp -af $(WASM_NODE)/ocaml-wasm/bin/                        $(OUTDIR_NODE)/ocaml-wasm/
-	mkdir -p $(OUTDIR_NODE)/@ocaml-wasm/4.12--num/             && cp -af $(WASM_NODE)/@ocaml-wasm/4.12--num/bin/             $(OUTDIR_NODE)/@ocaml-wasm/4.12--num/
-	mkdir -p $(OUTDIR_NODE)/@ocaml-wasm/4.12--zarith/          && cp -af $(WASM_NODE)/@ocaml-wasm/4.12--zarith/bin/          $(OUTDIR_NODE)/@ocaml-wasm/4.12--zarith/
-	mkdir -p $(OUTDIR_NODE)/@ocaml-wasm/4.12--janestreet-base/ && cp -af $(WASM_NODE)/@ocaml-wasm/4.12--janestreet-base/bin/ $(OUTDIR_NODE)/@ocaml-wasm/4.12--janestreet-base/
+	@dune build $(WAFILES)
+	@mkdir -p $(OUTDIR)
+	@cp -af _build/default/lsp-server/wasm/wacoq_worker.bc $(OUTDIR)
+	@cp -af _build/default/lsp-server/wasm/*.wasm $(OUTDIR)
+	@cd lsp-server/wasm/ && npm i $(NPM_OPTS) && npm run $(NPM_OPTS) $(NPM_TARGET)
+	@cp -af lsp-server/wasm/out/wacoq_worker.js $(OUTDIR)
+	@mkdir -p $(OUTDIR_NODE)/ocaml-wasm/                        && cp -af $(WASM_NODE)/ocaml-wasm/bin/                        $(OUTDIR_NODE)/ocaml-wasm/
+	@mkdir -p $(OUTDIR_NODE)/@ocaml-wasm/4.12--num/             && cp -af $(WASM_NODE)/@ocaml-wasm/4.12--num/bin/             $(OUTDIR_NODE)/@ocaml-wasm/4.12--num/
+	@mkdir -p $(OUTDIR_NODE)/@ocaml-wasm/4.12--zarith/          && cp -af $(WASM_NODE)/@ocaml-wasm/4.12--zarith/bin/          $(OUTDIR_NODE)/@ocaml-wasm/4.12--zarith/
+	@mkdir -p $(OUTDIR_NODE)/@ocaml-wasm/4.12--janestreet-base/ && cp -af $(WASM_NODE)/@ocaml-wasm/4.12--janestreet-base/bin/ $(OUTDIR_NODE)/@ocaml-wasm/4.12--janestreet-base/
 
 .PHONY: extension
 extension: wasm-bin
-	cd editor/code && npm i && npm run vscode:prepublish
+	@cd editor/code && npm i $(NPM_OPTS) && npm run $(NPM_OPTS) $(NPM_TARGET)
+
+# Without the wasm
+.PHONY: extension-code
+extension-code:
+	@cd editor/code && npm i $(NPM_OPTS) && npm run $(NPM_OPTS) $(NPM_TARGET)
 
 # Run prettier
 .PHONY: ts-fmt
@@ -223,6 +240,7 @@ endif
 	cd $(COQ_SRC_DIR) && git apply $(PATCH_DIR)/0001-jscoq-lib-system.ml-de-unix-stat.patch
 	cd $(COQ_SRC_DIR) && git apply $(PATCH_DIR)/0001-engine-trampoline.patch
 	# cd $(COQ_SRC_DIR) && git apply $(PATCH_DIR)/0001-ocaml-4-12.patch
+	# cd $(COQ_SRC_DIR) && git apply $(PATCH_DIR)/0001-String-UTF-for-Ocaml-4.12.patch
 ifndef VENDORED_SETUP
 	opam pin add $(COQ_CORE_NAME).$(COQ_CORE_VERSION) -k path $(COQ_SRC_DIR) -y
 endif

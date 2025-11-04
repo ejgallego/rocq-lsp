@@ -23,7 +23,10 @@ module CallBack : sig
     ; message : lvl:Level.t -> message:string -> unit
           (** Send a user-visible message *)
     ; diagnostics :
-        uri:Lang.LUri.File.t -> version:int -> Lang.Diagnostic.t list -> unit
+           uri:Lang.LUri.File.t
+        -> version:int
+        -> Coq.Pp_t.t Lang.Diagnostic.t list
+        -> unit
     ; fileProgress :
         uri:Lang.LUri.File.t -> version:int -> Progress.Info.t list -> unit
     ; perfData : uri:Lang.LUri.File.t -> version:int -> Perf.t -> unit
@@ -64,7 +67,7 @@ module Log : sig
   val trace_object : string -> Yojson.Safe.t -> unit
 
   (** For unhandled feedback, for example when running hover, remove eventually? *)
-  val feedback : string -> Loc.t Coq.Message.t list -> unit
+  val feedback : string -> Coq.Loc_t.t Coq.Message.t list -> unit
 end
 
 module Report : sig
@@ -79,7 +82,7 @@ module Report : sig
        io:CallBack.t
     -> uri:Lang.LUri.File.t
     -> version:int
-    -> Lang.Diagnostic.t list
+    -> Coq.Pp_t.t Lang.Diagnostic.t list
     -> unit
 
   val fileProgress :

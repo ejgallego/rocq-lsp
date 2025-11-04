@@ -2,7 +2,7 @@
   "name": "coq-lsp",
   "displayName": "Coq LSP",
   "description": "Coq LSP provides native vsCode support for checking Coq proof documents",
-  "version": "0.2.4",
+  "version": "0.2.5-dev",
   "contributors": [
     "Emilio Jesús Gallego Arias <e@x80.org>",
     "Ali Caglayan <alizter@gmail.com>",
@@ -113,7 +113,7 @@
       },
       {
         "command": "coq-lsp.toggle_mode",
-        "title": "Coq LSP: Toggle checking mode between continous / on-demand"
+        "title": "Coq LSP: Toggle checking mode between continuous / on-demand"
       },
       {
         "command": "coq-lsp.goals",
@@ -122,6 +122,10 @@
       {
         "command": "coq-lsp.document",
         "title": "Coq LSP: Serialize document to JSON"
+      },
+      {
+        "command": "coq-lsp.sentence",
+        "title": "Coq LSP: Serialize sentence at point to JSON"
       },
       {
         "command": "coq-lsp.save",
@@ -456,29 +460,28 @@
     ]
   },
   "devDependencies": {
-    "@types/jquery": "^3.5.20",
-    "@types/node": "^18.18.1",
-    "@types/object-hash": "^3.0.4",
-    "@types/react": "^18.2.24",
-    "@types/react-dom": "^18.2.8",
-    "@types/throttle-debounce": "^5.0.0",
-    "@types/vscode": "^1.75.0",
-    "@types/vscode-webview": "^1.57.2",
-    "esbuild": "^0.16.17",
-    "prettier": "^3.2.5",
-    "typescript": "^5.2.2",
-    "@vscode/vsce": "^2.21.1"
-  },
-  "dependencies": {
-    "@vscode/webview-ui-toolkit": "^1.2.2",
+    "esbuild": "^0.25.10",
     "jquery": "^3.7.1",
     "object-hash": "^3.0.0",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "throttle-debounce": "^5.0.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "prettier": "^3.6.2",
+    "throttle-debounce": "^5.0.2",
+    "typescript": "^5.9.2",
+    "@types/jquery": "^3.5.33",
+    "@types/node": "^18.19.127",
+    "@types/object-hash": "^3.0.6",
+    "@types/react": "^18.3.24",
+    "@types/react-dom": "^18.3.7",
+    "@types/throttle-debounce": "^5.0.2",
+    "@types/vscode": "^1.82.0",
+    "@types/vscode-webview": "^1.57.5",
     "vscode-languageclient": "^9.0.1",
-    "vscode-languageserver-types": "^3.17.5"
+    "vscode-languageserver-types": "^3.17.5",
+    "@vscode/vsce": "^3.6.1",
+    "@vscode/webview-ui-toolkit": "^1.4.0"
   },
+  "dependencies": {},
   "main": "./out/src/node.js",
   "browser": "/out/src/browser.js",
   "scripts": {

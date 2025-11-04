@@ -5,12 +5,13 @@
 (* Written by: Emilio J. Gallego Arias                                  *)
 (************************************************************************)
 
+module SM = Lang.Compat.String.Map
 open Fleche_lsp.Core
 
 let get_from_toc ~doc id_at_point =
   let { Fleche.Doc.toc; _ } = doc in
   Fleche.Io.Log.trace "rq_definition" "get_from_toc";
-  match CString.Map.find_opt id_at_point toc with
+  match SM.find_opt id_at_point toc with
   | Some node ->
     let uri = doc.uri in
     let range = node.range in

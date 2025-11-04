@@ -39,18 +39,17 @@ jobs:
           - os: ubuntu-latest
             ocaml: 4.14.x
           - os: ubuntu-latest
-            ocaml: 5.0.x
-          - os: ubuntu-latest
-            ocaml: 5.1.x
-          - os: ubuntu-latest
-            ocaml: 5.2.x
-          - os: ubuntu-latest
             ocaml: 5.3.x
+          - os: ubuntu-latest
+            ocaml: 5.4.x
           - os: macos-latest
             ocaml: 4.14.x
-          - name: Windows Latest
+          - os: macos-latest
+            ocaml: 5.4.x
+          - os: windows-latest
             ocaml: 4.14.x
-            os: windows-latest
+          - os: windows-latest
+            ocaml: 5.4.x
       fail-fast: false
 
     runs-on: ${{ matrix.os }}

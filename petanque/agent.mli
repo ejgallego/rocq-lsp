@@ -128,9 +128,8 @@ val start :
   -> unit
   -> State.t Run_result.t R.t
 
-(** [run ~token ?memo ~st ~tac] tries to run [tac] over state [st]. [memo] (by
-    default true) controls whether the command execution will be memoized in
-    Flèche incremental engine. *)
+(** [run ~token ?opts ~st ~tac] tries to run [tac] over state [st]. [opts]
+    controls several parameters of the Fleche execution engine. *)
 val run :
      token:Coq.Limits.Token.t
   -> ?opts:Run_opts.t
@@ -138,6 +137,18 @@ val run :
   -> tac:string
   -> unit
   -> State.t Run_result.t R.t
+
+(** [run_at_pos ~token ?opts ~doc ~command] tries to run [command] at [doc]
+    position [point]. [opts] controls several parameters of the Fleche execution
+    engine. *)
+val run_at_pos :
+     token:Coq.Limits.Token.t
+  -> ?opts:Run_opts.t
+  -> doc:Fleche.Doc.t
+  -> point:int * int
+  -> command:string
+  -> unit
+  -> unit Run_result.t R.t
 
 (** [goals ~token ~st] return the list of goals for a given [st] *)
 val goals :

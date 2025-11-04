@@ -8,6 +8,8 @@
 (* Flèche => document manager: document                                 *)
 (************************************************************************)
 
+module SM = Lang.Compat.String.Map
+
 module Node : sig
   module Ast : sig
     type t =
@@ -35,7 +37,8 @@ module Node : sig
     ; prev : t option
     ; ast : Ast.t option  (** Ast of node *)
     ; state : Coq.State.t  (** (Full) State of node *)
-    ; diags : Lang.Diagnostic.t list  (** Diagnostics associated to the node *)
+    ; diags : Coq.Pp_t.t Lang.Diagnostic.t list
+          (** Diagnostics associated to the node *)
     ; messages : Message.t list
     ; info : Info.t
     }
@@ -43,7 +46,7 @@ module Node : sig
   val range : t -> Lang.Range.t
   val ast : t -> Ast.t option
   val state : t -> Coq.State.t
-  val diags : t -> Lang.Diagnostic.t list
+  val diags : t -> Coq.Pp_t.t Lang.Diagnostic.t list
   val messages : t -> Message.t list
   val info : t -> Info.t
 end
@@ -85,7 +88,7 @@ type t = private
   ; completed : Completion.t
         (** Status of the document, usually either completed, suspended, or
             waiting for some IO / external event *)
-  ; toc : Node.t CString.Map.t  (** table of contents *)
+  ; toc : Node.t SM.t  (** table of contents *)
   ; env : Env.t  (** External document enviroment *)
   ; root : Coq.State.t
         (** [root] contains the first state document state, obtained by applying
@@ -100,7 +103,7 @@ val asts : t -> Node.Ast.t list
 val lines : t -> string Array.t
 
 (** Return the list of all diags in the doc *)
-val diags : t -> Lang.Diagnostic.t list
+val diags : t -> Coq.Pp_t.t Lang.Diagnostic.t list
 
 (** Create a new Coq document, this is cached! Note that this operation always
     suceeds, but the document could be created in a `Failed` state if problems
@@ -146,7 +149,8 @@ val check :
 
 (** [save ~doc] will save [doc] .vo file. It will fail if proofs are open, or if
     the document completion status is not [Yes] *)
-val save : token:Coq.Limits.Token.t -> doc:t -> (unit, Loc.t) Coq.Protect.E.t
+val save :
+  token:Coq.Limits.Token.t -> doc:t -> (unit, Coq.Loc_t.t) Coq.Protect.E.t
 
 (** [run ~token ?loc ?memo ~st cmds] run commands [cmds] starting on state [st],
     without commiting changes to the document. [loc] can be used to seed an
@@ -160,8 +164,8 @@ val save : token:Coq.Limits.Token.t -> doc:t -> (unit, Loc.t) Coq.Protect.E.t
     to users. *)
 val run :
      token:Coq.Limits.Token.t
-  -> ?loc:Loc.t
+  -> ?loc:Coq.Loc_t.t
   -> ?memo:bool
   -> st:Coq.State.t
   -> string
-  -> (Coq.State.t, Loc.t) Coq.Protect.E.t
+  -> (Coq.State.t, Coq.Loc_t.t) Coq.Protect.E.t

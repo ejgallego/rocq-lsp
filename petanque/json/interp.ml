@@ -73,6 +73,8 @@ let handle_request ~(do_handle : 'a handle) ~unhandled ~token ~method_ ~params =
     do_handle ~token (do_request (module Start) ~params)
   | s when String.equal RunTac.method_ s ->
     do_handle ~token (do_request (module RunTac) ~params)
+  | s when String.equal RunAtPoint.method_ s ->
+    do_handle ~token (do_request (module RunAtPoint) ~params)
   | s when String.equal Goals.method_ s ->
     do_handle ~token (do_request (module Goals) ~params)
   | s when String.equal Premises.method_ s ->

@@ -36,18 +36,7 @@ module LUri : sig
 end
 
 module Diagnostic : sig
-  module Mode : sig
-    (** Flèche diagnostics store the message as a Pp.t box format, but usually
-        LSP standard mandates the [message] field to be a string, thus we allow
-        clients to select the mode. *)
-    type t =
-      | String
-      | Pp
-
-    val set : t -> unit
-  end
-
-  type t = Lang.Diagnostic.t [@@deriving yojson]
+  type 'a t = 'a Lang.Diagnostic.t [@@deriving yojson]
 end
 
 module Ast : sig

@@ -39,6 +39,7 @@ import {
   GoalAnswer,
   PpString,
   DocumentPerfParams,
+  AstAtPosParams,
   ViewRangeParams,
   BoxString,
 } from "../lib/types";
@@ -287,13 +288,13 @@ export function activateCoqLSP(
   // switches between the different status of the server
   const toggle = async () => {
     if (client && client.isRunning() && !serverConfig.check_only_on_request) {
-      // Server on, and in continous mode, set lazy
+      // Server on, and in continuous mode, set lazy
       await toggle_lazy_checking().then(updateStatusBar);
     } else if (client && client.isRunning()) {
       // Server on, and in lazy mode, stop
       await stop();
     } else {
-      // Server is off, set continous mode and start
+      // Server is off, set continuous mode and start
       await toggle_lazy_checking().then(start);
     }
   };
@@ -412,6 +413,36 @@ export function activateCoqLSP(
     heatMap.toggle();
   };
 
+  // AST at point request setup, improve the type so the Pp format is matched
+  const astReq = new RequestType<AstAtPosParams, any, void>(
+    "petanque/ast_at_pos"
+  );
+
+  const getSentence = (editor: TextEditor) => {
+    let uri = editor.document.uri;
+    let version = editor.document.version;
+    let position = editor.selection.active;
+
+    // EJGA: We should maybe pass the version here.
+    let params: AstAtPosParams = { uri: uri.toString(), position };
+
+    client.sendRequest(astReq, params).then((fd) => {
+      // EJGA: uri_result could be used to set the suggested save path
+      // for the new editor, however we need to see how to do that
+      // and set `content` too for the new editor.
+      let path = `${uri.fsPath}-${version}.json`;
+      let uri_result = Uri.file(path).with({ scheme: "untitled" });
+
+      let open_options = {
+        language: "json",
+        content: JSON.stringify(fd, null, 2),
+      };
+      workspace.openTextDocument(open_options).then((document) => {
+        window.showTextDocument(document);
+      });
+    });
+  };
+
   // Document request setup, improve the type so the Pp format is matched
   const docReq = new RequestType<
     FlecheDocumentParams,
@@ -502,7 +533,7 @@ export function activateCoqLSP(
         lspStatusItem.backgroundColor = undefined;
         lspStatusItem.tooltip = "coq-lsp is running. Click to disable.";
       } else {
-        lspStatusItem.text = "$(check) coq-lsp (continous checking)";
+        lspStatusItem.text = "$(check) coq-lsp (continuous checking)";
         lspStatusItem.backgroundColor = undefined;
         lspStatusItem.tooltip = "coq-lsp is running. Click to disable.";
       }
@@ -536,6 +567,7 @@ export function activateCoqLSP(
   coqCommand("toggle_mode", toggle_lazy_checking);
 
   coqEditorCommand("goals", goals);
+  coqEditorCommand("sentence", getSentence);
   coqEditorCommand("document", getDocument);
   coqEditorCommand("save", saveDocument);
 

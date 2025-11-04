@@ -205,6 +205,40 @@ module RunTac = struct
   end
 end
 
+(* run_tac RPC *)
+module RunAtPoint = struct
+  let method_ = "petanque/run_at_point"
+
+  module Params = struct
+    type t =
+      { textDocument : Lsp.Doc.VersionedTextDocumentIdentifier.t
+      ; position : Lsp.JLang.Point.t
+      ; command : string
+      ; opts : Run_opts.t option [@default None]
+      }
+    [@@deriving yojson]
+  end
+
+  module Response = struct
+    type t = unit Run_result.t [@@deriving yojson]
+  end
+
+  module Handler = struct
+    module Params = Params
+    module Response = Response
+
+    let handler =
+      HType.PosInDoc
+        { uri_fn = (fun { Params.textDocument; _ } -> textDocument.uri)
+        ; pos_fn = (fun { position; _ } -> (position.line, position.character))
+        ; handler =
+            (fun ~token ~doc ~point
+                 { textDocument = _; position = _; command; opts } ->
+              Agent.run_at_pos ~token ?opts ~doc ~point ~command ())
+        }
+  end
+end
+
 (* goals RPC *)
 module Goals = struct
   let method_ = "petanque/goals"

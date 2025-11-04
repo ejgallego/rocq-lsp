@@ -38,7 +38,7 @@ module R = struct
   let print_err ~name e =
     match e with
     | Coq.Protect.Error.Anomaly { msg; _ } | User { msg; _ } ->
-      Format.asprintf "Error in %s request: %a" name Pp.pp_with msg
+      Format.asprintf "Error in %s request: %a" name Coq.Pp_t.pp_with msg
 
   let of_execution ~lines ~name ~f x : ('r, string) t =
     let Coq.Protect.E.{ r; feedback } = f x in

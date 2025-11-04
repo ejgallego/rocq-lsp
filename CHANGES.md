@@ -1,3 +1,40 @@
+# unreleased
+------------------------------
+
+ - [build] [wasm] [code] bump esbuild from 0.16 to 0.25, miscellaneous
+   npm dependencies bump (@ejgallego, #1033)
+ - [meta] Coq -> Rocq documentation rename (@ejgallego, #1034)
+ - [fleche] Support `\begin{rocq}` in literate Tex files (@ejgallego,
+   #1034)
+ - [fleche] Fix crash in `coq/trimCaches` notification (#1035,
+   @ejgallego, reported by @gbdrt)
+ - [controller] [goals] Fix a couple of bugs where goal printing
+   didn't respect the `pp_format` setting, introduced in
+   #668. (@ejgallego, #1037, fixes #1030, thanks to Will Thomas for
+   the report)
+ - [opam] Require memprof-limits in OCaml >= 5.3 (@ejgallego, #1038)
+ - [ocaml] Support for OCaml 5.4, drop support for OCaml 5.0, 5.1, and
+   5.2, drop support for Coq 8.17, 8.18, 8.19 (@ejgallego, #1039)
+ - [vscode] New command "Serialize Sentence at Point" that will print
+   the AST of the Rocq sentence at point (@ejgallego, #1048)
+ - [petanque] New request `petanque/run_at_pos` (@ejgallego, #1049)
+ - [petanque] `petanque/get_state_at_pos` will default to the previous
+   node state if there is no Rocq node at the current point
+   (@ejgallego, #1049)
+ - [layout-engine] Support for notations with binders (@ejgallego,
+   #1050)
+ - [layout-engine] Add background color for each box kind (@ejgallego,
+   #1050)
+ - [compiler] Fix handling of literate files (@ejgallego, #, reported
+   by @jim-portegies)
+ - [rocq] Create output directory on .vo file save if it doesn't
+   exists. This is very useful in the web context where we don't yet
+   have a proper virtual FS setup, thus making the "Save .vo file"
+   command fail (@ejgallego, #1054)
+ - [web worker] Add LSP root to Rocq's loadpath, this makes .vo file
+   loading work even when no worker FS setup could happen (@ejgallego,
+   #1054)
+
 # coq-lsp 0.2.4: (W)Activation
 ------------------------------
 
@@ -440,7 +477,7 @@
    user navigates proofs (@Alidra @ejgallego, #722, #725)
  - `fcc`: new option `--diags_level` to control whether Coq's notice
    and info messages appear as diagnostics
- - [code] Display the continous/on-request checking mode in the status bar,
+ - [code] Display the continuous/on-request checking mode in the status bar,
    allow to change it by clicking on it (@ejgallego, #721)
  - Add an example of multiple workspaces (@ejgallego, @Blaisorblade,
    #611)
