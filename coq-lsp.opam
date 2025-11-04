@@ -45,6 +45,8 @@ depends: [
 
   # v9.0
   "rocq-prover"         { >= "9.0" < "9.1" }
+  "rocq-runtime"        { >= "9.0" < "9.1" }
+  "rocq-core"           { >= "9.0" < "9.1" }
 
   # serlib deps
   "ppx_deriving"        { >= "5.2"                 }
