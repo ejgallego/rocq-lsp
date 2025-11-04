@@ -1,14 +1,14 @@
-# coq-lsp protocol documentation
+# rocq-lsp protocol documentation
 
 ## Table of contents
 
 <!-- TOC start (generated with https://github.com/derlin/bitdowntoc) -->
  - [Introduction and preliminaries](#introduction-and-preliminaries)
-    * [coq-lsp basic operating model](#coq-lsp-basic-operating-model)
-    * [coq-lsp workspace configuration](#coq-lsp-workspace-configuration)
+    * [`rocq-lsp` basic operating model](#rocq-lsp-basic-operating-model)
+    * [`rocq-lsp` workspace configuration](#rocq-lsp-workspace-configuration)
     * [A minimal client implementation:](#a-minimal-client-implementation)
  - [Language server protocol support table](#language-server-protocol-support-table)
-    * [URIs accepted by coq-lsp](#uris-accepted-by-coq-lsp)
+    * [URIs accepted by rocq-lsp](#uris-accepted-by-rocq-lsp)
  - [Implementation-specific options](#implementation-specific-options)
  - [Implementation-specific `data` error field](#implementation-specific-data-error-field)
  - [Extensions to the LSP specification](#extensions-to-the-lsp-specification)
@@ -31,6 +31,7 @@
     * [`petanque/get_state_at_pos`](#petanqueget_state_at_pos)
     * [`petanque/start`](#petanquestart)
     * [`petanque/run`](#petanquerun)
+    * [`petanque/run_at_pos`](#petanquerunatpos)
     * [`petanque/goals`](#petanquegoals)
     * [`petanque/premises`](#petanquepremises)
     * [`petanque/state/eq`](#petanquestateeq)
@@ -45,7 +46,7 @@
 <!-- TOC --><a name="introduction-and-preliminaries"></a>
 ## Introduction and preliminaries
 
-`coq-lsp` is a Language Server Protocol implementation for the Rocq
+`rocq-lsp` is a Language Server Protocol implementation for the Rocq
 Prover. It is compatible with standard LSP clients but includes
 extensions for advanced Rocq-specific, machine-learning, and software
 engineering workflows, named `petanque`.
@@ -53,41 +54,41 @@ engineering workflows, named `petanque`.
 This document is written for the 3.17 version of the LSP specification:
 https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification
 
-For documentation on the API of the VSCode/VSCodium `coq-lsp`
+For documentation on the API of the VSCode/VSCodium `rocq-lsp`
 extension see the [VSCODE_API](./VSCODE_API.md) file instead.
 
 See also the upstream LSP issue on generic support for Proof
 Assistants
 https://github.com/microsoft/language-server-protocol/issues/1414
 
-<!-- TOC --><a name="coq-lsp-basic-operating-model"></a>
-### coq-lsp basic operating model
+<!-- TOC --><a name="rocq-lsp-basic-operating-model"></a>
+### rocq-lsp basic operating model
 
-`coq-lsp` is a bit different from other servers in that checking the
+`rocq-lsp` is a bit different from other servers in that checking the
 file is often very expensive, so the continuous LSP model can be too
-heavy. The philosophy of `coq-lsp` is to treat a Coq document as a
+heavy. The philosophy of `rocq-lsp` is to treat a Rocq document as a
 build task, and then check the document under user-request.
 
 Thus, for example when the user requests goals at a given point,
-`coq-lsp` will check if the goals are known, otherwise try to check
+`rocq-lsp` will check if the goals are known, otherwise try to check
 the required document parts to return answers to the user ASAP.
 
-`coq-lsp` has three main functioning modes (controlled by a regular
+`rocq-lsp` has three main functioning modes (controlled by a regular
 parameter):
 
-- _continuous mode_: in this mode, `coq-lsp` will try to complete
+- _continuous mode_: in this mode, `rocq-lsp` will try to complete
   checking of all open files when idle. This mode has shown to be very
   useful in many contexts, for example educational, as it provides
   very low latency.
 
-- _on-demand mode_: in this mode, `coq-lsp` will do nothing when
+- _on-demand mode_: in this mode, `rocq-lsp` will do nothing when
   idle. This mode, for example, can simulate the traditional
   "step-based" Rocq interaction mode, configure your client to request
-  goals at the desired position, and `coq-lsp` will execute the
+  goals at the desired position, and `rocq-lsp` will execute the
   document up to that point.
 
 - _on-demand mode, with viewport hints_: in this mode, inspired by
-  Isabelle, the `coq-lsp` client will inform the server about the
+  Isabelle, the `rocq-lsp` client will inform the server about the
   user's viewport. This mode provides a comfortable compromise between
   latency and CPU usage.
 
@@ -103,17 +104,18 @@ However, the underlying checking engine (`Flèche`) is very flexible,
 please feel free to contact with us if your client would want things
 in a different way.
 
-<!-- TOC --><a name="coq-lsp-workspace-configuration"></a>
-### coq-lsp workspace configuration
+<!-- TOC --><a name="rocq-lsp-workspace-configuration"></a>
+### rocq-lsp workspace configuration
 
-See the manual for the exact details. By default, `coq-lsp` attempts
-to auto-configure projects by locating `_CoqProject` files within the
-LSP workspace folders sent by the client.
+See the manual for the exact details. By default, `rocq-lsp` attempts
+to auto-configure projects by locating `_RocqProject` (or
+`_CoqProject`) files within the LSP workspace folders sent by the
+client.
 
 <!-- TOC --><a name="a-minimal-client-implementation"></a>
 ### A minimal client implementation:
 
-To implement a minimal but functional `coq-lsp` client, you need to:
+To implement a minimal but functional `rocq-lsp` client, you need to:
 
 - Initialize a standard LSP client.
 - Setup the right parameters for `initializationOptions` on `initialize`.
@@ -161,44 +163,44 @@ If a feature doesn't appear here it usually means it is not planned in the short
 | `textDocument/selectionRange`         | Partial | Selection for a point is its span; no parents                            |
 |---------------------------------------|---------|--------------------------------------------------------------------------|
 | `workspace/diagnostic`                | No      | Planned                                                                  |
-| `workspace/workspaceFolders`          | Yes     | Each folder should have a `_CoqProject` file at the root.                |
+| `workspace/workspaceFolders`          | Yes     | Each folder should have a `_RocqProject` file at the root.               |
 | `workspace/didChangeWorkspaceFolders` | Yes     |                                                                          |
 | `workspace/didChangeConfiguration`    | Yes (*) | We still do a client -> server push, instead of pull                     |
 |---------------------------------------|---------|--------------------------------------------------------------------------|
 
-<!-- TOC --><a name="uris-accepted-by-coq-lsp"></a>
-### URIs accepted by coq-lsp
+<!-- TOC --><a name="uris-accepted-by-rocq-lsp"></a>
+### URIs accepted by rocq-lsp
 
-The `coq-lsp` server only accepts `file:///` URIs; moreover, the URIs
-sent to the server must be able to be mapped back to a Coq library
+The `rocq-lsp` server only accepts `file:///` URIs; moreover, the URIs
+sent to the server must be able to be mapped back to a Rocq library
 name, so a fully-checked file can be saved to a `.vo` for example.
 
 Don't hesitate to open an issue if you need support for different kind
 of URIs in your application / client. The client does support
 `vsls:///` URIs.
 
-Additionally, `coq-lsp` will use the `languageId` field in `didOpen`
+Additionally, `rocq-lsp` will use the `languageId` field in `didOpen`
 parameters to determine the content type. Supported `languageId` are:
 - `coq` / `rocq`: File will be interpreted as a regular Rocq
   vernacular file,
 - `markdown`: File will be interpreted as a markdown file. Code
-  snippets between `coq` or `rocq` markdown code blocks will be
+  snippets between `rocq` (or `coq`) markdown code blocks will be
   interpreted as Rocq code.
 - `latex`: File will be interpreted as a LaTeX file. Code snippets
-  between `\begin{coq}/\end{coq}` LaTeX environments (or
-  `\being{rocq}/\end{rocq}` will be interpreted as Rocq code.
+  between `\begin{rocq}/\end{rocq}` LaTeX environments (or
+  `\being{coq}/\end{coq}` will be interpreted as Rocq code.
 
-By default, the `coq-lsp` VSCode client will activate for files ending
+By default, the `rocq-lsp` VSCode client will activate for files ending
 in some specific extensions, setting their `languageId` as follows:
 
-- `.v`: `languageId = coq`
+- `.v`: `languageId = rocq`
 - `.mv`: `languageId = markdown`
 - `.v.tex` or `.lv`: `languageId = latex`
 
 <!-- TOC --><a name="implementation-specific-options"></a>
 ## Implementation-specific options
 
-The `coq-lsp` server accepts several options via the
+The `rocq-lsp` server accepts several options via the
 `initializationOptions` field of the LSP initialize request. See
 `package.json` and the documentation of the
 `workspace/didChangeConfiguration` call below for the list of options.
@@ -228,7 +230,7 @@ interface RocqErrorData = {
 <!-- TOC --><a name="extensions-to-the-lsp-specification"></a>
 ## Extensions to the LSP specification
 
-As of today, `coq-lsp` implements several extensions to the LSP
+As of today, `rocq-lsp` implements several extensions to the LSP
 spec. Note that none of them are stable yet.
 
 - [Extra diagnostics data](#extra-diagnostics-data)
@@ -273,7 +275,7 @@ type DiagnosticsData = {
 <!-- TOC --><a name="goal-display"></a>
 ### Goal Display
 
-In order to display proof goals and information at point, `coq-lsp`
+In order to display proof goals and information at point, `rocq-lsp`
 supports the `proof/goals` request, parameters are:
 
 ```typescript
@@ -366,7 +368,7 @@ The main objects of interest are:
 - `Hyp`: This represents a pair of hypothesis names and type,
   additionally with a body as obtained with `set` or `pose` tactics
 
-- `Goal`: Contains a Coq goal: a pair of hypothesis and the goal's type
+- `Goal`: Contains a Rocq goal: a pair of hypothesis and the goal's type
 
 - `GoalConfig`: This is the main object for goals information, `goals`
   contains the current list of foreground goals, `stack` contains a
@@ -395,8 +397,8 @@ The main objects of interest are:
   - if `messages_follow_goal = true`, the selected sentence is the
     same than the one used for `goals`.
 
-An example for `stack` is the following Coq script:
-```coq
+An example for `stack` is the following Rocq script:
+```rocq
 t. (* Produces 5 goals *)
 - t1.
 - t2.
@@ -410,7 +412,7 @@ t. (* Produces 5 goals *)
 In this case, the stack will be `[ ["f1"], ["f3"] ; [ "t2"; "t1" ], [ "t4" ; "t5" ]]`.
 
 `proof/goals` was first used in the lambdapi-lsp server
-implementation, and we adapted it to `coq-lsp`.
+implementation, and we adapted it to `rocq-lsp`.
 
 <!-- TOC --><a name="selecting-an-output-format"></a>
 #### Selecting an output format
@@ -419,12 +421,15 @@ As of today, the _default_ output format type parameter `Pp` is
 controlled by the server option `pp_type : number`, if the `pp_format`
 field is not present. see `package.json` for different values. `0` is
 guaranteed to be `Pp = string`, the other values are
-Coq-implementation-specific and generally not stable; tho we provide
+Rocq-implementation-specific and generally not stable; tho we provide
 utils for those interested in richer printing formats.
 
 <!-- TOC --><a name="changelog"></a>
 #### Changelog
 
+- v0.2.5:
+  + `petanque/get_state_at_pos` will not error if there is no node at point
+  + new method `petanque/run_at_pos`
 - v0.2.4:
   + behavior of `messages`, `error`, and `range` can now be
     controlled by the `messages_follow_goal` global setting
@@ -438,7 +443,7 @@ utils for those interested in richer printing formats.
 - v0.1.8: new optional `pretac` field for post-processing, backwards compatible with 0.1.7
 - v0.1.7: program information added, rest of fields compatible with 0.1.6
 - v0.1.7: pp_format field added to request, backwards compatible
-- v0.1.6: the `Pp` parameter can now be either Coq's `Pp.t` type or `string` (default)
+- v0.1.6: the `Pp` parameter can now be either Rocq's `Pp.t` type or `string` (default)
 - v0.1.5: message type does now include range and level
 - v0.1.4: goal type was made generic, the `stacks` and `def` fields are not null anymore, compatible v0.1.3 clients
 - v0.1.3: send full goal configuration with shelf, given_up, versioned identifier for document
@@ -538,10 +543,10 @@ const docReq : RequestType<FlecheDocumentParams, FlecheDocument, void>
 <!-- TOC --><a name="vo-file-saving"></a>
 ### .vo file saving
 
-Coq-lsp provides a file-save request `coq/saveVo`, which will save the
+rocq-lsp provides a file-save request `coq/saveVo`, which will save the
 current file to disk.
 
-Note that `coq-lsp` does not automatic trigger this on `didSave`, as
+Note that `rocq-lsp` does not automatic trigger this on `didSave`, as
 it would produce too much disk trashing, but we are happy to implement
 usability tweaks so `.vo` files are produced when they should.
 
@@ -697,7 +702,7 @@ client.
 ### Server Version Notification
 
 The server will send the `$/coq/serverVersion` notification to inform
-the client about `coq-lsp` version specific info.
+the client about `rocq-lsp` version specific info.
 
 The parameters are:
 ```typescript
@@ -743,7 +748,7 @@ export type CoqServerStatus = CoqBusyStatus | CoqIdleStatus;
 ### Sentence Execution Information
 
 The server will send the `$/coq/executionInformation` notification to
-inform the client that coq-lsp intends to execute a sentence.
+inform the client that rocq-lsp intends to execute a sentence.
 
 The parameters are:
 ```typescript
@@ -753,7 +758,7 @@ export type ExecutionInfoParams {
 };
 ```
 
-This way, clients can know when coq-lsp start execution of a sentence,
+This way, clients can know when rocq-lsp start execution of a sentence,
 and set a UI timer for example to inform the user that the sentence is
 under execution. This notification will likely be replaced by an
 improved `coq/fileProgress`.
@@ -789,8 +794,8 @@ Preliminary documentation for `pétanque` is provided below:
 <!-- TOC --><a name="changelog-8"></a>
 ### Changelog
 
-- v1 (coq-lsp 0.2.3): Initial public release
-- v2 (coq-lsp 0.2.4):
+- v1 (`rocq-lsp` 0.2.3): Initial public release
+- v2 (`rocq-lsp` 0.2.4):
   + **added**: new methods for Ast access
     [`petanque/ast`](#petanqueast) and
     [`petanque/ast_at_pos`](#petanqueastatpos) (@ejgallego, @JulesViennotFranca, #980)
@@ -799,10 +804,13 @@ Preliminary documentation for `pétanque` is provided below:
 ### Pétanque basics
 
 The basic operating mode of petanque is to first get a **Rocq state**
-from a document, this can be done either by position, or via a lemma
-name. Once you have a state at hand, you can use `petanque/run` to
-execute a Rocq command, `petanque/goals` to obtain goals from it, and
-a variety of other operations.
+from a document, this can be done either by position
+(`petanque/get_state_at_pos`), or via a lemma name
+(`petanque/start`). Once you have a state at hand, you can use
+`petanque/run` to execute a Rocq command, `petanque/goals` to obtain
+goals from it, and a variety of other operations. You can also use the
+different `*_at_pos` requests (for example `petanque/run_at_pos`) if
+your request is a one-shot query.
 
 <!-- TOC --><a name="common-types"></a>
 ### Common types
@@ -869,6 +877,10 @@ interface Response = Run_result<int>
 }
 ```
 
+If the position has no corresponding Rocq code attached (for example,
+empty space between two commands), the state returned will be the one
+of the previous node.
+
 <!-- TOC --><a name="petanquestart"></a>
 ### `petanque/start`
 
@@ -912,6 +924,31 @@ interface Response = Run_result<int>
 
 If the execution fails, the JSON-RPC request will fail.
 
+<!-- TOC --><a name="petanquerunatpos"></a>
+### `petanque/run_at_pos`
+
+Runs Rocq commands (either tactics or a full commands) at a particular document point. It admits
+multiple commands, separated by the usual `.`. It returns the generated Rocq messages.
+
+```typescript
+interface Params =
+    { opts?: Run_opts
+    ; textDocument: VersionedTextDocumentIdentifier
+    ; position: Position
+    ; command: string
+    }
+```
+
+```typescript
+interface Response = Run_result<unit>
+```
+
+If the execution fails, the JSON-RPC request will fail.
+
+If the position has no corresponding Rocq code attached (for example,
+empty space between two commands), the state returned will be the one
+of the previous node.
+
 <!-- TOC --><a name="petanquegoals"></a>
 ### `petanque/goals`
 
@@ -942,7 +979,7 @@ interface Info =
 
 interface Premise =
     { full_name : string
-          /* should be a Coq DirPath, but let's go step by step */
+          /* should be a Rocq DirPath, but let's go step by step */
     ; file : string /* file (in FS format) where the premise is found */
     ; info : Result<Info, string> /* Info about the object, if available */
     }

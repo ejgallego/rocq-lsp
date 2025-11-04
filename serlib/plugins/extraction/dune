@@ -9,4 +9,9 @@
    ppx_deriving_yojson
    ppx_hash
    ppx_compare))
- (libraries coq-core.plugins.extraction serlib))
+ (libraries
+  ; base
+  coq-core.pretyping
+  coq-core.plugins.extraction
+  sexplib
+  serlib))

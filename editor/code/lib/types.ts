@@ -234,3 +234,9 @@ export interface ExecutionInfoParams {
   textDocument: VersionedTextDocumentIdentifier;
   range: Range;
 }
+
+// Ast at point params
+export interface AstAtPosParams {
+  uri: string;
+  position: Position;
+}

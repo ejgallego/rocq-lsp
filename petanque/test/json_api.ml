@@ -56,6 +56,13 @@ let pp_toc fmt (name, ast_info) =
 
 let print_toc = false
 
+let run_at_pos_test feedback =
+  if
+    List.length feedback = 1
+    && String.starts_with ~prefix:"rev_snoc_cons" (List.nth feedback 0 |> snd)
+  then Ok None
+  else Error "unexpected feedback on run_at_pos test"
+
 let run (ic, oc) =
   let open Coq.Compat.Result.O in
   let debug = false in
@@ -73,9 +80,22 @@ let run (ic, oc) =
   (* Will this work on Windows? *)
   let root, uri = prepare_paths () in
   let* () = S.set_workspace { debug; root } in
+  (* Check run_at_pos *)
+  let* { Petanque.Agent.Run_result.feedback; _ } =
+    (* harcoded in shell.ml *)
+    let version = 0 in
+    let textDocument =
+      { Fleche_lsp.Doc.VersionedTextDocumentIdentifier.uri; version }
+    in
+    let position = Lang.Point.{ line = 19; character = 0; offset = -1 } in
+    let command = "About rev_snoc_cons." in
+    S.run_at_pos { textDocument; opts = None; position; command }
+  in
+  (* Petanque + start tests *)
   let* { st; _ } =
     S.start { uri; opts = None; pre_commands = None; thm = "rev_snoc_cons" }
   in
+  let* _ = run_at_pos_test feedback in
   (* Check get_at_pos works, note that LSP positions start at 0 ! *)
   let position = Lang.Point.{ line = 13; character = 0; offset = -1 } in
   let* st' = S.get_state_at_pos { uri; opts = None; position } in

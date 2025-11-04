@@ -32,13 +32,20 @@ let status_of_doc (doc : Doc.t) =
   | Stopped _ -> 2
   | Failed _ -> 1
 
+let guess_languageId file =
+  match Filename.extension file with
+  | ".mv" -> "markdown"
+  | ".v" -> "rocq"
+  | ".v.tex" -> "latex"
+  | _ -> "rocq"
+
 let compile_file ~cc file : int =
   let { Cc.io; root_state; workspaces; default; token } = cc in
   Io.Report.msg ~io ~lvl:Info "compiling file %s" file;
   match Lang.LUri.(File.of_uri (of_string file)) with
   | Error _ -> 222
   | Ok uri -> (
-    let languageId = "rocq" in
+    let languageId = guess_languageId file in
     let workspace = workspace_of_uri ~io ~workspaces ~uri ~default in
     let files = Coq.Files.make () in
     let env = Doc.Env.make ~init:root_state ~workspace ~files in

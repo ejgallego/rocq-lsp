@@ -4,4 +4,8 @@
  (synopsis "Serialization Library for Coq Firstorder Plugin")
  (preprocess
   (staged_pps ppx_import ppx_sexp_conv ppx_hash ppx_compare))
- (libraries coq-core.plugins.firstorder serlib sexplib))
+ (libraries
+  ; base
+  coq-core.plugins.firstorder
+  serlib
+  sexplib))

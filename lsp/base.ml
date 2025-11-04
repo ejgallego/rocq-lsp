@@ -123,7 +123,9 @@ module Message = struct
 
   let request_of_yojson method_ dict =
     let params =
-      List.assoc_opt "params" dict |> Option.map U.to_assoc |> Option.default []
+      List.assoc_opt "params" dict
+      |> Option.map U.to_assoc
+      |> Stdlib.Option.value ~default:[]
     in
     match List.assoc_opt "id" dict with
     | None -> Notification { Notification.method_; params }

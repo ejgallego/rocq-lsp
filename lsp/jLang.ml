@@ -5,7 +5,7 @@
 (* Written by: Emilio J. Gallego Arias                                  *)
 (************************************************************************)
 
-module Pp = JCoq.Pp
+module Pp_t = JCoq.Pp_t
 
 module Point = struct
   type t = [%import: Lang.Point.t] [@@deriving yojson]
@@ -90,16 +90,9 @@ module Qf = struct
 end
 
 module Diagnostic = struct
-  module Mode = struct
-    type t =
-      | String
-      | Pp
-
-    let default = ref String
-    let set v = default := v
+  module QualId = struct
+    type t = [%import: Lang.Diagnostic.QualId.t] [@@deriving yojson]
   end
-
-  module Libnames = Serlib.Ser_libnames
 
   module FailedRequire = struct
     type t = [%import: Lang.Diagnostic.FailedRequire.t] [@@deriving yojson]
@@ -119,37 +112,8 @@ module Diagnostic = struct
     type t = [%import: Lang.Diagnostic.Severity.t] [@@deriving yojson]
   end
 
-  module DiagnosticString = struct
-    type t =
-      { range : Range.t
-      ; severity : Severity.t
-      ; message : string
-      ; data : Data.t option [@default None]
-      }
-    [@@deriving yojson]
-
-    let conv { Lang.Diagnostic.range; severity; message; data } =
-      let message = Pp.string_of_ppcmds message in
-      { range; severity; message; data }
-
-    let vnoc { range; severity; message; data } =
-      let message = Pp.str message in
-      { Lang.Diagnostic.range; severity; message; data }
-  end
-
-  type t = [%import: (Lang.Diagnostic.t[@with Lang.Range.t := Range.t])]
+  type t = [%import: ('a Lang.Diagnostic.t[@with Lang.Range.t := Range.t])]
   [@@deriving yojson]
-
-  let of_yojson json =
-    let open Ppx_deriving_yojson_runtime in
-    match !Mode.default with
-    | String -> DiagnosticString.(of_yojson json >|= vnoc)
-    | Pp -> of_yojson json
-
-  let to_yojson p =
-    match !Mode.default with
-    | String -> DiagnosticString.(to_yojson (conv p))
-    | Pp -> to_yojson p
 end
 
 module Stdlib = JStdlib

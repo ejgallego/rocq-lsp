@@ -37,7 +37,7 @@ end
 (** Output Layout Box model, designed to be embedded in DOM almost directly, and
     to replace Pp.t *)
 type t =
-  | Variable of t Variable.t  (** Variable *)
+  | Variable of t option Variable.t  (** Variable *)
   | Constant of string  (** Constant *)
   | Identifier of t Id.t  (** Identifier *)
   | Sort of string list  (** Sort *)

@@ -9,4 +9,9 @@
    ppx_deriving_yojson
    ppx_hash
    ppx_compare))
- (libraries coq-core.plugins.number_string_notation serlib sexplib))
+ (libraries
+  ; base
+  coq-core.pretyping
+  coq-core.plugins.number_string_notation
+  sexplib
+  serlib))

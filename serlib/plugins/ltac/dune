@@ -9,4 +9,24 @@
    ppx_deriving_yojson
    ppx_hash
    ppx_compare))
- (libraries coq-core.plugins.ltac serlib sexplib))
+ (libraries
+  ; base
+  ; ppx_base
+  ; base.base_internalhash_types
+  ; ppx_hash.runtime-lib
+  ; ppx_compare.runtime-lib
+  coq-core.lib
+  coq-core.clib
+  coq-core.kernel
+  coq-core.library
+  coq-core.engine
+  coq-core.pretyping
+  coq-core.interp
+  coq-core.parsing
+  coq-core.printing
+  coq-core.proofs
+  coq-core.tactics
+  coq-core.vernac
+  coq-core.plugins.ltac
+  sexplib
+  serlib))

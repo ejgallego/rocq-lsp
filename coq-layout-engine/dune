@@ -1,4 +1,15 @@
 (library
  (name layout)
  (public_name coq-lsp.layout-printer)
- (libraries coq-core.interp coq-core.parsing coq-core.printing tyxml))
+ (libraries
+  coq-core.clib
+  coq-core.lib
+  coq-core.kernel
+  coq-core.library
+  coq-core.engine
+  coq-core.pretyping
+  coq-core.interp
+  coq-core.parsing
+  coq-core.printing
+  tyxml.functor
+  tyxml))

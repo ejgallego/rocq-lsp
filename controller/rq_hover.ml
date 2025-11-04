@@ -11,19 +11,20 @@ open Fleche_lsp.Core
 let build_ind_type mip = Inductive.type_of_inductive mip
 
 type id_info =
-  | Notation of Pp.t
+  | Notation of Coq.Pp_t.t
   | Def of
-      { typ : Pp.t  (** type of the ide *)
-      ; params : Pp.t  (** params that need display next to the name *)
-      ; full_path : Pp.t option
+      { typ : Coq.Pp_t.t  (** type of the ide *)
+      ; params : Coq.Pp_t.t  (** params that need display next to the name *)
+      ; full_path : Coq.Pp_t.t option
             (** full path of the constant, if any, for example
                 [Stdlib.Lists.map] *)
       ; source : string option  (** filename where the constant is located *)
       }
 
 let print_params env sigma params =
-  if CList.is_empty params then Pp.mt ()
-  else Pp.(spc () ++ Printer.pr_rel_context env sigma params ++ brk (1, 2))
+  if CList.is_empty params then Coq.Pp_t.mt ()
+  else
+    Coq.Pp_t.(spc () ++ Printer.pr_rel_context env sigma params ++ brk (1, 2))
 
 let info_of_ind env ((sp, i) : Names.Ind.t) =
   let udecl = None in
@@ -58,11 +59,11 @@ let info_of_ind env ((sp, i) : Names.Ind.t) =
   let inst =
     if Declareops.inductive_is_polymorphic mib then
       Printer.pr_universe_instance sigma u
-    else Pp.mt ()
+    else Coq.Pp_t.mt ()
   in
   let params = EConstr.Unsafe.to_rel_context params in
   let typ = Printer.pr_ltype_env ~impargs env_params sigma arity in
-  let params = Pp.(inst ++ print_params env sigma params) in
+  let params = Coq.Pp_t.(inst ++ print_params env sigma params) in
   let full_path = Some (Names.MutInd.print sp) in
   let source =
     let dp = Names.MutInd.modpath sp |> Names.ModPath.dp in
@@ -97,7 +98,7 @@ let info_of_const env cr =
   let inst =
     if Environ.polymorphic_constant cr env then
       Printer.pr_universe_instance sigma inst
-    else Pp.mt ()
+    else Coq.Pp_t.mt ()
   in
   let full_path = Some (Names.Constant.print cr) in
   let source =
@@ -124,7 +125,7 @@ let info_of_constructor env cr =
 let print_type env sigma x =
   Def
     { typ = Printer.pr_ltype_env env sigma x
-    ; params = Pp.mt ()
+    ; params = Coq.Pp_t.mt ()
     ; full_path = None
     ; source = None
     }
@@ -173,7 +174,8 @@ let info_of_id_at_point ~token ~node id =
 
 let pp_cr fmt = function
   | None -> ()
-  | Some cr -> Format.fprintf fmt " - **full path**: `%a`@\n" Pp.pp_with cr
+  | Some cr ->
+    Format.fprintf fmt " - **full path**: `%a`@\n" Coq.Pp_t.pp_with cr
 
 let pp_file fmt = function
   | None -> ()
@@ -181,16 +183,16 @@ let pp_file fmt = function
 
 let pp_typ id = function
   | Def { typ; params; full_path; source } ->
-    let typ = Pp.string_of_ppcmds typ in
-    let param = Pp.string_of_ppcmds params in
+    let typ = Coq.Pp_t.to_string typ in
+    let param = Coq.Pp_t.to_string params in
     Format.(
       asprintf "@[```coq\n%s%s: %s@\n```@\n@[%a@]@[%a@]@]" id param typ pp_cr
         full_path pp_file source)
   | Notation nt ->
-    let nt = Pp.string_of_ppcmds nt in
+    let nt = Coq.Pp_t.to_string nt in
     Format.(asprintf "```coq\n%s\n```" nt)
 
-let to_list x = Option.cata (fun x -> [ x ]) [] x
+let to_list x = Stdlib.Option.fold ~some:(fun x -> [ x ]) ~none:[] x
 
 let info_type ~token ~contents ~point ~node : string option =
   Option.bind (Rq_common.get_id_at_point ~contents ~point) (fun id ->
@@ -351,7 +353,8 @@ module State_hash : HoverProvider = struct
     if !Fleche.Config.v.show_state_hash_on_hover then
       let st_hash = Coq.State.hash node.state in
       let pf_hash =
-        Option.cata Coq.State.Proof.hash 0 (Coq.State.lemmas ~st:node.state)
+        Stdlib.Option.fold ~some:Coq.State.Proof.hash ~none:0
+          (Coq.State.lemmas ~st:node.state)
       in
       Some
         (Format.asprintf "state hash: %d | proof hash: %d@\n" st_hash pf_hash)

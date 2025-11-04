@@ -69,7 +69,8 @@ let eval_exn ~token ~f x =
        -> Some (List.map qf_of_coq qf) in *)
     let payload = Message.Payload.make ?range ?quickFix msg in
     Vernacstate.Interp.invalidate_cache ();
-    if CErrors.is_anomaly e then R.Completed (Error (Anomaly payload))
+    if CErrors.is_anomaly e then
+      R.Completed (Error (Anomaly payload))
     else R.Completed (Error (User payload))
 
 let _bind_exn ~f x =

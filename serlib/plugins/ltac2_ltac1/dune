@@ -9,4 +9,11 @@
    ppx_deriving_yojson
    ppx_hash
    ppx_compare))
- (libraries coq-core.plugins.ltac2_ltac1 serlib sexplib))
+ (libraries
+  ; base
+  coq-core.pretyping
+  coq-core.plugins.ltac2
+  coq-core.plugins.ltac2_ltac1
+  sexplib
+  serlib
+  serlib_ltac2))

@@ -174,3 +174,41 @@ module OCaml4_14 = struct
       | _ -> dec_invalid 1
   end
 end
+
+module List = struct
+  type 'a eq = 'a -> 'a -> bool
+
+  let is_empty = function
+    | [] -> true
+    | _ :: _ -> false
+
+  let insert p v l =
+    let rec insrec = function
+      | [] -> [ v ]
+      | h :: tl -> if p v h then v :: h :: tl else h :: insrec tl
+    in
+    insrec l
+
+  let remove cmp x l = List.filter (fun y -> not (cmp x y)) l
+
+  let count f l =
+    let rec aux acc = function
+      | [] -> acc
+      | h :: t -> if f h then aux (acc + 1) t else aux acc t
+    in
+    aux 0 l
+
+  let prefix_of cmp prefl l =
+    let rec prefrec = function
+      | h1 :: t1, h2 :: t2 -> cmp h1 h2 && prefrec (t1, t2)
+      | [], _ -> true
+      | _ -> false
+    in
+    prefrec (prefl, l)
+end
+
+module String = struct
+  module Map = Map.Make (String)
+end
+
+module IntSet : Set.S with type elt = int = Set.Make (Int)

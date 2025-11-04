@@ -8,11 +8,13 @@
 (* Flèche => document manager: theories                                 *)
 (************************************************************************)
 
+module IS = Lang.Compat.IntSet
+
 (* Handler for document *)
 module Handle = struct
   type t =
     { doc : Doc.t
-    ; cp_requests : Int.Set.t
+    ; cp_requests : IS.t
           (* For now we just store the request id to wake up on completion,
              later on we may want to store a more interesting type, for example
              "wake up when a location is reached", or always to continue the
@@ -35,8 +37,7 @@ module Handle = struct
     | Some _ ->
       Io.Log.trace "do_open" "file %a not properly closed by client"
         Lang.LUri.File.pp uri);
-    Hashtbl.add doc_table uri
-      { doc; cp_requests = Int.Set.empty; pt_requests = [] }
+    Hashtbl.add doc_table uri { doc; cp_requests = IS.empty; pt_requests = [] }
 
   let close ~uri = Hashtbl.remove doc_table uri
 
@@ -52,23 +53,23 @@ module Handle = struct
   let _update_doc ~handle ~(doc : Doc.t) =
     Hashtbl.replace doc_table doc.uri { handle with doc }
 
-  let pt_ids l = List.map (fun (id, _) -> id) l |> Int.Set.of_list
+  let pt_ids l = List.map (fun (id, _) -> id) l |> IS.of_list
 
   (* Clear requests *)
   let clear_requests ~uri =
     match Hashtbl.find_opt doc_table uri with
-    | None -> Int.Set.empty
+    | None -> IS.empty
     | Some { cp_requests; pt_requests; doc } ->
-      let invalid_reqs = Int.Set.union cp_requests (pt_ids pt_requests) in
+      let invalid_reqs = IS.union cp_requests (pt_ids pt_requests) in
       Hashtbl.replace doc_table uri
-        { doc; cp_requests = Int.Set.empty; pt_requests = [] };
+        { doc; cp_requests = IS.empty; pt_requests = [] };
       invalid_reqs
 
   (* Clear requests and update doc *)
   let update_doc_version ~(doc : Doc.t) =
     let invalid_reqs = clear_requests ~uri:doc.uri in
     Hashtbl.replace doc_table doc.uri
-      { doc; cp_requests = Int.Set.empty; pt_requests = [] };
+      { doc; cp_requests = IS.empty; pt_requests = [] };
     invalid_reqs
 
   let map_cp_requests ~uri ~f =
@@ -79,11 +80,11 @@ module Handle = struct
     | None -> ()
 
   let attach_cp_request ~uri ~id =
-    let f cp_requests = Int.Set.add id cp_requests in
+    let f cp_requests = IS.add id cp_requests in
     map_cp_requests ~uri ~f
 
   let remove_cp_request ~uri ~id =
-    let f cp_requests = Int.Set.remove id cp_requests in
+    let f cp_requests = IS.remove id cp_requests in
     map_cp_requests ~uri ~f
 
   let map_pt_requests ~uri ~f =
@@ -94,14 +95,14 @@ module Handle = struct
     | None -> ()
 
   (* This needs to be insertion sort! *)
-  let pt_insert x xs = CList.insert pt_gt x xs
+  let pt_insert x xs = Lang.Compat.List.insert pt_gt x xs
 
   let attach_pt_request ~uri ~id ~point =
     let f pt_requests = pt_insert (id, point) pt_requests in
     map_pt_requests ~uri ~f
 
   let remove_pt_request ~uri ~id ~point =
-    let f pt_requests = CList.remove pt_eq (id, point) pt_requests in
+    let f pt_requests = Lang.Compat.List.remove pt_eq (id, point) pt_requests in
     map_pt_requests ~uri ~f
 
   (* For now only on completion, I think we want check to return the list of
@@ -111,9 +112,9 @@ module Handle = struct
     match doc.completed with
     | Yes _ ->
       let pt_ids = pt_ids handle.pt_requests in
-      let wake_up = Int.Set.union pt_ids handle.cp_requests in
+      let wake_up = IS.union pt_ids handle.cp_requests in
       let pt_requests = [] in
-      let cp_requests = Int.Set.empty in
+      let cp_requests = IS.empty in
       ({ handle with cp_requests; pt_requests }, wake_up)
     | Stopped range ->
       let fullfilled, delayed =
@@ -123,7 +124,7 @@ module Handle = struct
       in
       let handle = { handle with pt_requests = delayed } in
       (handle, pt_ids fullfilled)
-    | Failed _ -> (handle, Int.Set.empty)
+    | Failed _ -> (handle, IS.empty)
 
   (* trigger pending incremental requests *)
   let update_doc_info ~handle ~(doc : Doc.t) =
@@ -211,7 +212,7 @@ module Check : sig
   val deschedule : uri:Lang.LUri.File.t -> unit
 
   val maybe_check :
-    io:Io.CallBack.t -> token:Coq.Limits.Token.t -> (Int.Set.t * Doc.t) option
+    io:Io.CallBack.t -> token:Coq.Limits.Token.t -> (IS.t * Doc.t) option
 
   val set_scheduler_hint : uri:Lang.LUri.File.t -> point:int * int -> unit
 end = struct
@@ -225,7 +226,7 @@ end = struct
       10-20 files open in this use case; other use cases may require a more
       efficient data-structure. *)
   let clean_uri uri pend =
-    CList.filter (fun u -> not (Lang.LUri.File.equal uri u)) pend
+    List.filter (fun u -> not (Lang.LUri.File.equal uri u)) pend
 
   let pend_push uri pend = uri :: clean_uri uri pend
 
@@ -296,13 +297,13 @@ end = struct
       | None
       (* If we are in lazy mode and we don't have any full document requests
          pending, we just deschedule *)
-        when !Config.v.check_only_on_request
-             && Int.Set.is_empty handle.cp_requests ->
+        when !Config.v.check_only_on_request && IS.is_empty handle.cp_requests
+        ->
         Io.Log.trace "maybe_check" "nothing to do, descheduling";
         pending := pend_pop !pending;
         None
       | (None | Some _) as tgt ->
-        let target = Option.default Doc.Target.End tgt in
+        let target = Stdlib.Option.value ~default:Doc.Target.End tgt in
         Io.Log.trace "maybe_check" "building target %a" Doc.Target.pp target;
         Some (do_check ~io ~token ~handle ~doc target)
     in
@@ -318,11 +319,11 @@ end = struct
   let deschedule ~uri = pending := clean_uri uri !pending
 
   let set_scheduler_hint ~uri ~point =
-    if CList.is_empty !pending then
+    if Lang.Compat.List.is_empty !pending then
       let () = hint := Some (uri, point) in
       let reason = Reason.ViewHint in
       schedule ~uri ~reason (* if the hint is set we wanna override it *)
-    else if not (Option.is_empty !hint) then hint := Some (uri, point)
+    else if not (Stdlib.Option.is_none !hint) then hint := Some (uri, point)
 end
 
 let open_ ~io ~token ~env ~uri ~languageId ~raw ~version =
@@ -352,11 +353,11 @@ let change ~io ~token ~(doc : Doc.t) ~version ~raw =
   else
     (* That's a weird case, get got changes without a version bump? Do nothing
        for now *)
-    Int.Set.empty
+    IS.empty
 
 let change ~io ~token ~uri ~version ~raw =
   let kind = "Theory.change" in
-  let default () = Int.Set.empty in
+  let default () = IS.empty in
   let f _ doc = change ~io ~token ~doc ~version ~raw in
   Handle.with_doc ~kind ~f ~uri ~default
 

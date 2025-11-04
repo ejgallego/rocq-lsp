@@ -1,3 +1,5 @@
+module SM = Lang.Compat.String.Map
+
 let init_coq ~debug =
   let load_module = Dynlink.loadfile in
   let load_plugin = Coq.Loader.plugin_handler None in
@@ -16,7 +18,7 @@ let cmdline : Coq.Workspace.CmdLine.t =
 let setup_workspace ~token ~init ~debug ~root =
   let dir = Lang.LUri.File.to_string_file root in
   (let open Coq.Compat.Result.O in
-   let+ workspace = Coq.Workspace.guess ~token ~debug ~cmdline ~dir in
+   let+ workspace = Coq.Workspace.guess ~token ~debug ~cmdline ~dir () in
    let files = Coq.Files.make () in
    Fleche.Doc.Env.make ~init ~workspace ~files)
   |> Result.map_error (fun msg -> Petanque.Agent.Error.(make_request (coq msg)))
@@ -116,5 +118,5 @@ let toc_to_info (name, node) =
 let get_toc ~token:_ ~(doc : Fleche.Doc.t) :
     (string * Lang.Ast.Info.t list option) list Petanque.Agent.R.t =
   let { Fleche.Doc.toc; _ } = doc in
-  let toc = CString.Map.bindings toc |> List.filter_map toc_to_info in
+  let toc = SM.bindings toc |> List.filter_map toc_to_info in
   Ok toc

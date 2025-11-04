@@ -96,6 +96,26 @@ let fake_start_test ~token ~doc =
     Error (Agent.Error.make_request (System "start on foo should have failed"))
   | Error _ -> Ok None
 
+let pr_feedback (lvl, msg) = Format.eprintf "%d: %s\n%!" lvl msg
+
+let run_at_pos_test ~token ~doc =
+  let open Coq.Compat.Result.O in
+  let point = (19, 0) in
+  let command = "About rev_snoc_cons." in
+  let* { Agent.Run_result.feedback; _ } =
+    Agent.run_at_pos ~token ~doc ~point ~command ()
+  in
+  (* debug *)
+  if false then List.iter pr_feedback feedback;
+  if
+    List.length feedback = 1
+    && String.starts_with ~prefix:"rev_snoc_cons" (List.nth feedback 0 |> snd)
+  then Ok None
+  else
+    Error
+      (Agent.Error.make_request
+         (System "unexpected feedback on run_at_pos test"))
+
 let main () =
   let open Coq.Compat.Result.O in
   let token = Coq.Limits.create_atomic () in
@@ -104,7 +124,8 @@ let main () =
   let* g2 = finished_stack_test ~token ~doc in
   let* g3 = multi_shot_test ~token ~doc in
   let* g4 = fake_start_test ~token ~doc in
-  Ok [ g1; g2; g3; g4 ]
+  let* g5 = run_at_pos_test ~token ~doc in
+  Ok [ g1; g2; g3; g4; g5 ]
 
 let max = List.fold_left max min_int
 

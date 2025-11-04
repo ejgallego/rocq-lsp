@@ -33,12 +33,26 @@ let ensure_no_pending_proofs ~in_file ~st =
       (fun pm -> Declare.Obls.check_solved_obligations ~what_for ~pm)
       pm
 
+let ensure_out_dir file =
+  let rec mkdir_p dir =
+    if not (Sys.file_exists dir) then (
+      mkdir_p (Filename.dirname dir);
+      Unix.mkdir dir 0o755)
+  in
+  mkdir_p (Filename.dirname file)
+
 let save_vo ~st ~ldir in_file =
   let st = State.to_coq st in
   let () = ensure_no_pending_proofs ~in_file ~st in
   let out_vo = Filename.(remove_extension in_file) ^ ".vo" in
   let output_native_objects = false in
   let todo_proofs = Library.ProofsTodoNone in
+  (* In some cases, such as in web-worker contexts, the output .vo directory may
+     not exist on the virtual worker filesystem, so we ensure the .vo creation
+     won't fail because of this. Note that this is really a hack and could have
+     security implications, a proper worker filesystem should be implemented
+     instead. *)
+  let () = ensure_out_dir out_vo in
   let () =
     Library.save_library_to todo_proofs ~output_native_objects ldir out_vo
   in

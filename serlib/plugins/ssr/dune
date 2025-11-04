@@ -10,8 +10,13 @@
    ppx_hash
    ppx_compare))
  (libraries
-  coq-core.plugins.ssreflect
+  ; base
+  sexplib
+  coq-core.engine
+  coq-core.pretyping
   serlib
+  coq-core.plugins.ltac
   serlib_ltac
+  coq-core.plugins.ssrmatching
   serlib_ssrmatching
-  sexplib))
+  coq-core.plugins.ssreflect))

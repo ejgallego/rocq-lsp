@@ -14,3 +14,32 @@ module OCaml4_14 : sig
     val get_utf_8_uchar : string -> int -> Uchar.utf_decode
   end
 end
+
+(* CList from Rocq *)
+module List : sig
+  type 'a eq = 'a -> 'a -> bool
+
+  (** Introduced in 5.1 *)
+  val is_empty : 'a list -> bool
+
+  (** Insert at the (first) position so that if the list is ordered wrt to the
+      total order given as argument, the order is preserved *)
+  val insert : 'a eq -> 'a -> 'a list -> 'a list
+
+  (** [remove eq a l] Remove all occurrences of [a] in [l] *)
+  val remove : 'a eq -> 'a -> 'a list -> 'a list
+
+  (** Count the number of elements satisfying a predicate *)
+  val count : ('a -> bool) -> 'a list -> int
+
+  (** [prefix_of eq l1 l2] returns [true] if [l1] is a prefix of [l2], [false]
+      otherwise. It uses [eq] to compare elements *)
+  val prefix_of : 'a eq -> 'a list eq
+end
+
+(* CString from Rocq *)
+module String : sig
+  module Map : Map.S with type key = String.t
+end
+
+module IntSet : Set.S with type elt = int

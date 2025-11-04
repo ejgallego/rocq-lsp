@@ -9,4 +9,4 @@ val init :
 (* val report : unit -> unit *)
 
 (** Output diagnostics *)
-val pp_diags : Format.formatter -> Lang.Diagnostic.t list -> unit
+val pp_diags : Format.formatter -> Coq.Pp_t.t Lang.Diagnostic.t list -> unit

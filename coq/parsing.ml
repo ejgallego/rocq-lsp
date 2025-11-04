@@ -8,6 +8,14 @@
 (* Rocq Language Server Protocol: Rocq parsing API                       *)
 (*************************************************************************)
 
+module Lexer = struct
+  let after = CLexer.after
+end
+
+module Stream = struct
+  let of_string = Gramlib.Stream.of_string
+end
+
 module Parsable = Pcoq.Parsable
 
 let parse ~st ps =

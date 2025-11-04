@@ -63,7 +63,12 @@ let _log_interrupt ~io =
   Fleche.Io.Report.message_ ~io ~lvl ~message
 
 let on_init ~io ~root_state ~cmdline ~debug cmd =
-  match Lsp_core.lsp_init_process ~ofn:post_message ~io ~cmdline ~debug cmd with
+  (* Add root workspace directory as default loadpath. *)
+  let add_root = true in
+  match
+    Lsp_core.lsp_init_process ~add_root ~ofn:post_message ~io ~cmdline ~debug
+      cmd
+  with
   | Lsp_core.Init_effect.Exit -> (* XXX: bind to worker.close () *) None
   | Lsp_core.Init_effect.Loop -> None
   | Lsp_core.Init_effect.Success workspaces ->

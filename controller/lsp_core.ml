@@ -12,6 +12,7 @@
     LSP interface, BEWARE of deps, this must be able to run in a Web Worker
     context *)
 
+module IS = Lang.Compat.IntSet
 module F = Format
 module J = Yojson.Safe
 module U = Yojson.Safe.Util
@@ -48,7 +49,7 @@ module Helpers = struct
            need to reflect this on the type just to undo it later; as this
            message morally doesn't belong here *)
         let message = Format.asprintf "json parsing failed: %s" err in
-        CErrors.user_err (Pp.str message)
+        CErrors.user_err (Coq.Pp_t.str message)
     in
     let Lsp.Doc.TextDocumentIdentifier.{ uri } = document in
     uri
@@ -109,7 +110,7 @@ module State = struct
   let add_workspace ~token state { WorkspaceFolder.uri; _ } =
     let dir = Lang.LUri.File.to_string_file uri in
     let { cmdline; workspaces; _ } = state in
-    let ws = Coq.Workspace.guess ~token ~debug:false ~cmdline ~dir in
+    let ws = Coq.Workspace.guess ~token ~debug:false ~cmdline ~dir () in
     { state with workspaces = (dir, ws) :: workspaces }
 
   let del_workspace state { WorkspaceFolder.uri; _ } =
@@ -126,7 +127,7 @@ module State = struct
   let is_in_dir ~dir ~file =
     let dir_c = split_in_components dir in
     let file_c = split_in_components file in
-    CList.prefix_of String.equal dir_c file_c
+    Lang.Compat.List.prefix_of String.equal dir_c file_c
 
   let workspace_of_uri ~io ~uri ~state =
     let { root_state; workspaces; default_workspace; _ } = state in
@@ -181,12 +182,12 @@ module Rq : sig
        ofn_rq:(Lsp.Base.Response.t -> unit)
     -> token:Coq.Limits.Token.t
     -> doc:Fleche.Doc.t
-    -> Int.Set.t
+    -> IS.t
     -> unit
 end = struct
   let feedback_to_message fb =
     Lsp.JFleche.Message.(
-      of_coq_message fb |> map ~f:Pp.string_of_ppcmds
+      of_coq_message fb |> map ~f:Coq.Pp_t.to_string
       |> to_yojson (fun s -> `String s))
 
   let feedback_to_data fbs =
@@ -272,7 +273,7 @@ end = struct
     | Action.Data p -> query ~ofn_rq ~token ~id p
 
   let serve_postponed ~ofn_rq ~token ~doc rl =
-    Int.Set.iter (serve_postponed ~ofn_rq ~token ~doc) rl
+    IS.iter (serve_postponed ~ofn_rq ~token ~doc) rl
 end
 
 (***********************************************************************)
@@ -305,7 +306,7 @@ let do_change ~ofn_rq ~io ~token params =
     let invalid_rq = Fleche.Theory.change ~io ~token ~uri ~version ~raw in
     let code = -32802 in
     let message = "Request got old in server" in
-    Int.Set.iter (Rq.cancel ~ofn_rq ~code ~message) invalid_rq
+    IS.iter (Rq.cancel ~ofn_rq ~code ~message) invalid_rq
 
 let do_close params =
   let uri = Helpers.get_uri params in
@@ -374,6 +375,7 @@ let get_pp_format params =
   match ostring_field "pp_format" params with
   | Some "Pp" -> Rq_goals.Pp
   | Some "Str" -> Rq_goals.Str
+  | Some "Box" -> Rq_goals.Box
   | Some v ->
     L.trace "get_pp_format" "error in parameter: %s" v;
     get_pp_format_from_config ()
@@ -438,7 +440,7 @@ let get_goals_format params =
   | None -> None
 
 let do_document ~params =
-  let ast = obool_field "ast" params |> Option.default false in
+  let ast = obool_field "ast" params |> Stdlib.Option.value ~default:false in
   let goals = get_goals_format params in
   let handler = Rq_document.request ~ast ~goals () in
   do_document_request_maybe ~params ~handler
@@ -545,7 +547,7 @@ let serverInfo =
   let coq_lsp = Fleche.Version.server in
   Fleche.ServerInfo.Version.{ coq; ocaml; coq_lsp }
 
-let lsp_init_process ~ofn ~io ~cmdline ~debug msg : Init_effect.t =
+let lsp_init_process ~ofn ~io ~cmdline ?add_root ~debug msg : Init_effect.t =
   let ofn_rq r = Lsp.Base.Message.response r |> ofn in
   let ofn_nt r = Lsp.Base.Message.notification r |> ofn in
   match msg with
@@ -563,11 +565,10 @@ let lsp_init_process ~ofn ~io ~cmdline ~debug msg : Init_effect.t =
       (Coq.Limits.name ());
     (* Workspace initialization *)
     let debug = debug || !Fleche.Config.v.debug in
-    let workspaces =
-      List.map
-        (fun dir -> (dir, Coq.Workspace.guess ~token ~cmdline ~debug ~dir))
-        dirs
+    let make_ws dir =
+      (dir, Coq.Workspace.guess ?add_root ~token ~cmdline ~debug ~dir ())
     in
+    let workspaces = List.map make_ws dirs in
     List.iter (log_workspace ~io) workspaces;
     Success workspaces
   | Lsp.Base.Message.Request { id; _ } ->
@@ -722,7 +723,7 @@ end = struct
     | Lsp.Base.Message.Notification { method_; params }
       when String.equal method_ "proof/goals" ->
       let uri, version = Helpers.get_uri_oversion params in
-      let version = Option.default (-1) version in
+      let version = Stdlib.Option.value ~default:(-1) version in
       Some (method_, uri, version)
     | _ -> None
 
@@ -790,7 +791,7 @@ let dispatch_or_resume_check ~io ~ofn ~state =
     (* let method_name = Lsp.Base.Message.method_ com in *)
     (* L.trace "process_queue" "exn in method: %s" method_name; *)
     L.trace "print_exn [OCaml]" "%s" (Printexc.to_string exn);
-    L.trace "print_exn [Coq  ]" "%a" Pp.pp_with CErrors.(iprint iexn);
+    L.trace "print_exn [Coq  ]" "%a" Coq.Pp_t.pp_with CErrors.(iprint iexn);
     L.trace "print_bt  [OCaml]" "%s" bt;
     Some (Yield state)
 
@@ -816,7 +817,9 @@ struct
   let message ~lvl ~message = Lsp.Base.mk_logMessage ~lvl ~message |> ofn
 
   let diagnostics ~uri ~version diags =
-    Lsp.Core.mk_diagnostics ~uri ~version diags |> ofn
+    (* For LSP, diagnostic messages should be string *)
+    let pp msg = `String (Coq.Pp_t.to_string msg) in
+    Lsp.Core.mk_diagnostics ~uri ~version ~pp diags |> ofn
 
   let fileProgress ~uri ~version progress =
     Lsp.JFleche.mk_progress ~uri ~version progress |> ofn
