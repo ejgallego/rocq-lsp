@@ -75,23 +75,6 @@ end
 
 module DPmap = Ser_cMap.Make(DPmap)(DirPath)
 
-module Label = struct
-
-  (* Label.t: private *)
-  module Label_= struct
-    type t = [%import: Names.Label.t]
-
-    (* XXX: This will miss the tag *)
-    type _t = Id.t
-    [@@deriving sexp,yojson,hash,compare]
-
-    let to_t = Label.of_id
-    let of_t = Label.to_id
-  end
-
-  include SerType.Biject(Label_)
-end
-
 module MBId = struct
 
   (* MBId.t: private *)
@@ -199,7 +182,6 @@ module MutInd = struct
   include SerType.Biject(BijectSpec)
 end
 
-module Mindmap = Ser_cMap.Make(Mindmap)(MutInd)
 module Mindmap_env = Ser_cMap.Make(Mindmap_env)(MutInd)
 
 type 'a tableKey =
@@ -245,7 +227,7 @@ module Projection = struct
         ; proj_relevant : bool
         ; proj_npars : int
         ; proj_arg : int
-        ; proj_name : Label.t
+        ; proj_name : Id.t
         } [@@deriving sexp,yojson,hash,compare]
     end
     include SerType.Pierce(PierceSpec)

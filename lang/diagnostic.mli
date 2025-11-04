@@ -4,10 +4,14 @@
 (* Written by: Emilio J. Gallego Arias                                  *)
 (************************************************************************)
 
+module QualId : sig
+  type t = string list
+end
+
 module FailedRequire : sig
   type t =
-    { prefix : Libnames.qualid option
-    ; refs : Libnames.qualid list
+    { prefix : QualId.t option
+    ; refs : QualId.t list
     }
 end
 
@@ -28,11 +32,11 @@ module Severity : sig
   val hint : t (* 4 *)
 end
 
-type t =
+type 'a t =
   { range : Range.t
   ; severity : Severity.t
-  ; message : Pp.t
+  ; message : 'a
   ; data : Data.t option [@default None]
   }
 
-val is_error : t -> bool
+val is_error : 'a t -> bool

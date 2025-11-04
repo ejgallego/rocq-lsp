@@ -30,7 +30,6 @@ module Name    : SerType.SJHC with type t = Name.t
 module DirPath : SerType.SJHC with type t = DirPath.t
 module DPmap   : Ser_cMap.ExtS with type key = DirPath.t and type 'a t = 'a DPmap.t
 
-module Label   : SerType.SJHC with type t = Label.t
 module MBId    : SerType.SJHC with type t = MBId.t
 module ModPath : SerType.SJHC with type t = ModPath.t
 module MPmap   : Ser_cMap.ExtS with type key = ModPath.t and type 'a t = 'a MPmap.t
@@ -47,7 +46,6 @@ module Cmap_env : Ser_cMap.ExtS with type key = Constant.t and type 'a t = 'a Cm
 
 module MutInd : SerType.SJHC with type t = MutInd.t
 
-module Mindmap : Ser_cMap.ExtS with type key = MutInd.t and type 'a t = 'a Mindmap.t
 module Mindmap_env : Ser_cMap.ExtS with type key = MutInd.t and type 'a t = 'a Mindmap_env.t
 
 module Indset_env : Ser_cSet.ExtS with type elt = inductive and type t = Indset_env.t

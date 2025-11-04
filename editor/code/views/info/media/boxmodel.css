@@ -18,14 +18,10 @@
   align-items: center;
 }
 
-#goal-text span.notation {
-  padding: 0px;
-  border: 0px;
-}
-
 /* ids */
 #goal-text span.absolute {
   display: none;
+  background-color: #dce8f2; /* soft blue */
 }
 
 #goal-text span.raw {
@@ -34,12 +30,21 @@
 
 #goal-text span.type {
   display: none;
+  background-color: #e2f0e9; /* misty green */
+}
+
+#goal-text span.notation {
+  padding: 0px;
+  border: 0px;
+  background-color: #eae4f2; /* lavender gray */
 }
 
 #goal-text span.key {
   display: none;
+  background-color: #fff5cc; /* pale yellow */
 }
 
 #goal-text span.arguments {
   display: none;
+  background-color: #f9e1e0; /* blush rose */
 }

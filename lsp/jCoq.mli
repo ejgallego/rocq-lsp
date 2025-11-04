@@ -6,10 +6,25 @@
 (* Written by: Emilio J. Gallego Arias & coq-lsp contributors            *)
 (*************************************************************************)
 
-type t = string
+(** This module contains the serialization functions for some Rocq's types *)
 
-(************************************************************************)
-(*                        UPDATE VERSION HERE                           *)
-let server = "0.2.5-dev"
-(*                        UPDATE VERSION HERE                           *)
-(************************************************************************)
+module Pp_t : sig
+  type t = Coq.Pp_t.t [@@deriving yojson]
+end
+
+module Goals : sig
+  type ('a, 'pp) t = ('a, 'pp) Coq.Goals.t [@@deriving yojson]
+  type ('a, 'pp) reified = ('a, 'pp) Coq.Goals.reified [@@deriving yojson]
+end
+
+module Ast : sig
+  type t = Coq.Ast.t [@@deriving yojson]
+end
+
+module State : sig
+  module Proof : sig
+    module Program : sig
+      type t = Coq.State.Proof.Program.t [@@deriving yojson]
+    end
+  end
+end

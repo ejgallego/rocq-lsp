@@ -41,7 +41,7 @@ let filter_map_cut f l =
   | res -> Some res
 
 (* Return list of pairs of diags, qf *)
-let get_qf (d : Lang.Diagnostic.t) : _ option =
+let get_qf (d : Coq.Pp_t.t Lang.Diagnostic.t) : _ option =
   Option.bind d.data (function
     | { Lang.Diagnostic.Data.quickFix = Some qf; _ } -> Some (d, qf)
     | _ -> None)
@@ -71,5 +71,6 @@ let request ~range ~token:_ ~(doc : Fleche.Doc.t) =
   List.concat_map bf qf
 
 let request ~range ~token ~(doc : Fleche.Doc.t) =
+  let pp = Fleche_lsp.JCoq.Pp_t.to_yojson in
   let res = request ~range ~token ~doc in
-  Ok (`List (List.map Lsp.Core.CodeAction.to_yojson res))
+  Ok (`List (List.map (Lsp.Core.CodeAction.to_yojson pp) res))

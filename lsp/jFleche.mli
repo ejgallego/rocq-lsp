@@ -47,7 +47,7 @@ module Message : sig
     }
   [@@deriving yojson]
 
-  val of_coq_message : Lang.Range.t Coq.Message.t -> Pp.t t
+  val of_coq_message : Lang.Range.t Coq.Message.t -> Coq.Pp_t.t t
   val map : f:('a -> 'b) -> 'a t -> 'b t
 end
 
@@ -57,8 +57,7 @@ module GoalsAnswer : sig
     ; position : Lang.Point.t
     ; range : Lang.Range.t option [@default None]
     ; goals : ('goals, 'pp) JCoq.Goals.reified option [@default None]
-    ; program : JCoq.Declare.OblState.View.t Names.Id.Map.t option
-          [@default None]
+    ; program : JCoq.State.Proof.Program.t Names.Id.Map.t option [@default None]
     ; messages : 'pp Message.t list
     ; error : 'pp option [@default None]
     }

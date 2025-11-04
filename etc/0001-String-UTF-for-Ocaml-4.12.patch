@@ -1,0 +1,286 @@
+From d7207ecd0b7c289d29a5d5fab19e3013d4f08648 Mon Sep 17 00:00:00 2001
+From: Emilio Jesus Gallego Arias <e+git@x80.org>
+Date: Sat, 18 Oct 2025 14:32:42 +0200
+Subject: [PATCH] String UTF for Ocaml 4.12
+
+---
+ clib/cString.ml     |  26 +++----
+ clib/ccx_compat.ml  | 176 ++++++++++++++++++++++++++++++++++++++++++++
+ clib/ccx_compat.mli |  16 ++++
+ 3 files changed, 205 insertions(+), 13 deletions(-)
+ create mode 100644 clib/ccx_compat.ml
+ create mode 100644 clib/ccx_compat.mli
+
+diff --git a/clib/cString.ml b/clib/cString.ml
+index aae672192d..b388ca7b3e 100644
+--- a/clib/cString.ml
++++ b/clib/cString.ml
+@@ -148,19 +148,19 @@ let uchar_array_of_utf_8_string s =
+   let uchars = Array.make slen Uchar.max in
+   let k = ref 0 and i = ref 0 in
+   while (!i < slen) do
+-    let dec = get_utf_8_uchar s !i in
+-    i := !i + Uchar.utf_decode_length dec;
+-    uchars.(!k) <- Uchar.utf_decode_uchar dec;
++    let dec = Ccx_compat.OCaml4_14.String.get_utf_8_uchar s !i in
++    i := !i + Ccx_compat.OCaml4_14.Uchar.utf_decode_length dec;
++    uchars.(!k) <- Ccx_compat.OCaml4_14.Uchar.utf_decode_uchar dec;
+     incr k;
+   done;
+   uchars, !k
+ 
+ let edit_distance ?(limit = Stdlib.Int.max_int) s0 s1 =
+   if limit <= 1 then (if equal s0 s1 then 0 else limit) else
+-  let[@inline] minimum a b c = Stdlib.Int.min a (Stdlib.Int.min b c) in
++  let[@inline] minimum a b c = min a (min b c) in
+   let s0, len0 = uchar_array_of_utf_8_string s0 in
+   let s1, len1 = uchar_array_of_utf_8_string s1 in
+-  let limit = Stdlib.Int.min (Stdlib.Int.max len0 len1) limit in
++  let limit = min (max len0 len1) limit in
+   if Stdlib.Int.abs (len1 - len0) >= limit then limit else
+   let s0, s1 = if len0 > len1 then s0, s1 else s1, s0 in
+   let len0, len1 = if len0 > len1 then len0, len1 else len1, len0 in
+@@ -170,12 +170,12 @@ let edit_distance ?(limit = Stdlib.Int.max_int) s0 s1 =
+     let row_min = ref Stdlib.Int.max_int in
+     row.(0) <- i;
+     let jmax =
+-      let jmax = Stdlib.Int.min len1 (i + limit - 1) in
++      let jmax = min len1 (i + limit - 1) in
+       if jmax < 0 then (* overflow *) len1 else jmax
+     in
+-    for j = Stdlib.Int.max 1 (i - limit) to jmax do
++    for j = max 1 (i - limit) to jmax do
+       let cost = if Uchar.equal s0.(i-1) s1.(j-1) then 0 else 1 in
+-      let min = minimum
++      let min_d = minimum
+           (row_minus1.(j-1) + cost) (* substitute *)
+           (row_minus1.(j) + 1)      (* delete *)
+           (row.(j-1) + 1)           (* insert *)
+@@ -185,15 +185,15 @@ let edit_distance ?(limit = Stdlib.Int.max_int) s0 s1 =
+              (row.(j-1) + 1) is greater or equal to [limit] and thus does
+              not affect adversely the minimum computation. *)
+       in
+-      let min =
++      let min_d =
+         if (i > 1 && j > 1 &&
+             Uchar.equal s0.(i-1) s1.(j-2) &&
+             Uchar.equal s0.(i-2) s1.(j-1))
+-        then Stdlib.Int.min min (row_minus2.(j-2) + cost) (* transpose *)
+-        else min
++        then min min_d (row_minus2.(j-2) + cost) (* transpose *)
++        else min_d
+       in
+-      row.(j) <- min;
+-      row_min := Stdlib.Int.min !row_min min;
++      row.(j) <- min_d;
++      row_min := min !row_min min_d;
+     done;
+     if !row_min >= limit then (* can no longer decrease *) limit else
+     loop row_minus1 row row_minus2 (i + 1) len0 limit s0 s1
+diff --git a/clib/ccx_compat.ml b/clib/ccx_compat.ml
+new file mode 100644
+index 0000000000..8590464f11
+--- /dev/null
++++ b/clib/ccx_compat.ml
+@@ -0,0 +1,176 @@
++(* OCaml compat *)
++
++(* The following is copied from Ocaml's standard library Bytes and Uchar
++   modules. We use the public safe variant of various functions, so it should be
++   slower.
++
++   TODO: when our minimum supported Ocaml version is >= 4.14 we shoud switch to
++   the standard library. *)
++module Uchar_ = Uchar
++
++module OCaml4_14 = struct
++  module Uchar = struct
++    type utf_decode = int
++
++    (* From Uchar.ml *)
++    let rep = 0xFFFD
++    let valid_bit = 27
++    let decode_bits = 24
++    let[@inline] utf_decode_is_valid d = d lsr valid_bit = 1
++    let[@inline] utf_decode_length d = (d lsr decode_bits) land 0b111
++    let[@inline] utf_decode_uchar d = Uchar.unsafe_of_int (d land 0xFFFFFF)
++    let[@inline] utf_decode n u = ((8 lor n) lsl decode_bits) lor Uchar.to_int u
++    let[@inline] utf_decode_invalid n = (n lsl decode_bits) lor rep
++
++    let utf_8_byte_length u =
++      match Uchar.to_int u with
++      | u when u < 0 -> assert false
++      | u when u <= 0x007F -> 1
++      | u when u <= 0x07FF -> 2
++      | u when u <= 0xFFFF -> 3
++      | u when u <= 0x10FFFF -> 4
++      | _ -> assert false
++
++    let utf_16_byte_length u =
++      match Uchar.to_int u with
++      | u when u < 0 -> assert false
++      | u when u <= 0xFFFF -> 2
++      | u when u <= 0x10FFFF -> 4
++      | _ -> assert false
++  end
++
++  module String = struct
++    let[@inline] not_in_x80_to_xBF b = b lsr 6 <> 0b10
++    let[@inline] not_in_xA0_to_xBF b = b lsr 5 <> 0b101
++    let[@inline] not_in_x80_to_x9F b = b lsr 5 <> 0b100
++    let[@inline] not_in_x90_to_xBF b = b < 0x90 || 0xBF < b
++    let[@inline] not_in_x80_to_x8F b = b lsr 4 <> 0x8
++    let[@inline] utf_8_uchar_2 b0 b1 = ((b0 land 0x1F) lsl 6) lor (b1 land 0x3F)
++
++    let[@inline] utf_8_uchar_3 b0 b1 b2 =
++      ((b0 land 0x0F) lsl 12) lor ((b1 land 0x3F) lsl 6) lor (b2 land 0x3F)
++
++    let[@inline] utf_8_uchar_4 b0 b1 b2 b3 =
++      ((b0 land 0x07) lsl 18)
++      lor ((b1 land 0x3F) lsl 12)
++      lor ((b2 land 0x3F) lsl 6)
++      lor (b3 land 0x3F)
++
++    let[@inline] dec_ret n u = Uchar.utf_decode n (Uchar_.unsafe_of_int u)
++    let dec_invalid = Uchar.utf_decode_invalid
++
++    let get_utf_8_uchar s i =
++      let b = Bytes.unsafe_of_string s in
++      let b0 = Bytes.get_uint8 b i in
++      (* raises if [i] is not a valid index. *)
++      let get = Bytes.get_uint8 in
++      let max = Bytes.length b - 1 in
++      match Char.unsafe_chr b0 with
++      (* See The Unicode Standard, Table 3.7 *)
++      | '\x00' .. '\x7F' -> dec_ret 1 b0
++      | '\xC2' .. '\xDF' ->
++        let i = i + 1 in
++        if i > max then dec_invalid 1
++        else
++          let b1 = get b i in
++          if not_in_x80_to_xBF b1 then dec_invalid 1
++          else dec_ret 2 (utf_8_uchar_2 b0 b1)
++      | '\xE0' ->
++        let i = i + 1 in
++        if i > max then dec_invalid 1
++        else
++          let b1 = get b i in
++          if not_in_xA0_to_xBF b1 then dec_invalid 1
++          else
++            let i = i + 1 in
++            if i > max then dec_invalid 2
++            else
++              let b2 = get b i in
++              if not_in_x80_to_xBF b2 then dec_invalid 2
++              else dec_ret 3 (utf_8_uchar_3 b0 b1 b2)
++      | '\xE1' .. '\xEC' | '\xEE' .. '\xEF' ->
++        let i = i + 1 in
++        if i > max then dec_invalid 1
++        else
++          let b1 = get b i in
++          if not_in_x80_to_xBF b1 then dec_invalid 1
++          else
++            let i = i + 1 in
++            if i > max then dec_invalid 2
++            else
++              let b2 = get b i in
++              if not_in_x80_to_xBF b2 then dec_invalid 2
++              else dec_ret 3 (utf_8_uchar_3 b0 b1 b2)
++      | '\xED' ->
++        let i = i + 1 in
++        if i > max then dec_invalid 1
++        else
++          let b1 = get b i in
++          if not_in_x80_to_x9F b1 then dec_invalid 1
++          else
++            let i = i + 1 in
++            if i > max then dec_invalid 2
++            else
++              let b2 = get b i in
++              if not_in_x80_to_xBF b2 then dec_invalid 2
++              else dec_ret 3 (utf_8_uchar_3 b0 b1 b2)
++      | '\xF0' ->
++        let i = i + 1 in
++        if i > max then dec_invalid 1
++        else
++          let b1 = get b i in
++          if not_in_x90_to_xBF b1 then dec_invalid 1
++          else
++            let i = i + 1 in
++            if i > max then dec_invalid 2
++            else
++              let b2 = get b i in
++              if not_in_x80_to_xBF b2 then dec_invalid 2
++              else
++                let i = i + 1 in
++                if i > max then dec_invalid 3
++                else
++                  let b3 = get b i in
++                  if not_in_x80_to_xBF b3 then dec_invalid 3
++                  else dec_ret 4 (utf_8_uchar_4 b0 b1 b2 b3)
++      | '\xF1' .. '\xF3' ->
++        let i = i + 1 in
++        if i > max then dec_invalid 1
++        else
++          let b1 = get b i in
++          if not_in_x80_to_xBF b1 then dec_invalid 1
++          else
++            let i = i + 1 in
++            if i > max then dec_invalid 2
++            else
++              let b2 = get b i in
++              if not_in_x80_to_xBF b2 then dec_invalid 2
++              else
++                let i = i + 1 in
++                if i > max then dec_invalid 3
++                else
++                  let b3 = get b i in
++                  if not_in_x80_to_xBF b3 then dec_invalid 3
++                  else dec_ret 4 (utf_8_uchar_4 b0 b1 b2 b3)
++      | '\xF4' ->
++        let i = i + 1 in
++        if i > max then dec_invalid 1
++        else
++          let b1 = get b i in
++          if not_in_x80_to_x8F b1 then dec_invalid 1
++          else
++            let i = i + 1 in
++            if i > max then dec_invalid 2
++            else
++              let b2 = get b i in
++              if not_in_x80_to_xBF b2 then dec_invalid 2
++              else
++                let i = i + 1 in
++                if i > max then dec_invalid 3
++                else
++                  let b3 = get b i in
++                  if not_in_x80_to_xBF b3 then dec_invalid 3
++                  else dec_ret 4 (utf_8_uchar_4 b0 b1 b2 b3)
++      | _ -> dec_invalid 1
++  end
++end
+diff --git a/clib/ccx_compat.mli b/clib/ccx_compat.mli
+new file mode 100644
+index 0000000000..fe4f24a2fa
+--- /dev/null
++++ b/clib/ccx_compat.mli
+@@ -0,0 +1,16 @@
++module OCaml4_14 : sig
++  module Uchar : sig
++    type utf_decode
++
++    val utf_decode_is_valid : utf_decode -> bool
++    val utf_decode_uchar : utf_decode -> Uchar.t
++    val utf_decode_length : utf_decode -> int
++    val utf_decode : int -> Uchar.t -> int
++    val utf_8_byte_length : Uchar.t -> int
++    val utf_16_byte_length : Uchar.t -> int
++  end
++
++  module String : sig
++    val get_utf_8_uchar : string -> int -> Uchar.utf_decode
++  end
++end
+-- 
+2.43.0
+

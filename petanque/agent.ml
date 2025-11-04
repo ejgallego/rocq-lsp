@@ -5,6 +5,8 @@
 (* Written by: Emilio J. Gallego Arias & coq-lsp contributors           *)
 (************************************************************************)
 
+module SM = Lang.Compat.String.Map
+
 module State = struct
   type t = Coq.State.t
 
@@ -97,12 +99,14 @@ module Run_result = struct
     ; proof_finished : bool
     ; feedback : (int * string) list
     }
+
+  let map ~f r = { r with st = f r.st }
 end
 
 let find_thm ~(doc : Fleche.Doc.t) ~thm =
   let { Fleche.Doc.toc; _ } = doc in
   let feedback = [] in
-  match CString.Map.find_opt thm toc with
+  match SM.find_opt thm toc with
   | None ->
     let msg = Format.asprintf "@[[find_thm] Theorem not found!@]" in
     Error Error.(make (Theorem_not_found msg) ~feedback)
@@ -114,7 +118,7 @@ let find_thm ~(doc : Fleche.Doc.t) ~thm =
       let msg =
         Format.asprintf
           "@[[find_thm] Theorem found but failed with Coq error:@\n @[%a@]!@]"
-          Pp.pp_with err.message
+          Coq.Pp_t.pp_with err.message
       in
       Error Error.(make (Theorem_not_found msg) ~feedback))
 
@@ -143,17 +147,21 @@ let protect_to_result (r : _ Coq.Protect.E.t) : (_, _) Result.t =
     Error Error.(make Interrupted ~feedback)
   | { r = Completed (Error (User { msg; _ })); feedback } ->
     let feedback = clean_fb feedback in
-    Error Error.(make (Coq (Pp.string_of_ppcmds msg)) ~feedback)
+    Error Error.(make (Coq (Coq.Pp_t.to_string msg)) ~feedback)
   | { r = Completed (Error (Anomaly { msg; _ })); feedback } ->
     let feedback = clean_fb feedback in
-    Error Error.(make (Anomaly (Pp.string_of_ppcmds msg)) ~feedback)
+    Error Error.(make (Anomaly (Coq.Pp_t.to_string msg)) ~feedback)
   | { r = Completed (Ok r); feedback } -> Ok (r feedback)
 
 let proof_finished { Coq.Goals.goals; stack; shelf; given_up; _ } =
   let check_stack stack =
-    CList.(for_all (fun (l, r) -> is_empty l && is_empty r)) stack
+    List.(
+      for_all (fun (l, r) ->
+          Lang.Compat.List.is_empty l && Lang.Compat.List.is_empty r))
+      stack
   in
-  List.for_all CList.is_empty [ goals; shelf; given_up ] && check_stack stack
+  List.for_all Lang.Compat.List.is_empty [ goals; shelf; given_up ]
+  && check_stack stack
 
 (* At some point we want to return both hashes *)
 module Hash_kind = struct
@@ -173,7 +181,7 @@ let hash_mode = Hash_kind.Proof
 (* XXX: duplicated with Request.R.of_execution, refactoring planned (not
    trivial) *)
 let fb_print_string (lvl, { Coq.Message.Payload.msg; _ }) =
-  (lvl, Pp.string_of_ppcmds msg)
+  (lvl, Coq.Pp_t.to_string msg)
 
 let analyze_after_run ~hash st feedback =
   let proof_finished =
@@ -199,7 +207,7 @@ let get_root_state ?opts ~doc () =
   Ok (analyze_after_run ~hash state [])
 
 let get_state_at_pos ?opts ~doc ~point () =
-  match Fleche.Info.(LC.node ~doc ~point Exact) with
+  match Fleche.Info.(LC.node ~doc ~point PrevIfEmpty) with
   | Some { Fleche.Doc.Node.state; _ } ->
     let opts = default_opts opts in
     let hash = opts.hash in
@@ -232,10 +240,21 @@ let run ~token ?opts ~st ~tac () : (_ Run_result.t, Error.t) Request.R.t =
   in
   protect_to_result execution
 
+(* Use a trans *)
+let run_at_pos ~token ?opts ~doc ~point ~command () :
+    (_ Run_result.t, Error.t) Request.R.t =
+  match Fleche.Info.(LC.node ~doc ~point PrevIfEmpty) with
+  | Some { Fleche.Doc.Node.state = st; _ } ->
+    let open Coq.Compat.Result.O in
+    let+ res = run ~token ?opts ~st ~tac:command () in
+    (* Return more info eventually? *)
+    Run_result.map ~f:(fun _ -> ()) res
+  | None -> Error (Error.make_request No_node_at_point)
+
 let goals ~token ~st =
   let f goals =
-    let f = Coq.Goals.Reified_goal.map ~f:Pp.string_of_ppcmds in
-    let g = Pp.string_of_ppcmds in
+    let f = Coq.Goals.Reified_goal.map ~f:Coq.Pp_t.to_string in
+    let g = Coq.Pp_t.to_string in
     (* XXX: Fixme, take feedback into account *)
     fun _feedback -> Option.map (Coq.Goals.map ~f ~g) goals
   in
@@ -266,7 +285,14 @@ end
 
    XXX move this caching to Flèche. *)
 module Memo = struct
-  module H = Hashtbl.Make (CString)
+  (* String.hash added in 5.0 *)
+  module MyString = struct
+    include String
+
+    let hash = Stdlib.Hashtbl.hash
+  end
+
+  module H = Hashtbl.Make (MyString)
 
   let table_glob = H.create 1000
 
@@ -342,7 +368,7 @@ let simple_run_result res feedback =
 
 let ast ~token ~st ~text () : Coq.Ast.t option Run_result.t R.t =
   (let open Coq.Protect.E.O in
-   let pa = Coq.Parsing.Parsable.make Gramlib.Stream.(of_string text) in
+   let pa = Coq.Parsing.(Parsable.make Stream.(of_string text)) in
    let+ ast = Coq.Parsing.parse ~token ~st pa in
    simple_run_result ast)
   |> protect_to_result

@@ -49,7 +49,7 @@ export class CoqLanguageStatus {
     );
     this.status.name = "Running Status";
 
-    // this.status.command = "start continous toogle continous";
+    // this.status.command = "start continuous toggle continuous";
     // root = languages.createLanguageStatusItem("coq.root", CoqSelector.all);
 
     this.updateVersion(version);
@@ -64,7 +64,7 @@ export class CoqLanguageStatus {
   updateStatus(status: CoqServerStatus, lazy_mode: boolean) {
     let command = lazy_mode
       ? {
-          title: "Enable Continous Mode",
+          title: "Enable Continuous Mode",
           command: "coq-lsp.toggle_mode",
         }
       : {
@@ -73,7 +73,7 @@ export class CoqLanguageStatus {
           args: true,
         };
 
-    let status_name = lazy_mode ? "On-demand" : "Continous";
+    let status_name = lazy_mode ? "On-demand" : "Continuous";
 
     if (status.status == "Busy") {
       this.status.busy = true;

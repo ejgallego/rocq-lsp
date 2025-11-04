@@ -10,7 +10,9 @@ module Lsp = Fleche_lsp
 (* Replace by ppx when we can print goals properly in the client *)
 let mk_messages node =
   Option.map Fleche.Doc.Node.messages node
-  |> Option.cata (List.map Lsp.JFleche.Message.of_coq_message) []
+  |> Stdlib.Option.fold
+       ~some:(List.map Lsp.JFleche.Message.of_coq_message)
+       ~none:[]
 
 let mk_error node =
   let open Fleche in
@@ -55,13 +57,18 @@ let layout_term env sigma t =
 
 let pp ~pp_format ~token env evd x =
   match pp_format with
-  | Pp -> Fleche.Info.Goals.to_pp ~token env evd x |> Lsp.JCoq.Pp.to_yojson
+  | Pp -> Fleche.Info.Goals.to_pp ~token env evd x |> Lsp.JCoq.Pp_t.to_yojson
   | Str ->
     let pp = Fleche.Info.Goals.to_pp ~token env evd x in
     `String (Pp.string_of_ppcmds pp)
   | Box ->
     let pp = layout_term env evd x in
     `List [ `String "box"; `String pp ]
+
+let pp_msgs ~pp_format =
+  match pp_format with
+  | Str | Box -> fun x -> `String (Coq.Pp_t.to_string x)
+  | Pp -> fun x -> Lsp.JCoq.Pp_t.to_yojson x
 
 let run_pretac ~token ~loc ~st pretac =
   match pretac with
@@ -107,10 +114,11 @@ let goals ~pp_format ~mode ~pretac () ~token ~doc ~point =
     get_goal_info ~pp_format ~token ~doc ~point ~mode ~pretac ()
   in
   let range, messages, error = get_node_info ~doc ~point ~mode in
+  let pp_msg = pp_msgs ~pp_format in
   Lsp.JFleche.GoalsAnswer.(
     to_yojson
       (fun x -> x)
-      (fun x -> Lsp.JCoq.Pp.to_yojson x)
+      pp_msg
       { textDocument; position; range; goals; program; messages; error })
   |> Result.ok
 
