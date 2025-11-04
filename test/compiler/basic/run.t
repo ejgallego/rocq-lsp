@@ -99,7 +99,7 @@ Compile both files and a markdown file
      + findlib default location: [TEST_PATH]
    - coqlib is at: [TEST_PATH]
      + 2 Coq path directory bindings in scope
-     + Modules [Corelib.Init.Prelude] will be loaded by default
+     + Modules [Coq.Init.Prelude] will be loaded by default
   [message] compiling file proj1/a.v
   [message] compiling file proj1/b.v
   [message] compiling file proj1/c.mv
