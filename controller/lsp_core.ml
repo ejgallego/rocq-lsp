@@ -110,7 +110,7 @@ module State = struct
   let add_workspace ~token state { WorkspaceFolder.uri; _ } =
     let dir = Lang.LUri.File.to_string_file uri in
     let { cmdline; workspaces; _ } = state in
-    let ws = Coq.Workspace.guess ~token ~debug:false ~cmdline ~dir in
+    let ws = Coq.Workspace.guess ~token ~debug:false ~cmdline ~dir () in
     { state with workspaces = (dir, ws) :: workspaces }
 
   let del_workspace state { WorkspaceFolder.uri; _ } =
@@ -547,7 +547,7 @@ let serverInfo =
   let coq_lsp = Fleche.Version.server in
   Fleche.ServerInfo.Version.{ coq; ocaml; coq_lsp }
 
-let lsp_init_process ~ofn ~io ~cmdline ~debug msg : Init_effect.t =
+let lsp_init_process ~ofn ~io ~cmdline ?add_root ~debug msg : Init_effect.t =
   let ofn_rq r = Lsp.Base.Message.response r |> ofn in
   let ofn_nt r = Lsp.Base.Message.notification r |> ofn in
   match msg with
@@ -565,11 +565,10 @@ let lsp_init_process ~ofn ~io ~cmdline ~debug msg : Init_effect.t =
       (Coq.Limits.name ());
     (* Workspace initialization *)
     let debug = debug || !Fleche.Config.v.debug in
-    let workspaces =
-      List.map
-        (fun dir -> (dir, Coq.Workspace.guess ~token ~cmdline ~debug ~dir))
-        dirs
+    let make_ws dir =
+      (dir, Coq.Workspace.guess ?add_root ~token ~cmdline ~debug ~dir ())
     in
+    let workspaces = List.map make_ws dirs in
     List.iter (log_workspace ~io) workspaces;
     Success workspaces
   | Lsp.Base.Message.Request { id; _ } ->

@@ -88,9 +88,11 @@ end
 
 val guess :
      token:Limits.Token.t
+  -> ?add_root:bool
   -> debug:bool
   -> cmdline:CmdLine.t
   -> dir:string
+  -> unit
   -> (t, string) Result.t
 
 (* Fallback workspace *)

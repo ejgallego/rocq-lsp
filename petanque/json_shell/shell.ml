@@ -18,7 +18,7 @@ let cmdline : Coq.Workspace.CmdLine.t =
 let setup_workspace ~token ~init ~debug ~root =
   let dir = Lang.LUri.File.to_string_file root in
   (let open Coq.Compat.Result.O in
-   let+ workspace = Coq.Workspace.guess ~token ~debug ~cmdline ~dir in
+   let+ workspace = Coq.Workspace.guess ~token ~debug ~cmdline ~dir () in
    let files = Coq.Files.make () in
    Fleche.Doc.Env.make ~init ~workspace ~files)
   |> Result.map_error (fun msg -> Petanque.Agent.Error.(make_request (coq msg)))
