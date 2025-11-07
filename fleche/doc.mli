@@ -54,7 +54,11 @@ end
 module Completion : sig
   type t = private
     | Yes of Lang.Range.t  (** Location of the last token in the document *)
-    | Stopped of Lang.Range.t  (** Location of the last valid token *)
+    | Stopped of Lang.Range.t
+        (** Location of the last valid token before stopping *)
+    | WorkspaceUpdated of Lang.Range.t
+        (** The Workspace Environment was updated when document was processed up
+            to the range. Document may need full re-check from the beginning. *)
     | Failed of Lang.Range.t  (** Critical failure, like an anomaly *)
 
   val is_completed : t -> bool
@@ -122,6 +126,10 @@ val create :
     `Failed` state. *)
 val bump_version :
   token:Coq.Limits.Token.t -> version:int -> raw:string -> t -> t
+
+(** Notify the document the workspace / environment has changed. For now amounts
+    to re-creating a new document with the updated environment. *)
+val update_env : doc:t -> env:Env.t -> t
 
 (** Checking targets, this specifies what we expect check to reach *)
 module Target : sig
