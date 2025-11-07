@@ -394,27 +394,32 @@ module Admit = SEval (struct
 end)
 
 module InitEval = struct
-  type t = Coq.State.t * Coq.Workspace.t * Lang.LUri.File.t
+  type t = Coq.State.t * Coq.Workspace.t * Coq.Files.t * Lang.LUri.File.t
 
-  let equal (s1, w1, u1) (s2, w2, u2) : bool =
+  let equal (s1, w1, f1, u1) (s2, w2, f2, u2) : bool =
     if Lang.LUri.File.compare u1 u2 = 0 then
       if Coq.Workspace.compare w1 w2 = 0 then
-        if Coq.State.compare s1 s2 = 0 then true else false
+        if Coq.Files.compare f1 f2 = 0 then
+          if Coq.State.compare s1 s2 = 0 then true else false
+        else false
       else false
     else false
 
-  let hash (st, w, uri) =
+  let hash (st, w, f, uri) =
     Hashtbl.hash
-      (Coq.State.hash st, Coq.Workspace.hash w, Lang.LUri.File.hash uri)
+      ( Coq.State.hash st
+      , Coq.Workspace.hash w
+      , Coq.Files.hash f
+      , Lang.LUri.File.hash uri )
 
   type output = Coq.State.t
 
-  let eval ~token (root_state, workspace, uri) =
+  let eval ~token (root_state, workspace, _files, uri) =
     Coq.Init.doc_init ~token ~intern ~root_state ~workspace ~uri
 
-  let input_info (st, ws, file) =
-    Format.asprintf "st %d | ws %d | file %s" (Hashtbl.hash st)
-      (Hashtbl.hash ws)
+  let input_info (st, ws, files, file) =
+    Format.asprintf "st %d | ws %d | fs: %a| file %s" (Hashtbl.hash st)
+      (Hashtbl.hash ws) Coq.Files.pp files
       (Lang.LUri.File.to_string_file file)
 end
 

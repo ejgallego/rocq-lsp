@@ -59,7 +59,8 @@ end
 (** Document creation cache *)
 module Init :
   S
-    with type input = Coq.State.t * Coq.Workspace.t * Lang.LUri.File.t
+    with type input =
+      Coq.State.t * Coq.Workspace.t * Coq.Files.t * Lang.LUri.File.t
      and type output = Coq.State.t
 
 (** Vernacular evaluation cache, invariant w.r.t. Coq's Ast locations, results

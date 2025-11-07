@@ -31,7 +31,7 @@ val open_ :
   -> version:int
   -> unit
 
-(** Update a document inside a theory, returns the list of not valid requests *)
+(** Update a document inside a theory, returns the set of invalidated requests *)
 val change :
      io:Io.CallBack.t
   -> token:Coq.Limits.Token.t
@@ -39,6 +39,10 @@ val change :
   -> version:int
   -> raw:string
   -> IS.t
+
+(** Notify the theory manager that the workspace has changed, for example due to
+    new .vo files present or updated. Returns the set of invalidated requests *)
+val workspace_update : unit -> IS.t
 
 (** Close a document *)
 val close : uri:Lang.LUri.File.t -> unit
