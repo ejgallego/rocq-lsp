@@ -468,6 +468,12 @@ let do_cancel ~ofn_rq ~params =
 
 let do_cache_trim ~io = Nt_cache_trim.notification ~io
 
+let do_workspace_update ~ofn_rq =
+  let invalid_rq = Fleche.Theory.workspace_update () in
+  let code = -32802 in
+  let message = "Request got old in server" in
+  IS.iter (Rq.cancel ~ofn_rq ~code ~message) invalid_rq
+
 let do_viewRange params =
   match List.assoc "range" params |> Lsp.JLang.Range.of_yojson with
   | Ok range ->
@@ -602,6 +608,7 @@ let dispatch_notification ~io ~ofn ~token ~state ~method_ ~params : unit =
   (* Specific to coq-lsp *)
   | "coq/viewRange" -> do_viewRange params
   | "coq/trimCaches" -> do_cache_trim ~io
+  | "coq/workspace_update" -> do_workspace_update ~ofn_rq
   (* Cancel Request *)
   | "$/cancelRequest" -> do_cancel ~ofn_rq ~params
   (* NOOPs *)

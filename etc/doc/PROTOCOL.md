@@ -19,6 +19,7 @@
     * [.vo file saving](#vo-file-saving)
     * [Performance Data Notification](#performance-data-notification)
     * [Trim cache notification](#trim-cache-notification)
+    * [Workspace Update Notification](#workspace-update-notification)
     * [Viewport notification](#viewport-notification)
     * [Did Change Configuration and Server Configuration parameters](#did-change-configuration-and-server-configuration-parameters)
     * [Server Version Notification](#server-version-notification)
@@ -240,6 +241,7 @@ spec. Note that none of them are stable yet.
 - [.vo file saving](#vo-file-saving)
 - [Performance data notification](#performance-data-notification)
 - [Trim cache notification](#trim-cache-notification)
+- [Workspace Update Notification](#workspace-update-notification)
 - [Viewport notification](#viewport-notification)
 - [Server configuration parameters](#did-change-configuration-and-server-configuration-parameters)
 - [Server version notification](#server-version-notification)
@@ -625,6 +627,16 @@ const coqPerfData : NotificationType<DocumentPerfParams<Range>>
 
 The `coq/trimCaches` notification from client to server tells the
 server to free memory. It has no parameters.
+
+<!-- TOC --><a name="workspace-update-notification"></a>
+### Workspace update notification
+
+The `coq/workspace_update` notification from client to server notifies
+the server that the Rocq external environment has changed, for
+example, when .vo files have been updated.
+
+This can used in combination with other calls like `coq/saveVo` to
+work with multiple files.
 
 <!-- TOC --><a name="viewport-notification"></a>
 ### Viewport notification

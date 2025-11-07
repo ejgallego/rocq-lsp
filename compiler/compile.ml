@@ -29,7 +29,7 @@ let save_diags_file ~(doc : Fleche.Doc.t) =
 let status_of_doc (doc : Doc.t) =
   match doc.completed with
   | Yes _ -> 0
-  | Stopped _ -> 2
+  | Stopped _ | WorkspaceUpdated _ -> 2
   | Failed _ -> 1
 
 let guess_languageId file =
