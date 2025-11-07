@@ -486,6 +486,13 @@ export function activateCoqLSP(
     client.sendNotification(trimNot, {});
   };
 
+  // WS Update notification setup
+  const wsNot = new NotificationType<{}>("coq/workspace_update");
+
+  const workspaceUpdate = () => {
+    client.sendNotification(wsNot, {});
+  };
+
   // Save request setup
   const saveReq = new RequestType<FlecheDocumentParams, void, void>(
     "coq/saveVo"
@@ -563,6 +570,7 @@ export function activateCoqLSP(
   coqCommand("restart", restart);
   coqCommand("toggle", toggle);
   coqCommand("trim", cacheTrim);
+  coqCommand("workspace_update", workspaceUpdate);
 
   coqCommand("toggle_mode", toggle_lazy_checking);
 

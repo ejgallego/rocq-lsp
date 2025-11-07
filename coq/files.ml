@@ -22,3 +22,6 @@ type t = int [@@deriving hash, compare]
 
 let make () = 0
 let bump i = i + 1
+let hash = Int.hash
+let compare = Int.compare
+let pp = Format.pp_print_int
