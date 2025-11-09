@@ -76,6 +76,7 @@ module Namegen    = Ser_namegen
 module Genarg     = Ser_genarg
 module Stdarg     = Ser_stdarg
 module Genredexpr = Ser_genredexpr
+module Redexpr    = Ser_redexpr
 module Genintern  = Ser_genintern
 module Goal_select = Ser_goal_select
 module Pattern    = Ser_pattern
@@ -167,7 +168,7 @@ type ml_tactic_entry =
   [%import: Ltac_plugin.Tacexpr.ml_tactic_entry]
   [@@deriving sexp,yojson,hash,compare]
 
-type ('a, 'b, 'c, 'd) may_eval = [%import: ('a,'b,'c,'d) Ltac_plugin.Tacexpr.may_eval]
+type ('a, 'b, 'c, 'd, 'e) may_eval = [%import: ('a,'b,'c,'d,'e) Ltac_plugin.Tacexpr.may_eval]
   [@@deriving sexp,yojson,hash,compare]
 
 (* type dyn = Ser_Dyn [@@deriving sexp] *)
@@ -197,7 +198,7 @@ type ('trm, 'dtrm, 'pat, 'redpat, 'cst, 'ref, 'nam, 'occvar, 'tacexpr, 'lev) gen
       Namegen.intro_pattern_naming_expr CAst.t option
   | TacInductionDestruct of
       rec_flag * evars_flag * ('trm,'dtrm,'nam) induction_clause_list
-  | TacReduce of ('trm,'cst,'redpat,'occvar) Genredexpr.red_expr_gen * 'nam Locus.clause_expr
+  | TacReduce of ('trm,'cst,'redpat,'occvar,'lev Redexpr.user_red_expr) Genredexpr.red_expr_gen * 'nam Locus.clause_expr
   | TacChange of check_flag * 'redpat option * 'dtrm * 'nam Locus.clause_expr
   | TacRewrite of evars_flag *
       (bool * Equality.multi * 'dtrm with_bindings_arg) list * 'nam Locus.clause_expr *
@@ -206,7 +207,7 @@ type ('trm, 'dtrm, 'pat, 'redpat, 'cst, 'ref, 'nam, 'occvar, 'tacexpr, 'lev) gen
 
 and ('trm, 'dtrm, 'pat, 'redpat, 'cst, 'ref, 'nam, 'occvar, 'tacexpr, 'lev) gen_tactic_arg =
   | TacGeneric     of string option * 'lev Genarg.generic_argument
-  | ConstrMayEval  of ('trm,'cst,'redpat,'occvar) may_eval
+  | ConstrMayEval  of ('trm,'cst,'redpat,'occvar,'lev Redexpr.user_red_expr) may_eval
   | Reference      of 'ref
   | TacCall        of ('ref *
       ('trm, 'dtrm, 'pat, 'redpat, 'cst, 'ref, 'nam, 'occvar, 'tacexpr, 'lev) gen_tactic_arg list) CAst.t
