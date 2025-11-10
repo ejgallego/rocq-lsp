@@ -16,7 +16,7 @@
 (* Written by: Emilio J. Gallego Arias and others                       *)
 (************************************************************************)
 
-type 'a red_atom = 'a Genredexpr.red_atom
+(*type 'a red_atom = 'a Genredexpr.red_atom
  [@@deriving sexp,yojson,hash,compare]
 
 type 'a glob_red_flag =  'a Genredexpr.glob_red_flag
@@ -24,11 +24,13 @@ type 'a glob_red_flag =  'a Genredexpr.glob_red_flag
 
 type ('a, 'b, 'c, 'd, 'e) red_expr_gen =  ('a, 'b, 'c, 'd, 'e) Genredexpr.red_expr_gen
   [@@deriving sexp,yojson,hash,compare]
+*)
 
-type 'a raw_red_expr = 'a Genredexpr.raw_red_expr [@@deriving sexp,yojson,hash,compare]
-
-type 'a and_short_name = 'a Genredexpr.and_short_name
+type 'l user_red_expr = 'l Redexpr.user_red_expr
   [@@deriving sexp,yojson,hash,compare]
 
-type 'a glob_red_expr = 'a Genredexpr.glob_red_expr
+type raw_red_expr = Redexpr.raw_red_expr
+  [@@deriving sexp,yojson,hash,compare]
+
+type glob_red_expr = Redexpr.glob_red_expr
   [@@deriving sexp,yojson,hash,compare]
