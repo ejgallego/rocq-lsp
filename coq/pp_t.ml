@@ -31,6 +31,7 @@ type doc_view = Pp.doc_view =
   | Ppcmd_force_newline
   | Ppcmd_comment of string list
 
+let pp = Pp.pp_with
 let pp_with = Pp.pp_with
 let mt = Pp.mt
 let spc = Pp.spc

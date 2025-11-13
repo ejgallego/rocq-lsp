@@ -382,8 +382,8 @@ module Pr_vernac : HoverProvider = struct
   let h ~token ~contents:_ ~point:_ ~(node : Fleche.Doc.Node.t) =
     let f (ast : Fleche.Doc.Node.Ast.t) =
       match Coq.Print.pr_vernac ~token ~st:node.state ast.v with
-      | Coq.Protect.{ E.r = R.Completed (Ok pp); feedback = _ } ->
-        Some Coq.Pp_t.(to_string (str "pr_vernac: " ++ pp))
+      | Coq.Protect.{ E.r = R.Completed (Ok pr_ast); feedback = _ } ->
+        Some Coq.Pp_t.(to_string (str "pr_vernac: " ++ pr_ast))
       | Coq.Protect.
           { E.r = R.Completed (Error (User msg | Anomaly msg)); feedback = _ }
         -> Some Coq.Pp_t.(to_string (str "Error in pr_vernac: " ++ msg.msg))
