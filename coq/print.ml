@@ -12,3 +12,7 @@ let pr_goals ~token ~proof =
   in
   let f = Printer.pr_open_subgoals in
   Protect.eval ~token ~f proof
+
+let pr_vernac ~token ~st v =
+  let f = Ppvernac.pr_vernac in
+  State.in_state ~token ~st ~f (Ast.to_coq v)

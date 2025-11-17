@@ -363,6 +363,22 @@ module State_hash : HoverProvider = struct
   let h = Handler.WithNode h
 end
 
+module Pr_vernac : HoverProvider = struct
+  let h ~token ~contents:_ ~point:_ ~(node : Fleche.Doc.Node.t) =
+    let f (ast : Fleche.Doc.Node.Ast.t) =
+      match Coq.Print.pr_vernac ~token ~st:node.state ast.v with
+      | Coq.Protect.{ E.r = R.Completed (Ok pp); feedback = _ } ->
+        Some Coq.Pp_t.(to_string (str "pr_vernac: " ++ pp))
+      | Coq.Protect.
+          { E.r = R.Completed (Error (User msg | Anomaly msg)); feedback = _ }
+        -> Some Coq.Pp_t.(to_string (str "Error in pr_vernac: " ++ msg.msg))
+      | _ -> None
+    in
+    Option.cata f None node.ast
+
+  let h = Handler.WithNode h
+end
+
 module Register = struct
   let handlers : Handler.t list ref = ref []
   let add fn = handlers := fn :: !handlers
@@ -389,6 +405,7 @@ let () =
     ; InputHelp.h
     ; UniDiff.h
     ; State_hash.h
+    ; Pr_vernac.h
     ]
 
 let hover ~token ~(doc : Fleche.Doc.t) ~point =

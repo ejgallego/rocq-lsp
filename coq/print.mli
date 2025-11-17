@@ -8,3 +8,6 @@ val pr_letype_env :
 
 val pr_goals :
   token:Limits.Token.t -> proof:State.Proof.t -> (Pp.t, Loc.t) Protect.E.t
+
+val pr_vernac :
+  token:Limits.Token.t -> st:State.t -> Ast.t -> (Pp.t, Loc.t) Protect.E.t
