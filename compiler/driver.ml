@@ -1,9 +1,10 @@
 (* Duplicated with coq_lsp *)
-let coq_init ~debug =
+let coq_init ~debug ~record_comments =
   let load_module = Dynlink.loadfile in
   let load_plugin = Coq.Loader.plugin_handler None in
   let vm, warnings = (true, None) in
-  Coq.Init.(coq_init { debug; load_module; load_plugin; vm; warnings })
+  Coq.Init.(
+    coq_init { debug; record_comments; load_module; load_plugin; vm; warnings })
 
 let replace_test_path exp message =
   let home_re = Str.regexp (exp ^ ".*$") in
@@ -44,6 +45,7 @@ let go ~int_backend args =
       ; plugins
       ; max_errors
       ; coq_diags_level
+      ; record_comments
       } =
     args
   in
@@ -52,7 +54,7 @@ let go ~int_backend args =
   let io = Output.init ~display ~perfData ~coq_diags_level in
   (* Initialize Coq *)
   let debug = debug || Fleche.Debug.backtraces || !Fleche.Config.v.debug in
-  let root_state = coq_init ~debug in
+  let root_state = coq_init ~debug ~record_comments in
   let roots = if List.length roots < 1 then [ Sys.getcwd () ] else roots in
   let default = Coq.Workspace.default ~debug ~cmdline in
   let () = Coq.Limits.select_best int_backend in

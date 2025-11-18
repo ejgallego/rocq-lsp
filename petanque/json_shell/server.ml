@@ -72,7 +72,7 @@ let log_error Request.Error.{ payload = err; _ } =
   Format.eprintf "Error in --root option: %s@\n%!" message
 (* Logs_lwt.info (fun m -> m "%s" message) *)
 
-let pet_main debug roots address port backlog =
+let pet_main debug record_comments roots address port backlog =
   Coq.Limits.start ();
   let token = Coq.Limits.Token.create () in
   let () = Logs.set_reporter (Logs.format_reporter ()) in
@@ -82,7 +82,8 @@ let pet_main debug roots address port backlog =
   (* EJGA: pet-server should handle this at some point *)
   (* Petanque.Shell.trace_ref := trace_notification; *)
   (* Petanque.Shell.message_ref := message_notification); *)
-  Result.iter_error log_error (Shell.init_agent ~token ~debug ~roots);
+  Result.iter_error log_error
+    (Shell.init_agent ~token ~debug ~record_comments ~roots);
   Lwt_main.run @@ serve ()
 
 open Cmdliner
@@ -116,8 +117,8 @@ let pet_cmd : unit Cmd.t =
   let version = Fleche.Version.server in
   let pet_term =
     Term.(
-      const pet_main $ Coq.Args.debug $ Coq.Args.roots $ address $ port
-      $ backlog)
+      const pet_main $ Coq.Args.debug $ Coq.Args.record_comments
+      $ Coq.Args.roots $ address $ port $ backlog)
   in
   Cmd.(v (Cmd.info "pet" ~version ~doc ~man) pet_term)
 

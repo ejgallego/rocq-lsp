@@ -4,7 +4,7 @@ open Fcc_lib
 
 let fcc_main int_backend roots display debug plugins files coqlib findlib_config
     ocamlpath rload_path load_path require_libraries no_vo max_errors
-    coq_diags_level =
+    coq_diags_level record_comments =
   let vo_load_path = rload_path @ load_path in
   let args = [] in
   let cmdline =
@@ -27,6 +27,7 @@ let fcc_main int_backend roots display debug plugins files coqlib findlib_config
       ; plugins
       ; max_errors
       ; coq_diags_level
+      ; record_comments
       }
   in
   Driver.go ~int_backend args
@@ -99,7 +100,7 @@ let fcc_cmd : int Cmd.t =
     Term.(
       const fcc_main $ int_backend $ roots $ display $ debug $ plugins $ file
       $ coqlib $ findlib_config $ ocamlpath $ rload_paths $ qload_paths
-      $ ri_from $ no_vo $ max_errors $ coq_diags_level)
+      $ ri_from $ no_vo $ max_errors $ coq_diags_level $ record_comments)
   in
   let exits = Exit_codes.[ fatal; stopped; scheduled; uri_failed ] in
   Cmd.(v (Cmd.info "fcc" ~exits ~version ~doc ~man) fcc_term)

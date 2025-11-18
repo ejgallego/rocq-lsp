@@ -21,6 +21,7 @@ module Parsable : sig
 
   val make : ?loc:Loc.t -> (unit, char) Gramlib.Stream.t -> t
   val loc : t -> Loc.t
+  val comments : t -> ((int * int) * string) list
 end
 
 val parse :

@@ -89,6 +89,8 @@ type t = private
   ; version : int  (** [version] of the document *)
   ; contents : Contents.t  (** [contents] of the document *)
   ; nodes : Node.t list  (** List of document nodes *)
+  ; comments : ((int * int) * string) list
+        (** List of all comments found up to [completed] *)
   ; completed : Completion.t
         (** Status of the document, usually either completed, suspended, or
             waiting for some IO / external event *)

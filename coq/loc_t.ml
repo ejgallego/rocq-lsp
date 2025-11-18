@@ -27,3 +27,5 @@ type t = Loc.t =
   ; bp : int  (** Start position. *)
   ; ep : int  (** End position. *)
   }
+
+let pp = Loc.pr
