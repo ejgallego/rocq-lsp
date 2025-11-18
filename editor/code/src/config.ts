@@ -24,6 +24,7 @@ export interface CoqLspServerConfig {
   show_loc_info_on_hover: boolean;
   show_universes_on_hover: boolean;
   show_state_hash_on_hover: boolean;
+  show_comments_on_hover: boolean;
   check_only_on_request: boolean;
   send_perf_data: boolean;
   send_execinfo: boolean;
@@ -50,6 +51,7 @@ export namespace CoqLspServerConfig {
       show_loc_info_on_hover: wsConfig.show_loc_info_on_hover,
       show_universes_on_hover: wsConfig.show_universes_on_hover,
       show_state_hash_on_hover: wsConfig.show_state_hash_on_hover,
+      show_comments_on_hover: wsConfig.show_comments_on_hover,
       check_only_on_request: wsConfig.check_only_on_request,
       send_perf_data: wsConfig.send_perf_data,
       send_execinfo: wsConfig.send_execinfo,

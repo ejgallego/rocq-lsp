@@ -363,6 +363,21 @@ module State_hash : HoverProvider = struct
   let h = Handler.WithNode h
 end
 
+module Comment_info = struct
+  let pr_comment fmt ((start, end_), cm) =
+    Format.fprintf fmt "@[(%d,%d) %s@]" start end_ cm
+
+  let h ~token:_ ~(doc : Fleche.Doc.t) ~point:_ ~node:_ =
+    if !Fleche.Config.v.show_comments_on_hover then
+      Some
+        Format.(
+          asprintf "@[%d comments found@\n```@\n@[<v>%a@]@]@\n```"
+            (List.length doc.comments) (pp_print_list pr_comment) doc.comments)
+    else None
+
+  let h = Handler.WithDoc h
+end
+
 module Register = struct
   let handlers : Handler.t list ref = ref []
   let add fn = handlers := fn :: !handlers
@@ -389,6 +404,7 @@ let () =
     ; InputHelp.h
     ; UniDiff.h
     ; State_hash.h
+    ; Comment_info.h
     ]
 
 let hover ~token ~(doc : Fleche.Doc.t) ~point =

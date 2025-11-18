@@ -307,6 +307,8 @@ type t =
   ; version : int  (** [version] of the document *)
   ; contents : Contents.t  (** [contents] of the document *)
   ; nodes : Node.t list  (** List of document nodes *)
+  ; comments : ((int * int) * string) list
+        (** List of all comments found up to [completed] *)
   ; completed : Completion.t
         (** Status of the document, usually either completed, suspended, or
             waiting for some IO / external event *)
@@ -382,6 +384,7 @@ let empty_doc ~uri ~languageId ~contents ~version ~env ~root ~nodes ~completed =
   let lines = contents.Contents.lines in
   let init_loc = init_loc ~uri in
   let init_range = Coq.Utils.to_range ~lines init_loc in
+  let comments = [] in
   let toc = SM.empty in
   let diags_dirty = not (Lang.Compat.List.is_empty nodes) in
   let completed = completed init_range in
@@ -393,6 +396,7 @@ let empty_doc ~uri ~languageId ~contents ~version ~env ~root ~nodes ~completed =
   ; env
   ; root
   ; nodes
+  ; comments
   ; diags_dirty
   ; completed
   }
@@ -493,6 +497,13 @@ let recover_up_to_offset ~init_range doc offset =
   in
   find [] init_range doc.nodes
 
+(* Simple commment filter, we drop the comments before the start of the last
+   valid token *)
+let filter_comments comments (range : Lang.Range.t) =
+  let cutoff = range.start.offset in
+  (* We could optimize this, also verify what the math is here *)
+  List.filter (fun ((_, e), _) -> e <= cutoff) comments
+
 let compute_common_prefix ~init_range ~contents (prev : t) =
   let s1 = prev.contents.raw in
   let l1 = prev.contents.last.offset in
@@ -505,14 +516,17 @@ let compute_common_prefix ~init_range ~contents (prev : t) =
   in
   let common_idx = match_or_stop 0 in
   let nodes, range = recover_up_to_offset ~init_range prev common_idx in
+  let comments = filter_comments prev.comments range in
   let toc = rebuild_toc nodes in
   Io.Log.trace "prefix" "resuming from %a" Lang.Range.pp range;
   let completed = Completion.Stopped range in
-  (nodes, completed, toc)
+  (nodes, comments, completed, toc)
 
 let bump_version ~init_range ~version ~contents doc =
   (* When a new document, we resume checking from a common prefix *)
-  let nodes, completed, toc = compute_common_prefix ~init_range ~contents doc in
+  let nodes, comments, completed, toc =
+    compute_common_prefix ~init_range ~contents doc
+  in
   (* Important: uri, root remain the same *)
   let uri = doc.uri in
   let languageId = doc.languageId in
@@ -523,6 +537,7 @@ let bump_version ~init_range ~version ~contents doc =
   ; version
   ; root
   ; nodes
+  ; comments
   ; contents
   ; toc
   ; diags_dirty = true (* EJGA: Is it worth to optimize this? *)
@@ -567,7 +582,15 @@ let send_eager_diagnostics ~io ~uri ~version ~doc =
     { doc with diags_dirty = false })
   else doc
 
-let set_completion ~completed doc = { doc with completed }
+let set_completion ~completed pa doc =
+  let new_comments = List.rev (Coq.Parsing.Parsable.comments pa) in
+  let loc = Coq.Parsing.Parsable.loc pa in
+  Io.Log.trace "set_completion" "setting new comments %d"
+    (List.length new_comments);
+  Io.Log.trace "set_completion" "parsable at position %a" Coq.Pp_t.pp_with
+    (Coq.Loc_t.pp loc);
+  let comments = List.append doc.comments new_comments in
+  { doc with comments; completed }
 
 (* We approximate the remnants of the document. It would be easier if instead of
    reporting what is missing, we would report what is done, but for now we are
@@ -1002,7 +1025,7 @@ let process_and_parse ~io ~token ~target ~uri ~version doc last_tok doc_handle =
       let completed = Completion.Failed last_tok in
       let node = max_errors_node ~state:st ~range:last_tok ~prev in
       let doc = add_node ~node doc in
-      set_completion ~completed doc
+      set_completion ~completed doc_handle doc
     | Target ->
       let () = log_beyond_target last_tok target in
       (* We set to Completed.Yes when we have reached the EOI *)
@@ -1011,7 +1034,7 @@ let process_and_parse ~io ~token ~target ~uri ~version doc last_tok doc_handle =
           Completion.Yes last_tok
         else Completion.Stopped last_tok
       in
-      set_completion ~completed doc
+      set_completion ~completed doc_handle doc
     | Continue -> (
       (* Parsing *)
       if Debug.parsing then Io.Log.trace "coq" "parsing sentence";
@@ -1025,12 +1048,13 @@ let process_and_parse ~io ~token ~target ~uri ~version doc last_tok doc_handle =
           ~parsing_time ~prev ~doc last_tok doc_handle action
       in
       match action with
-      | Interrupted last_tok -> set_completion ~completed:(Stopped last_tok) doc
+      | Interrupted last_tok ->
+        set_completion ~completed:(Stopped last_tok) doc_handle doc
       | Stop (completed, node) ->
         let doc = add_node ~node doc in
         (* See #445 *)
         report_progress ~io ~doc (Completion.range completed);
-        set_completion ~completed doc
+        set_completion ~completed doc_handle doc
       | Continue { state; last_tok; node } ->
         let n_errors =
           Lang.Compat.List.count Lang.Diagnostic.is_error node.Node.diags
@@ -1099,7 +1123,8 @@ let resume_check ~io ~token ~(last_tok : Lang.Range.t) ~doc ~target =
   | None ->
     (* Guard against internal tricky eof errors *)
     let completed = Completion.Failed last_tok in
-    set_completion ~completed doc
+    let fake_pa = Coq.Parsing.(Parsable.make (Stream.of_string "")) in
+    set_completion ~completed fake_pa doc
   | Some processed_content ->
     let handle =
       Coq.Parsing.(

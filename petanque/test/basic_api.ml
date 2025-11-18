@@ -19,11 +19,14 @@ let dump_msgs () = List.iter (Format.eprintf "%s@\n") (List.rev !msgs)
 
 let init ~token =
   let debug = false in
+  let record_comments = false in
   Shell.trace_ref := trace;
   Shell.message_ref := message;
   (* Will this work on Windows? *)
   let open Coq.Compat.Result.O in
-  let _ : _ Result.t = Shell.init_agent ~token ~debug ~roots:[] in
+  let _ : _ Result.t =
+    Shell.init_agent ~token ~debug ~record_comments ~roots:[]
+  in
   (* Twice to test for #766 *)
   let root, uri = prepare_paths () in
   let* () = Shell.set_workspace ~token ~debug ~root in
