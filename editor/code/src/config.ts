@@ -70,6 +70,7 @@ export enum ShowGoalsOnCursorChange {
 export interface CoqLspClientConfig {
   show_goals_on: ShowGoalsOnCursorChange;
   pp_format: "Str" | "Pp" | "Box";
+  compact_hypotheses: boolean;
   check_on_scroll: boolean;
 }
 
@@ -90,6 +91,7 @@ export namespace CoqLspClientConfig {
       show_goals_on: wsConfig.show_goals_on,
       pp_format: pp_type_to_pp_format(wsConfig.pp_type),
       check_on_scroll: wsConfig.check_on_scroll,
+      compact_hypotheses: wsConfig.compact_hypotheses,
     };
     return obj;
   }

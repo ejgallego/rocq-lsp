@@ -308,6 +308,11 @@
               "Coq Layout Engine (experimental)"
             ]
           },
+          "coq-lsp.compact_hypotheses": {
+            "type": "boolean",
+            "default": true,
+            "description": "Whether to group hypotheses with a similar type together in the goal window"
+          },
           "coq-lsp.messages_follow_goal": {
             "type": "boolean",
             "default": false,

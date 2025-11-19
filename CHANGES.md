@@ -40,6 +40,9 @@
    checking of Rocq's `Require`s when needed. The algorithm is not
    smart at all yet, as it invalidates all the requires for all open
    files. (@ejgallego, @helguo, #1059)
+ - [goals] New option (LSP, petanque, API) to display and retrieve
+   goals without the compacted context. See protocol docs for more
+   information. (@ejgallego, alexJ, #1065, cc #1043)
 
 # coq-lsp 0.2.4: (W)Activation
 ------------------------------

@@ -130,7 +130,7 @@ let run (ic, oc) =
   let* st = r ~st ~tac:"Search naat." in
   check_search st 6;
   (* No goals after qed *)
-  S.goals { st = extract_st st }
+  S.goals { st = extract_st st; opts = None }
 
 let main () =
   let server_out, server_in = Unix.open_process "pet" in
