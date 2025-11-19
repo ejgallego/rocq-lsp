@@ -479,6 +479,11 @@ let create ~token ~env ~uri ~languageId ~version ~raw =
   handle_contents_creation ~env ~uri ~version ~languageId ~raw
     (handle_doc_creation_exec ~token)
 
+let create ~token ~env ~uri ~languageId ~version ~raw =
+  NewProfile.profile "Doc.create"
+    (fun () -> create ~token ~env ~uri ~languageId ~version ~raw)
+    ()
+
 (* Used in bump, we should consolidate with create *)
 let recreate ~token ~doc ~version ~contents =
   let env, uri, languageId = (doc.env, doc.uri, doc.languageId) in
@@ -562,6 +567,11 @@ let bump_version ~token ~version ~raw doc =
   | Contents.R.Error e ->
     conv_error_doc ~raw ~uri ~languageId ~version ~env:doc.env ~root:doc.root e
   | Contents.R.Ok contents -> bump_version ~token ~version ~contents doc
+
+let bump_version ~token ~version ~raw doc =
+  NewProfile.profile "Doc.bump_version"
+    (fun () -> bump_version ~token ~version ~raw doc)
+    ()
 
 let update_env ~doc ~env =
   let range = Completion.range doc.completed in
@@ -866,6 +876,11 @@ let parse_action ~token ~lines ~st last_tok doc_handle =
       in
       (Skip (span_range, last_tok_range), parse_diags, feedback, time))
 
+let parse_action ~token ~lines ~st last_tok doc_handle =
+  NewProfile.profile "Doc.parse_action"
+    (fun () -> parse_action ~token ~lines ~st last_tok doc_handle)
+    ()
+
 (* Result of node-building action *)
 type document_action =
   | Stop of Completion.t * Node.t
@@ -983,6 +998,14 @@ let document_action ~token ~io ~st ~parsing_diags ~parsing_feedback
       node_of_coq_result ~token ~doc ~range:ast_range ~prev ~ast ~st
         ~parsing_diags ~parsing_feedback ~feedback ~info last_tok_new res)
 
+let document_action ~token ~io ~st ~parsing_diags ~parsing_feedback
+    ~parsing_time ~prev ~doc last_tok doc_handle action =
+  NewProfile.profile "Doc.document_action"
+    (fun () ->
+      document_action ~token ~io ~st ~parsing_diags ~parsing_feedback
+        ~parsing_time ~prev ~doc last_tok doc_handle action)
+    ()
+
 module Target = struct
   type t =
     | End
@@ -1091,6 +1114,12 @@ let process_and_parse ~io ~token ~target ~uri ~version doc last_tok doc_handle =
   let doc = { doc with nodes = List.rev doc.nodes } in
   doc
 
+let process_and_parse ~io ~token ~target ~uri ~version doc last_tok doc_handle =
+  NewProfile.profile "Doc.process_and_parse"
+    (fun () ->
+      process_and_parse ~io ~token ~target ~uri ~version doc last_tok doc_handle)
+    ()
+
 let log_doc_completion (completed : Completion.t) =
   let timestamp = Unix.gettimeofday () in
   let range = Completion.range completed in
@@ -1163,6 +1192,9 @@ let check ~io ~token ~target ~doc () =
     log_doc_completion doc.completed;
     Util.print_stats ();
     doc
+
+let check ~io ~token ~target ~doc () =
+  NewProfile.profile "Doc.check" (fun () -> check ~io ~token ~target ~doc ()) ()
 
 let save ~token ~doc =
   match doc.completed with
