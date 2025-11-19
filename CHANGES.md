@@ -78,6 +78,9 @@
    (@ejgallego, #590)
  - [plugins] New plugin to dump document data (@ejgallego, Stefania
    Dumbrava, #1075)
+ - [fcc] New option `--trace-file` that will generate trace data for
+   visualizing with perfetto.dev (@ejgallego, AlexJ, Gaëtan Gilbert,
+   #1076)
 
 # coq-lsp 0.2.4: (W)Activation
 ------------------------------
