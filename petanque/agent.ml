@@ -185,7 +185,7 @@ let fb_print_string (lvl, { Coq.Message.Payload.msg; _ }) =
 
 let analyze_after_run ~hash st feedback =
   let proof_finished =
-    let goals = Fleche.Info.Goals.get_goals_unit ~st in
+    let goals = Fleche.Info.Goals.get_goals_unit ~compact:false ~st in
     match goals with
     | None -> true
     | Some goals when proof_finished goals -> true
@@ -251,7 +251,13 @@ let run_at_pos ~token ?opts ~doc ~point ~command () :
     Run_result.map ~f:(fun _ -> ()) res
   | None -> Error (Error.make_request No_node_at_point)
 
-let goals ~token ~st =
+module Goal_opts = struct
+  type t = { compact : bool }
+
+  let default = { compact = true }
+end
+
+let goals ~token ~st ?(opts = Goal_opts.default) () =
   let f goals =
     let f = Coq.Goals.Reified_goal.map ~f:Coq.Pp_t.to_string in
     let g = Coq.Pp_t.to_string in
@@ -259,7 +265,8 @@ let goals ~token ~st =
     fun _feedback -> Option.map (Coq.Goals.map ~f ~g) goals
   in
   let pr = Fleche.Info.Goals.to_pp in
-  Coq.Protect.E.map ~f (Fleche.Info.Goals.goals ~token ~pr ~st)
+  let { Goal_opts.compact } = opts in
+  Coq.Protect.E.map ~f (Fleche.Info.Goals.goals ~token ~compact ~pr ~st)
   |> protect_to_result
 
 module Premise = struct

@@ -285,6 +285,7 @@ interface GoalRequest {
     textDocument: VersionedTextDocumentIdentifier;
     position: Position;
     pp_format?: 'Box' | 'Pp' | 'Str';
+    compact?: boolean;
     pretac?: string;
     command?: string;
     mode?: 'Prev' | 'After';
@@ -301,6 +302,11 @@ Note that `rocq-lsp` will execute the Rocq document up to the
   (to be documented, see our rendered under
   `editor/code/lib/format-pprint`), `String` will return the goals and
   message bodies in plain text.
+
+- `compact` controls whether the hypotheses will be "compacted", that
+  is to say, given for example hypotheses `a`, `b` of type `nat`, they
+  will be displayed as `a, b : nat`, or separately, that is to say
+  `a : nat \n b : nat`.
 
 - `mode` (if absent, the `goal_after_tactic` global configuration
   parameter will be used) controls whether the `goals` returned
@@ -432,6 +438,8 @@ utils for those interested in richer printing formats.
 - v0.2.5:
   + `petanque/get_state_at_pos` will not error if there is no node at point
   + new method `petanque/run_at_pos`
+  + new option `compact` in goal requests (both LSP and petanque) to
+    display "non-compacted" contexts.
 - v0.2.4:
   + behavior of `messages`, `error`, and `range` can now be
     controlled by the `messages_follow_goal` global setting
@@ -965,7 +973,9 @@ of the previous node.
 ### `petanque/goals`
 
 ```typescript
-interface Params = { st: number }
+interface Goal_opts = { compact : bool }
+
+interface Params = { st: number; opts?: Goal_opts }
 ```
 
 ```typescript

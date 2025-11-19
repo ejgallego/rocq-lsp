@@ -71,6 +71,7 @@ export interface GoalRequest {
   textDocument: VersionedTextDocumentIdentifier;
   position: Position;
   pp_format?: "Box" | "Pp" | "Str";
+  compact?: boolean;
   pretac?: string;
   command?: string;
   mode?: "Prev" | "After";

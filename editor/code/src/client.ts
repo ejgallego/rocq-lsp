@@ -334,7 +334,8 @@ export function activateCoqLSP(
       uri,
       version,
       position,
-      config.pp_format
+      config.pp_format,
+      config.compact_hypotheses
     );
   };
 
