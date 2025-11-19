@@ -28,66 +28,49 @@ module Libnames = Ser_libnames
 module Constrexpr = Ser_constrexpr
 module Genintern = Ser_genintern
 module Evaluable = Ser_evaluable
+module EConstr   = Ser_eConstr
+module Pattern   = Ser_pattern
+module Genarg    = Ser_genarg
+module Genredexpr = Ser_genredexpr
 
-type 'a red_atom =
-  [%import: 'a Genredexpr.red_atom]
+module BO =
+struct
+  let name = "Redexpr.user_red_expr"
+  type 'a t = 'a Redexpr.user_red_expr
+end
+module B = SerType.Opaque1(BO)
+
+type 'a user_red_expr = 'a B.t
+ [@@deriving sexp,yojson,hash,compare]
+
+type raw_red_expr =
+  [%import: Redexpr.raw_red_expr]
+[@@deriving sexp,yojson,hash,compare]
+
+type glob_red_expr =
+  [%import: Redexpr.glob_red_expr]
+[@@deriving sexp,yojson,hash,compare]
+
+module A = struct
+
+  type raw =
+    [%import: Redexpr.raw_red_expr]
   [@@deriving sexp,yojson,hash,compare]
 
-type strength =
-  [%import: Genredexpr.strength]
+  type glb =
+    [%import: Redexpr.glob_red_expr]
   [@@deriving sexp,yojson,hash,compare]
 
-type 'a glob_red_flag =
-  [%import: 'a Genredexpr.glob_red_flag]
+  type top =
+    [%import: Redexpr.red_expr]
   [@@deriving sexp,yojson,hash,compare]
+end
 
-type ('a,'b,'c) red_context =
-  [%import: ('a,'b,'c) Genredexpr.red_context]
-  [@@deriving sexp,yojson,hash,compare]
+let ser_wit_red_expr = let module M = Ser_genarg.GS(A) in M.genser
 
-type ('a,'b,'c,'d,'e,'f) red_expr_gen0 =
-  [%import: ('a,'b,'c,'d,'e,'f) Genredexpr.red_expr_gen0]
-  [@@deriving sexp,yojson,hash,compare]
+let register () =
+    Ser_genarg.register_genser Redexpr.wit_red_expr ser_wit_red_expr;
+    ()
 
-type ('a,'b,'c,'d,'e) red_expr_gen =
-  [%import: ('a,'b,'c,'d,'e) Genredexpr.red_expr_gen]
-  [@@deriving sexp,yojson,hash,compare]
-
-(* Helpers for raw_red_expr *)
-type r_trm =
-  [%import: Genredexpr.r_trm]
-  [@@deriving sexp,yojson,hash,compare]
-
-type r_cst =
-  [%import: Genredexpr.r_cst]
-  [@@deriving sexp,yojson,hash,compare]
-
-type r_pat =
-  [%import: Genredexpr.r_pat]
-  [@@deriving sexp,yojson,hash,compare]
-
-type 'a raw_red_expr =
-  [%import: 'a Genredexpr.raw_red_expr]
-  [@@deriving sexp,yojson,hash,compare]
-
-(* glob_red_expr *)
-
-type 'a and_short_name =
-  [%import: 'a Genredexpr.and_short_name]
-  [@@deriving sexp,yojson,hash,compare]
-
-type g_trm =
-  [%import: Genredexpr.g_trm]
-  [@@deriving sexp,yojson,hash,compare]
-
-type g_cst =
-  [%import: Genredexpr.g_cst]
-  [@@deriving sexp,yojson,hash,compare]
-
-type g_pat =
-  [%import: Genredexpr.g_pat]
-  [@@deriving sexp,yojson,hash,compare]
-
-type 'a glob_red_expr =
-  [%import: 'a Genredexpr.glob_red_expr]
-  [@@deriving sexp,yojson,hash,compare]
+let _ =
+  register ()

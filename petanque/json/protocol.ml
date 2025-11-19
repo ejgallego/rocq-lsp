@@ -244,7 +244,11 @@ module Goals = struct
   let method_ = "petanque/goals"
 
   module Params = struct
-    type t = { st : int } [@@deriving yojson]
+    type t =
+      { st : int
+      ; opts : Goal_opts.t option [@default None]
+      }
+    [@@deriving yojson]
   end
 
   module Response = struct
@@ -253,13 +257,18 @@ module Goals = struct
 
   module Handler = struct
     module Params = struct
-      type t = { st : State.t } [@@deriving yojson]
+      type t =
+        { st : State.t
+        ; opts : Goal_opts.t option [@default None]
+        }
+      [@@deriving yojson]
     end
 
     module Response = Response
 
     let handler =
-      HType.Immediate (fun ~token { Params.st } -> Agent.goals ~token ~st)
+      HType.Immediate
+        (fun ~token { Params.st; opts } -> Agent.goals ~token ?opts ~st ())
   end
 end
 

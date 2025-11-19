@@ -46,6 +46,7 @@ module Notation_term = Ser_notation_term
 module Hints         = Ser_hints
 module Goptions      = Ser_goptions
 module Genredexpr    = Ser_genredexpr
+module Redexpr       = Ser_redexpr
 module Universes     = Ser_universes
 module Attributes    = Ser_attributes
 module Gramlib       = Ser_gramlib

@@ -176,14 +176,15 @@ export class InfoPanel {
     uri: URI,
     version: number,
     position: Position,
-    pp_format: "Box" | "Pp" | "Str"
+    pp_format: "Box" | "Pp" | "Str",
+    compact: boolean
   ) {
     let textDocument = VersionedTextDocumentIdentifier.create(uri, version);
 
     // Example to test the `command` parameter
     // let command = "idtac.";
     // let cursor: GoalRequest = { textDocument, position, command };
-    let cursor: GoalRequest = { textDocument, position, pp_format };
+    let cursor: GoalRequest = { textDocument, position, pp_format, compact };
     this.updateInfoPanelForCursor(client, cursor);
     this.updateAPIClientForCursor(client, cursor);
   }

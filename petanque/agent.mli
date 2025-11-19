@@ -150,10 +150,16 @@ val run_at_pos :
   -> unit
   -> unit Run_result.t R.t
 
+module Goal_opts : sig
+  type t = { compact : bool }
+end
+
 (** [goals ~token ~st] return the list of goals for a given [st] *)
 val goals :
      token:Coq.Limits.Token.t
   -> st:State.t
+  -> ?opts:Goal_opts.t
+  -> unit
   -> (string, string) Coq.Goals.reified option R.t
 
 module Premise : sig

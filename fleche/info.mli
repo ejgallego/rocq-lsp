@@ -44,10 +44,13 @@ module O : S with module P := Offset
 (** We move towards a more modular design here, for preprocessing *)
 module Goals : sig
   val get_goals_unit :
-    st:Coq.State.t -> (unit, Coq.Pp_t.t) Coq.Goals.reified option
+       compact:bool
+    -> st:Coq.State.t
+    -> (unit, Coq.Pp_t.t) Coq.Goals.reified option
 
   val get_goals :
-       st:Coq.State.t
+       compact:bool
+    -> st:Coq.State.t
     -> (Environ.env * Evd.evar_map * EConstr.t, Coq.Pp_t.t) Coq.Goals.reified
        option
 
@@ -59,6 +62,7 @@ module Goals : sig
   val goals :
        token:Coq.Limits.Token.t
     -> pr:'a printer
+    -> compact:bool
     -> st:Coq.State.t
     -> (('a, Coq.Pp_t.t) Coq.Goals.reified option, Coq.Loc_t.t) Coq.Protect.E.t
 

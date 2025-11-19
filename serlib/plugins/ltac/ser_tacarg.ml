@@ -34,6 +34,7 @@ module EConstr      = Ser_eConstr
 module Hints        = Ser_hints
 module Ltac_pretype = Ser_ltac_pretype
 module Genredexpr   = Ser_genredexpr
+module Redexpr      = Ser_redexpr
 module Gentactic    = Ser_gentactic
 
 module Ltac_plugin = struct

@@ -57,7 +57,7 @@ let snoc_test ~token ~doc =
   let* st = r ~st ~tac:"-" in
   let* st = r ~st ~tac:"now simpl; rewrite IHl." in
   let* st = r ~st ~tac:"Qed." in
-  Agent.goals ~token ~st:(extract_st st)
+  Agent.goals ~token ~st:(extract_st st) ()
 
 let finished_stack_test ~token ~doc =
   let open Coq.Compat.Result.O in
@@ -78,7 +78,7 @@ let finished_stack_test ~token ~doc =
   (* Check that we properly detect no goals with deep stacks. *)
   assert proof_finished;
   let* st = Agent.run ~token ~st ~tac:"Qed." () in
-  Agent.goals ~token ~st:(extract_st st)
+  Agent.goals ~token ~st:(extract_st st) ()
 
 let multi_shot_test ~token ~doc =
   let open Coq.Compat.Result.O in
@@ -88,7 +88,7 @@ let multi_shot_test ~token ~doc =
       ~tac:"induction l. idtac. - reflexivity. - now simpl; rewrite IHl. Qed."
       ()
   in
-  Agent.goals ~token ~st:(extract_st st)
+  Agent.goals ~token ~st:(extract_st st) ()
 
 let fake_start_test ~token ~doc =
   match Agent.start ~token ~doc ~thm:"foo" () with
