@@ -42,6 +42,7 @@ let go ~int_backend args =
       ; debug
       ; files
       ; plugins
+      ; trace_file
       ; max_errors
       ; coq_diags_level
       } =
@@ -65,4 +66,4 @@ let go ~int_backend args =
   let cc = Cc.{ root_state; workspaces; default; io; token } in
   (* Initialize plugins *)
   plugin_init plugins;
-  Compile.compile ~cc files
+  Compile.compile ~cc ~trace_file files

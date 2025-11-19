@@ -59,7 +59,33 @@ let compile_file ~cc file : int =
       Theory.close ~uri;
       status_of_doc doc)
 
-let compile ~cc =
-  List.fold_left
+let compile_file ~cc file : int =
+  NewProfile.profile "compile" (fun () -> compile_file ~cc file) ()
+
+let oprofile = ref None
+
+let init_profile trace_file =
+  match trace_file with
+  | None -> ()
+  | Some file ->
+    let oc = Stdlib.open_out file in
+    let fmt = Format.formatter_of_out_channel oc in
+    oprofile := Some (oc, fmt);
+    NewProfile.init { output = fmt ; fname = "fcc" }
+
+let finish_profile () =
+  match !oprofile with
+  | None -> ()
+  | Some (oc, fmt) ->
+    NewProfile.finish ();
+    Format.pp_print_flush fmt ();
+    Stdlib.close_out oc
+
+let compile ~cc ~trace_file =
+  init_profile trace_file;
+  let res = List.fold_left
     (fun status file -> if status = 0 then compile_file ~cc file else status)
-    0
+    0 in
+  (* XXX Try / finally *)
+  finish_profile ();
+  res

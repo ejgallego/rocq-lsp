@@ -12,6 +12,7 @@ type t =
   ; debug : bool  (** run in debug mode *)
   ; display : Display.t  (** display level *)
   ; plugins : string list  (** Flèche plugins to load *)
+  ; trace_file : string option  (** Save flame profile to file *)
   ; max_errors : int option
         (** Maximum erros before aborting the compilation *)
   ; coq_diags_level : int

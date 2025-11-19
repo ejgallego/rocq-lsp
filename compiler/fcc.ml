@@ -2,7 +2,7 @@
 open Cmdliner
 open Fcc_lib
 
-let fcc_main int_backend roots display debug plugins files coqlib findlib_config
+let fcc_main int_backend roots display debug plugins trace_file files coqlib findlib_config
     ocamlpath rload_path load_path require_libraries no_vo max_errors
     coq_diags_level =
   let vo_load_path = rload_path @ load_path in
@@ -25,6 +25,7 @@ let fcc_main int_backend roots display debug plugins files coqlib findlib_config
       ; files
       ; debug
       ; plugins
+      ; trace_file
       ; max_errors
       ; coq_diags_level
       }
@@ -50,6 +51,10 @@ let file : string list Term.t =
 let plugins : string list Term.t =
   let doc = "Compiler plugins to load" in
   Arg.(value & opt_all string [] & info [ "plugin" ] ~docv:"PLUGINS" ~doc)
+
+let trace_file : string option Term.t =
+  let doc = "Activate profiling and output a Rocq flame graph in FILE" in
+  Arg.(value & opt (some string) None & info [ "trace_file" ] ~docv:"FILE" ~doc)
 
 let no_vo : bool Term.t =
   let doc = "Don't generate .vo files at the end of compilation" in
@@ -97,7 +102,7 @@ let fcc_cmd : int Cmd.t =
   let fcc_term =
     let open Coq.Args in
     Term.(
-      const fcc_main $ int_backend $ roots $ display $ debug $ plugins $ file
+      const fcc_main $ int_backend $ roots $ display $ debug $ plugins $ trace_file $ file
       $ coqlib $ findlib_config $ ocamlpath $ rload_paths $ qload_paths
       $ ri_from $ no_vo $ max_errors $ coq_diags_level)
   in
