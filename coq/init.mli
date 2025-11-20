@@ -37,3 +37,6 @@ val doc_init :
   -> workspace:Workspace.t
   -> uri:Lang.LUri.File.t
   -> (State.t, Loc.t) Protect.E.t
+
+val mk_fb_handler :
+  (int * Loc.t Message.Payload.t) list ref -> Feedback.feedback -> unit

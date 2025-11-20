@@ -1212,6 +1212,28 @@ let save ~token ~doc =
     let error = Coq.Pp_t.(str "Can't save document that failed to check") in
     Coq.Protect.E.error error
 
+let doc_to_disk ~doc ~in_file : unit =
+  let out_vof = Filename.(remove_extension in_file) ^ ".vof" in
+  Coq.Compat.Ocaml_414.Out_channel.with_open_bin out_vof (fun oc ->
+      Marshal.to_channel oc doc [])
+
+let doc_of_disk ~in_file : t =
+  let out_vof = Filename.(remove_extension in_file) ^ ".vof" in
+  Stdlib.In_channel.with_open_bin out_vof (fun ic -> Marshal.from_channel ic)
+
+let save_vof ~token ~doc =
+  match doc.completed with
+  | Yes _ ->
+    let st =
+      Util.last doc.nodes |> Stdlib.Option.fold ~some:Node.state ~none:doc.root
+    in
+    let uri = doc.uri in
+    let in_file = Lang.LUri.File.to_string_file uri in
+    Coq.State.in_state ~token ~st ~f:(fun () -> doc_to_disk ~doc ~in_file) ()
+  | _ ->
+    let error = Coq.Pp_t.(str "Can't save document that failed to check") in
+    Coq.Protect.E.error error
+
 (* run api, experimental *)
 
 (* Adaptor, should be supported in memo directly *)

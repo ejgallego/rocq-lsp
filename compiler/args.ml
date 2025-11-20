@@ -28,6 +28,8 @@ type t =
   ; coq_diags_level : int
         (** Whether to include feedback messages in the diagnostics *)
   ; record_comments : bool  (** Record comments (experimental) *)
+  ; save_vof : bool  (** Save a vof file *)
+  ; load_vof : bool  (** Load a vof file instead of compiling *)
   }
 
 let compute_default_plugins ~no_vo ~plugins =
