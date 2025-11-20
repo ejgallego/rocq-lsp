@@ -29,31 +29,19 @@ type format =
   | Box
 
 (* BoxLayout helpers *)
-let set_flag flag value f =
-  let v = !flag in
-  flag := value;
-  try
-    let res = f () in
-    flag := v;
-    res
-  with exn ->
-    flag := v;
-    raise exn
 
-let layout_term env sigma t =
+let layout_term ~flags env sigma t =
   (* Coq stores goals in kernel-format, we need to recover the AST back before
      calling the layout engine; this is called "externalization" in Coq
      jargon *)
-  let t = Constrextern.extern_type env sigma t in
+  let t = Constrextern.extern_type ~flags env sigma t in
   let html = Layout.(Term.layout env sigma t |> BoxModel.Render.to_html) in
   Format.asprintf "@[%a@]" (Tyxml.Html.pp_elt ()) html
 
 let layout_term env sigma t =
-  set_flag
-    (* Notations = no *)
-    (* Constrextern.print_no_symbol true *)
-    (* Notations = yes *)
-    Constrextern.print_no_symbol false (fun () -> layout_term env sigma t)
+  let flags = PrintingFlags.current() in
+  let flags = { flags with extern = { flags.extern with notations = true } } in
+  layout_term ~flags env sigma t
 
 let pp ~pp_format ~token env evd x =
   match pp_format with
