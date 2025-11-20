@@ -4,7 +4,7 @@ open Fcc_lib
 
 let fcc_main int_backend roots display debug plugins files coqlib findlib_config
     ocamlpath rload_path load_path require_libraries no_vo max_errors
-    coq_diags_level =
+    coq_diags_level save_vof load_vof =
   let vo_load_path = rload_path @ load_path in
   let args = [] in
   let cmdline =
@@ -27,6 +27,8 @@ let fcc_main int_backend roots display debug plugins files coqlib findlib_config
       ; plugins
       ; max_errors
       ; coq_diags_level
+      ; save_vof
+      ; load_vof
       }
   in
   Driver.go ~int_backend args
@@ -54,6 +56,14 @@ let plugins : string list Term.t =
 let no_vo : bool Term.t =
   let doc = "Don't generate .vo files at the end of compilation" in
   Arg.(value & flag & info [ "no_vo" ] ~doc)
+
+let save_vof : bool Term.t =
+  let doc = "Save a .vof file with Fleche-specific metadata" in
+  Arg.(value & flag & info [ "vof" ] ~doc)
+
+let load_vof : bool Term.t =
+  let doc = "Save a .vof file with Fleche-specific metadata" in
+  Arg.(value & flag & info [ "load_vof" ] ~doc)
 
 let max_errors : int option Term.t =
   let doc = "Maximum errors in files before aborting" in
@@ -99,7 +109,7 @@ let fcc_cmd : int Cmd.t =
     Term.(
       const fcc_main $ int_backend $ roots $ display $ debug $ plugins $ file
       $ coqlib $ findlib_config $ ocamlpath $ rload_paths $ qload_paths
-      $ ri_from $ no_vo $ max_errors $ coq_diags_level)
+      $ ri_from $ no_vo $ max_errors $ coq_diags_level $ save_vof $ load_vof)
   in
   let exits = Exit_codes.[ fatal; stopped; scheduled; uri_failed ] in
   Cmd.(v (Cmd.info "fcc" ~exits ~version ~doc ~man) fcc_term)

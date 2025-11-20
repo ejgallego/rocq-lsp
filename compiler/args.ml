@@ -16,6 +16,8 @@ type t =
         (** Maximum erros before aborting the compilation *)
   ; coq_diags_level : int
         (** Whether to include feedback messages in the diagnostics *)
+  ; save_vof : bool
+  ; load_vof : bool
   }
 
 let compute_default_plugins ~no_vo ~plugins =

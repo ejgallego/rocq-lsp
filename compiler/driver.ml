@@ -44,6 +44,8 @@ let go ~int_backend args =
       ; plugins
       ; max_errors
       ; coq_diags_level
+      ; save_vof
+      ; load_vof = _
       } =
     args
   in
@@ -62,7 +64,62 @@ let go ~int_backend args =
   let workspaces = List.map make_ws roots in
   List.iter (log_workspace ~io) workspaces;
   let () = apply_config ~max_errors in
-  let cc = Cc.{ root_state; workspaces; default; io; token } in
+  let cc = Cc.{ root_state; workspaces; default; io; token; save_vof } in
   (* Initialize plugins *)
   plugin_init plugins;
   Compile.compile ~cc files
+
+let go ~int_backend args =
+  let { Args.cmdline = _
+      ; roots = _
+      ; display
+      ; debug = _
+      ; files
+      ; plugins
+      ; max_errors = _
+      ; coq_diags_level
+      ; save_vof = _
+      ; load_vof
+      } =
+    args
+  in
+  if load_vof then
+    let open Fleche in
+
+    (* Initialize logging. *)
+    let fb_handler = Coq.Init.mk_fb_handler Coq.Protect.fb_queue in
+    ignore (Feedback.add_feeder fb_handler);
+
+    plugin_init plugins;
+
+    let perfData = Option.is_empty fcc_test in
+    let io = Output.init ~display ~perfData ~coq_diags_level in
+    let in_file = List.nth files 0 in
+    let in_vof = Filename.(remove_extension in_file) ^ ".vof" in
+    let doc = Doc.doc_of_disk ~in_file:in_vof in
+    Io.Report.msg ~io ~lvl:Info "vof file loaded";
+    Io.Report.msg ~io ~lvl:Info "document has %d nodes" (List.length doc.nodes);
+    Io.Report.msg ~io ~lvl:Info "calling plugins";
+    (* Little test *)
+    let token = Coq.Limits.Token.create () in
+    Theory.Register.Completed.fire ~io ~token ~doc;
+    let node = (List.rev doc.nodes) |> List.hd in
+    let cmds = "About cos_eq_0_2PI_1." in
+    (if false then
+    begin
+      match Doc.run ~token ?loc:None ~st:node.state cmds with
+      | Coq.Protect.E.{r = Coq.Protect.R.Completed (Ok _st); feedback} ->
+        Io.Log.feedback "run_test" feedback;
+        Io.Report.msg ~io ~lvl:Info "Number of feedbacks: %d" (List.length feedback);
+        Io.Report.msg ~io ~lvl:Info "About run!"
+      | Coq.Protect.E.{r = Completed (Error (User msg)); feedback}
+      | Coq.Protect.E.{r = Completed (Error (Anomaly msg)); feedback} ->
+        Io.Log.feedback "run test" feedback;
+        Io.Report.msg ~io ~lvl:Error "error running about vof file %a" Coq.Pp_t.pp_with msg.msg
+      | Coq.Protect.E.{r = Interrupted; feedback} ->
+        Io.Log.feedback "run test" feedback;
+        Io.Report.msg ~io ~lvl:Error "about vof file interrupted"
+    end);
+    0
+  else
+    go ~int_backend args
