@@ -16,10 +16,10 @@ module Lsp = Fleche_lsp
 
 module State : sig
   type t =
-    { cmdline : Coq.Workspace.CmdLine.t
-    ; root_state : Coq.State.t
-    ; workspaces : (string * (Coq.Workspace.t, string) Result.t) list
-    ; default_workspace : Coq.Workspace.t  (** fail safe *)
+    { cmdline : Pure.Workspace.CmdLine.t
+    ; root_state : Pure.State.t
+    ; workspaces : (string * (Pure.Workspace.t, string) Result.t) list
+    ; default_workspace : Pure.Workspace.t  (** fail safe *)
     }
 end
 
@@ -28,8 +28,8 @@ exception Lsp_exit
 (** Lsp special init loop *)
 module Init_effect : sig
   type t =
-    | Success of (string * (Coq.Workspace.t, string) Result.t) list
-    (* List of workspace roots, + maybe an associated Coq workspace for the
+    | Success of (string * (Pure.Workspace.t, string) Result.t) list
+    (* List of workspace roots, + maybe an associated Pure workspace for the
        path *)
     | Loop
     | Exit
@@ -38,7 +38,7 @@ end
 val lsp_init_process :
      ofn:(Lsp.Base.Message.t -> unit)
   -> io:Fleche.Io.CallBack.t
-  -> cmdline:Coq.Workspace.CmdLine.t
+  -> cmdline:Pure.Workspace.CmdLine.t
   -> debug:bool
   -> Lsp.Base.Message.t
   -> Init_effect.t

@@ -39,7 +39,7 @@ let rec process_queue ~delay ~io ~ofn ~state : unit =
 
 let concise_cb ofn =
   let diagnostics ~uri ~version diags =
-    let pp msg = `String (Coq.Pp_t.to_string msg) in
+    let pp msg = `String (Pure.Pp_t.to_string msg) in
     if List.length diags > 0 then
       Lsp.Core.mk_diagnostics ~uri ~version ~pp diags |> ofn
   in
@@ -55,11 +55,12 @@ let concise_cb ofn =
     }
 
 (* Main loop *)
-let coq_init ~debug =
-  let load_module = Dynlink.loadfile in
-  let load_plugin = Coq.Loader.plugin_handler None in
-  let vm, warnings = (true, None) in
-  Coq.Init.(coq_init { debug; load_module; load_plugin; vm; warnings })
+let coq_init ~debug:_ =
+  (* let load_module = Dynlink.loadfile in *)
+  (* let load_plugin = Pure.Loader.plugin_handler None in *)
+  (* let vm, warnings = (true, None) in *)
+  (* Pure.Init.(coq_init { debug; load_module; load_plugin; vm; warnings }) *)
+  Pure.Init.init ()
 
 let exit_notification =
   Lsp.Base.Message.(Notification { method_ = "exit"; params = [] })
@@ -111,10 +112,11 @@ end = struct
       close_out oc
 end
 
-let lsp_main bt coqlib findlib_config ocamlpath vo_load_path require_libraries
-    delay int_backend lsp_trace lsp_trace_file =
-  Coq.Limits.select_best int_backend;
-  Coq.Limits.start ();
+(* let lsp_main bt coqlib findlib_config ocamlpath vo_load_path require_libraries *)
+(*     delay int_backend lsp_trace lsp_trace_file = *)
+let lsp_main delay lsp_trace lsp_trace_file =
+  (* Pure.Limits.select_best int_backend; *)
+  (* Pure.Limits.start (); *)
 
   (* Try to be sane w.r.t. \r\n in Windows *)
   Stdlib.set_binary_mode_in stdin true;
@@ -139,18 +141,18 @@ let lsp_main bt coqlib findlib_config ocamlpath vo_load_path require_libraries
      initialize is received, [Trace.setup] violates that if there is an error
      when creating the log file. *)
 
-  (* Core Coq initialization *)
-  let debug = bt || Fleche.Debug.backtraces in
+  (* Core Pure initialization *)
+  let debug = (* bt ||  *)Fleche.Debug.backtraces in
   let root_state = coq_init ~debug in
-  let cmdline =
-    { Coq.Workspace.CmdLine.coqlib
-    ; findlib_config
-    ; ocamlpath
-    ; vo_load_path
-    ; args = []
-    ; require_libraries
-    }
-  in
+  let cmdline = Pure.Workspace.CmdLine.make () in
+  (*   { Pure.Workspace.CmdLine.coqlib *)
+  (*   ; findlib_config *)
+  (*   ; ocamlpath *)
+  (*   ; vo_load_path *)
+  (*   ; args = [] *)
+  (*   ; require_libraries *)
+  (*   } *)
+  (* in *)
 
   (* Read JSON-RPC messages and push them to the queue *)
   let rec read_loop () =
@@ -181,7 +183,7 @@ let lsp_main bt coqlib findlib_config ocamlpath vo_load_path require_libraries
     in
 
     (* Core LSP loop context *)
-    let default_workspace = Coq.Workspace.default ~debug ~cmdline in
+    let default_workspace = Pure.Workspace.default ~debug ~cmdline in
     let state = { State.root_state; cmdline; workspaces; default_workspace } in
 
     (* Read workspace state (noop for now) *)
@@ -197,11 +199,11 @@ let lsp_main bt coqlib findlib_config ocamlpath vo_load_path require_libraries
     Fleche.Io.Report.msg ~io ~lvl:Error "[LSP shutdown] EOF\n"
   | exn ->
     let bt = Printexc.get_backtrace () in
-    let exn, info = Exninfo.capture exn in
+    (* let exn, info = Exninfo.capture exn in *)
     let exn_msg = Printexc.to_string exn in
     L.trace "fatal error" "%s\n%s" exn_msg bt;
-    L.trace "fatal_error [coq iprint]" "%a" Pp.pp_with
-      CErrors.(iprint (exn, info));
+    (* L.trace "fatal_error [coq iprint]" "%a" Pp.pp_with *)
+    (*   CErrors.(iprint (exn, info)); *)
     L.trace "server crash" "%s\n%s" exn_msg bt;
     Fleche.Io.Report.msg ~io ~lvl:Error
       "[uncontrolled LSP shutdown] server crash:\n%s" exn_msg
@@ -224,26 +226,27 @@ let lsp_trace_file : string Term.t =
     value & opt string default_file
     & info [ "lsp_trace_file" ] ~docv:"TRACE_FILE" ~doc)
 
-let term_append l =
+let _term_append l =
   Term.(List.(fold_right (fun t l -> const append $ t $ l) l (const [])))
 
 let lsp_cmd : unit Cmd.t =
-  let doc = "Coq LSP Server" in
+  let doc = "Pure LSP Server" in
   let man =
     [ `S "DESCRIPTION"
-    ; `P "Coq LSP server"
+    ; `P "Pure LSP server"
     ; `S "USAGE"
     ; `P "See the documentation on the project's webpage for more information"
     ]
   in
-  let open Coq.Args in
-  let vo_load_path = term_append [ rload_paths; qload_paths ] in
+  (* let open Pure.Args in *)
+  (* let _vo_load_path = term_append [ rload_paths; qload_paths ] in *)
   Cmd.(
     v
-      (Cmd.info "coq-lsp" ~version:Fleche.Version.server ~doc ~man)
-      Term.(
-        const lsp_main $ bt $ coqlib $ findlib_config $ ocamlpath $ vo_load_path
-        $ ri_from $ delay $ int_backend $ lsp_trace $ lsp_trace_file))
+      (Cmd.info "lp-lsp" ~version:Fleche.Version.server ~doc ~man)
+      Term.(const lsp_main $ delay $ lsp_trace $ lsp_trace_file ))
+      (* Term.( *)
+      (*   const lsp_main $ bt $ coqlib $ findlib_config $ ocamlpath $ vo_load_path *)
+      (*   $ ri_from $ delay $ int_backend $ lsp_trace $ lsp_trace_file)) *)
 
 let main () =
   let ecode = Cmd.eval lsp_cmd in

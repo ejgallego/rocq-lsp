@@ -12,14 +12,14 @@ open Fleche
 module Handler : sig
   (** Returns [Some markdown] if there is some hover to match *)
   type 'node h_node =
-       token:Coq.Limits.Token.t
+       token:Pure.Limits.Token.t
     -> contents:Contents.t
     -> point:int * int
     -> node:'node
     -> string option
 
   type h_doc =
-       token:Coq.Limits.Token.t
+       token:Pure.Limits.Token.t
     -> doc:Doc.t
     -> point:int * int
     -> node:Doc.Node.t option
@@ -43,6 +43,6 @@ module Register : sig
 end
 
 (** Auxiliary functions *)
-module UniDiff : sig
-  (** [info_universes ~node] returns [nunivs, nconstraints] *)
-end
+(* module UniDiff : sig *)
+(*   (\** [info_universes ~node] returns [nunivs, nconstraints] *\) *)
+(* end *)

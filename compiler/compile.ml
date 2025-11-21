@@ -1,6 +1,6 @@
 open Fleche
 
-let is_in_dir ~dir ~file = CString.is_prefix dir file
+let is_in_dir ~dir ~file = Lang.Compat.String.is_prefix dir file
 
 let workspace_of_uri ~io ~uri ~workspaces ~default =
   let file = Lang.LUri.File.to_string_file uri in
@@ -13,12 +13,17 @@ let workspace_of_uri ~io ~uri ~workspaces ~default =
     default
   | Some (_, Ok workspace) -> workspace
 
+let format_to_file ~file ~f x =
+  Out_channel.with_open_bin file (fun oc ->
+      let of_fmt = Format.formatter_of_out_channel oc in
+      Format.fprintf of_fmt "@[%a@]%!" f x)
+
 (** Move to a plugin *)
 let save_diags_file ~(doc : Fleche.Doc.t) =
   let file = Lang.LUri.File.to_string_file doc.uri in
   let file = Filename.remove_extension file ^ ".diags" in
   let diags = Fleche.Doc.diags doc in
-  Coq.Compat.format_to_file ~file ~f:Output.pp_diags diags
+  format_to_file ~file ~f:Output.pp_diags diags
 
 (** Return: exit status for file:
 
@@ -40,9 +45,9 @@ let compile_file ~cc file : int =
   | Ok uri -> (
     let languageId = "rocq" in
     let workspace = workspace_of_uri ~io ~workspaces ~uri ~default in
-    let files = Coq.Files.make () in
+    let files = Pure.Files.make () in
     let env = Doc.Env.make ~init:root_state ~workspace ~files in
-    let raw = Coq.Compat.Ocaml_414.In_channel.(with_open_bin file input_all) in
+    let raw = Stdlib.In_channel.(with_open_bin file input_all) in
     let () = Theory.open_ ~io ~token ~env ~uri ~languageId ~raw ~version:1 in
     match Theory.Check.maybe_check ~io ~token with
     | None -> 102

@@ -2,34 +2,37 @@
 open Cmdliner
 open Fcc_lib
 
-let fcc_main int_backend roots display debug plugins files coqlib findlib_config
-    ocamlpath rload_path load_path require_libraries no_vo max_errors
-    coq_diags_level =
-  let vo_load_path = rload_path @ load_path in
-  let args = [] in
-  let cmdline =
-    { Coq.Workspace.CmdLine.coqlib
-    ; findlib_config
-    ; ocamlpath
-    ; vo_load_path
-    ; args
-    ; require_libraries
-    }
-  in
-  let plugins = Args.compute_default_plugins ~no_vo ~plugins in
+(* let fcc_main int_backend roots display debug plugins files coqlib findlib_config *)
+(*     ocamlpath rload_path load_path require_libraries no_vo max_errors *)
+(*     coq_diags_level = *)
+
+let fcc_main display debug files no_vo max_errors =
+
+  (* let vo_load_path = rload_path @ load_path in *)
+  (* let args = [] in *)
+  let cmdline = Pure.Workspace.CmdLine.make () in
+    (* { Coq.Workspace.CmdLine.coqlib *)
+    (* ; findlib_config *)
+    (* ; ocamlpath *)
+    (* ; vo_load_path *)
+    (* ; args *)
+    (* ; require_libraries *)
+    (* } *)
+  (* in *)
+  let plugins = Args.compute_default_plugins ~no_vo ~plugins:[] in
   let args =
     Args.
       { cmdline
-      ; roots
+      ; roots = []
       ; display
       ; files
       ; debug
       ; plugins
       ; max_errors
-      ; coq_diags_level
+      ; coq_diags_level = 0
       }
   in
-  Driver.go ~int_backend args
+  Driver.go ~int_backend:0 args
 
 (****************************************************************************)
 (* Specific to fcc *)
@@ -47,7 +50,7 @@ let file : string list Term.t =
   let doc = "File(s) to compile" in
   Arg.(value & pos_all string [] & info [] ~docv:"FILES" ~doc)
 
-let plugins : string list Term.t =
+let _plugins : string list Term.t =
   let doc = "Compiler plugins to load" in
   Arg.(value & opt_all string [] & info [ "plugin" ] ~docv:"PLUGINS" ~doc)
 
@@ -84,6 +87,10 @@ module Exit_codes = struct
     Cmd.Exit.info ~doc 222
 end
 
+let debug : bool Term.t =
+  let doc = "Enable debug mode" in
+  Arg.(value & flag & info [ "debug" ] ~doc)
+
 let fcc_cmd : int Cmd.t =
   let doc = "Flèche Coq Compiler" in
   let man =
@@ -95,11 +102,13 @@ let fcc_cmd : int Cmd.t =
   in
   let version = Fleche.Version.server in
   let fcc_term =
-    let open Coq.Args in
+    (* let open Pure.Args in *)
     Term.(
-      const fcc_main $ int_backend $ roots $ display $ debug $ plugins $ file
-      $ coqlib $ findlib_config $ ocamlpath $ rload_paths $ qload_paths
-      $ ri_from $ no_vo $ max_errors $ coq_diags_level)
+      const fcc_main $ display $ debug $ file $ no_vo $ max_errors)
+
+      (* const fcc_main $ int_backend $ roots $ display $ debug $ plugins $ file *)
+      (* $ coqlib $ findlib_config $ ocamlpath $ rload_paths $ qload_paths *)
+      (* $ ri_from $ no_vo $ max_errors $ coq_diags_level) *)
   in
   let exits = Exit_codes.[ fatal; stopped; scheduled; uri_failed ] in
   Cmd.(v (Cmd.info "fcc" ~exits ~version ~doc ~man) fcc_term)

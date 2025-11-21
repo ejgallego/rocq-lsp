@@ -19,5 +19,5 @@ val goals :
   -> unit
   -> (Yojson.Safe.t, string) Request.position
 
-(** For printing of goals in [coq/getDocument] *)
-val pp : pp_format:format -> Yojson.Safe.t Fleche.Info.Goals.printer
+(* For printing of goals in [coq/getDocument] *)
+(* val pp : pp_format:format -> Yojson.Safe.t Fleche.Info.Goals.printer *)

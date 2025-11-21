@@ -43,7 +43,12 @@ module O : S with module P := Offset
 
 (** We move towards a more modular design here, for preprocessing *)
 module Goals : sig
-  val get_goals_unit : st:Pure.State.t -> ('a, 'pp) Pure.Goals.t option
+  val goals :
+    token:Pure.Limits.Token.t
+    -> st:Pure.State.t
+    -> (('a, Pure.Pp_t.t) Pure.Goals.t option, Pure.Loc_t.t) Pure.Protect.E.t
+
+  (* val get_goals_unit : st:Pure.State.t -> ('a, 'pp) Pure.Goals.t option *)
 
 (*
   val get_goals :
@@ -66,10 +71,10 @@ module Goals : sig
 *)
 end
 
-module Completion : sig
-  val candidates :
-       token:Pure.Limits.Token.t
-    -> st:Pure.State.t
-    -> string
-    -> (string list option, Pure.Loc_t.t) Pure.Protect.E.t
-end
+(* module Completion : sig *)
+(*   val candidates : *)
+(*        token:Pure.Limits.Token.t *)
+(*     -> st:Pure.State.t *)
+(*     -> string *)
+(*     -> (string list option, Pure.Loc_t.t) Pure.Protect.E.t *)
+(* end *)

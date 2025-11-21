@@ -41,7 +41,7 @@ let filter_map_cut f l =
   | res -> Some res
 
 (* Return list of pairs of diags, qf *)
-let get_qf (d : Coq.Pp_t.t Lang.Diagnostic.t) : _ option =
+let get_qf (d : Pure.Pp_t.t Lang.Diagnostic.t) : _ option =
   Option.bind d.data (function
     | { Lang.Diagnostic.Data.quickFix = Some qf; _ } -> Some (d, qf)
     | _ -> None)

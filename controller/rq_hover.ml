@@ -7,6 +7,8 @@
 
 open Fleche_lsp.Core
 
+(*
+
 (* Taken from printmod.ml, funny stuff! *)
 let build_ind_type mip = Inductive.type_of_inductive mip
 
@@ -235,20 +237,22 @@ let info_notation ~token:_ ~contents:_ ~point ~node : string option =
   if false then Option.bind node.Fleche.Doc.Node.ast (info_notation ~point)
   else None
 
+*)
+
 open Fleche
 
 (* Hover handler *)
 module Handler = struct
   (** Returns [Some markdown] if there is some hover to match *)
   type 'node h_node =
-       token:Coq.Limits.Token.t
+       token:Pure.Limits.Token.t
     -> contents:Contents.t
     -> point:int * int
     -> node:'node
     -> string option
 
   type h_doc =
-       token:Coq.Limits.Token.t
+       token:Pure.Limits.Token.t
     -> doc:Doc.t
     -> point:int * int
     -> node:Doc.Node.t option
@@ -262,7 +266,9 @@ end
 
 module type HoverProvider = sig
   val h : Handler.t
-end
+end [@warning "-32"]
+
+(*
 
 module Loc_info : HoverProvider = struct
   let h ~token:_ ~contents:_ ~point:_ ~node =
@@ -363,6 +369,8 @@ module State_hash : HoverProvider = struct
   let h = Handler.WithNode h
 end
 
+*)
+
 module Register = struct
   let handlers : Handler.t list ref = ref []
   let add fn = handlers := fn :: !handlers
@@ -381,15 +389,15 @@ end
 
 (* Register in-file hover plugins *)
 let () =
-  List.iter Register.add
-    [ Loc_info.h
-    ; Stats.h
-    ; Type.h
-    ; Notation.h
-    ; InputHelp.h
-    ; UniDiff.h
-    ; State_hash.h
-    ]
+  List.iter Register.add []
+    (* [ Loc_info.h *)
+    (* ; Stats.h *)
+    (* ; Type.h *)
+    (* ; Notation.h *)
+    (* ; InputHelp.h *)
+    (* ; UniDiff.h *)
+    (* ; State_hash.h *)
+    (* ] *)
 
 let hover ~token ~(doc : Fleche.Doc.t) ~point =
   let node = Info.LC.node ~doc ~point Exact in

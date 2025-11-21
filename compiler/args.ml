@@ -6,7 +6,7 @@ module Display = struct
 end
 
 type t =
-  { cmdline : Coq.Workspace.CmdLine.t
+  { cmdline : Pure.Workspace.CmdLine.t
   ; roots : string list  (** workspace root(s) *)
   ; files : string list  (** files to compile *)
   ; debug : bool  (** run in debug mode *)

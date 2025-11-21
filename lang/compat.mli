@@ -40,6 +40,7 @@ end
 (* CString from Rocq *)
 module String : sig
   module Map : Map.S with type key = String.t
+  val is_prefix : string -> string -> bool
 end
 
 module IntSet : Set.S with type elt = int

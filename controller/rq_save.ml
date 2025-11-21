@@ -18,7 +18,7 @@
 (** Several todos here in terms of usability *)
 
 let request ~token ~doc =
-  let open Coq.Protect.E.O in
+  let open Pure.Protect.E.O in
   let lines = Fleche.Doc.lines doc in
   let f () =
     (* XXX: What do do with feedback, return to user? *)

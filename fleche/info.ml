@@ -105,7 +105,7 @@ module type S = sig
   val node : (approx, Doc.Node.t) query
 end
 
-let some x = Some x
+(* let some x = Some x *)
 
 module Make (P : Point) : S with module P := P = struct
   type ('a, 'r) query = doc:Doc.t -> point:P.t -> 'a -> 'r option
@@ -138,6 +138,7 @@ module O = Make (Offset)
 
 (* Related to goal request *)
 module Goals = struct
+(*
   let get_goals_unit ~st =
     let ppx _env _sigma _x = () in
     Pure.State.lemmas ~st |> Option.map (Pure.Goals.reify ~ppx)
@@ -164,31 +165,31 @@ module Goals = struct
   let pr_goal ~token ~pr st =
     let lemmas = Pure.State.lemmas ~st in
     Option.map (Pure.Goals.reify ~ppx:(pr ~token)) lemmas
+*)
 
   (* We need to use [in_state] here due to printing not being pure, but we want
      a better design here eventually *)
-  let goals ~token ~pr ~st =
-    Pure.State.in_state ~token ~st ~f:(pr_goal ~token ~pr) st
+  let goals ~token:_ ~st = Pure.Protect.E.ok (Pure.Goals.goals st)
 
-  let program ~st = Pure.State.program ~st
+  (* let program ~st = Pure.State.program ~st *)
 end
 
-module Completion = struct
-  (* XXX: This belongs in Coq *)
-  let pr_extref gr =
-    match gr with
-    | Globnames.TrueGlobal gr -> Printer.pr_global gr
-    | Globnames.Abbrev kn -> Names.KerName.print kn
+(* module Completion = struct *)
+(*   (\* XXX: This belongs in Coq *\) *)
+(*   let pr_extref gr = *)
+(*     match gr with *)
+(*     | Globnames.TrueGlobal gr -> Printer.pr_global gr *)
+(*     | Globnames.Abbrev kn -> Names.KerName.print kn *)
 
-  (* XXX This may fail when passed "foo." for example, so more sanitizing is
-     needed *)
-  let to_qualid p = try Some (Libnames.qualid_of_string p) with _ -> None
+(*   (\* XXX This may fail when passed "foo." for example, so more sanitizing is *)
+(*      needed *\) *)
+(*   let to_qualid p = try Some (Libnames.qualid_of_string p) with _ -> None *)
 
-  let candidates ~token ~st prefix =
-    let ( let* ) = Option.bind in
-    Pure.State.in_state ~token ~st prefix ~f:(fun prefix ->
-        let* p = to_qualid prefix in
-        Nametab.completion_canditates p
-        |> List.map (fun x -> Pure.Pp_t.to_string (pr_extref x))
-        |> some)
-end
+(*   let candidates ~token ~st prefix = *)
+(*     let ( let* ) = Option.bind in *)
+(*     Pure.State.in_state ~token ~st prefix ~f:(fun prefix -> *)
+(*         let* p = to_qualid prefix in *)
+(*         Nametab.completion_canditates p *)
+(*         |> List.map (fun x -> Pure.Pp_t.to_string (pr_extref x)) *)
+(*         |> some) *)
+(* end *)

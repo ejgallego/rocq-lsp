@@ -29,7 +29,7 @@ type format =
   | Box
 
 (* BoxLayout helpers *)
-let set_flag flag value f =
+let _set_flag flag value f =
   let v = !flag in
   flag := value;
   try
@@ -40,6 +40,7 @@ let set_flag flag value f =
     flag := v;
     raise exn
 
+(*
 let layout_term env sigma t =
   (* Coq stores goals in kernel-format, we need to recover the AST back before
      calling the layout engine; this is called "externalization" in Coq
@@ -75,21 +76,24 @@ let run_pretac ~token ~loc ~st pretac =
   | None -> Coq.Protect.E.ok st
   | Some tac -> Fleche.Doc.run ~token ?loc ~st tac
 
-let get_goal_info ~pp_format ~token ~doc ~point ~mode ~pretac () =
+*)
+
+let get_goal_info ~pp_format:_ ~token ~doc ~point ~mode ~pretac:_ () =
   let open Fleche in
   let node = Info.LC.node ~doc ~point mode in
   match node with
-  | None -> Coq.Protect.E.ok (None, None)
+  | None -> Pure.Protect.E.ok None
   | Some node ->
-    let open Coq.Protect.E.O in
+    let open Pure.Protect.E.O in
     let st = Doc.Node.state node in
     (* XXX: Get the location from node *)
-    let loc = None in
-    let* st = run_pretac ~token ~loc ~st pretac in
-    let pr = pp ~pp_format in
-    let+ goals = Info.Goals.goals ~token ~pr ~st in
-    let program = Info.Goals.program ~st in
-    (goals, Some program)
+    let _loc = None in
+    (* let* st = run_pretac ~token ~loc ~st pretac in *)
+    (* let pr = pp ~pp_format in *)
+    (* let+ goals = Info.Goals.goals ~token ~pr ~st in *)
+    let+ goals = Info.Goals.goals ~token ~st in
+    (* let program = Info.Goals.program ~st in *)
+    goals (* , Some program) *)
 
 let get_node_info ~doc ~point ~mode =
   let open Fleche in
@@ -109,17 +113,20 @@ let goals ~pp_format ~mode ~pretac () ~token ~doc ~point =
   let position =
     Lang.Point.{ line = fst point; character = snd point; offset = -1 }
   in
-  let open Coq.Protect.E.O in
-  let+ goals, program =
+  let open Pure.Protect.E.O in
+  let+ goals (* , program *) =
     get_goal_info ~pp_format ~token ~doc ~point ~mode ~pretac ()
   in
   let range, messages, error = get_node_info ~doc ~point ~mode in
-  let pp_msg = pp_msgs ~pp_format in
+  (* let pp_msg = pp_msgs ~pp_format in *)
+  let pp_msg x = x in
+  let messages = List.map (fun msg -> Fleche_lsp.JFleche.Message.map ~f:(fun x -> `String x) msg) messages in
+  let error = Option.map (fun msg -> `String msg) error in
   Lsp.JFleche.GoalsAnswer.(
     to_yojson
       (fun x -> x)
       pp_msg
-      { textDocument; position; range; goals; program; messages; error })
+      { textDocument; position; range; goals; (* program;  *) messages; error })
   |> Result.ok
 
 let goals ~pp_format ~mode ~pretac () ~token ~doc ~point =

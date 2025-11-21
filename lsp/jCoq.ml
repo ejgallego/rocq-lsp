@@ -6,6 +6,7 @@
 (* Written by: Emilio J. Gallego Arias & coq-lsp contributors            *)
 (*************************************************************************)
 
+(*
 module Loc = Serlib.Ser_loc
 module Names = Serlib.Ser_names
 module Evar = Serlib.Ser_evar
@@ -31,23 +32,33 @@ let rec pp_opt d =
     | Ppcmd_tag (t, d) -> Ppcmd_tag (t, pp_opt d)
     | d -> d)
 
+
 module Loc_t = struct
   include Serlib.Ser_loc
 end
+*)
 
 module Pp_t = struct
-  include Serlib.Ser_pp
-
-  let to_yojson x = to_yojson (pp_opt x)
+  type t = [%import: Pure.Pp_t.t] [@@deriving yojson]
 end
 
-module Goals = struct
-  module Reified_goal = struct
-    type 'a hyp = [%import: 'a Coq.Goals.Reified_goal.hyp] [@@deriving yojson]
-    type info = [%import: Coq.Goals.Reified_goal.info] [@@deriving yojson]
-    type 'a t = [%import: 'a Coq.Goals.Reified_goal.t] [@@deriving yojson]
-  end
+type conclusion = [%import: Pure.conclusion] [@@deriving yojson]
+type goal = [%import: Pure.goal] [@@deriving yojson]
 
+module Goals = struct
+  type ('a, 'pp) t = [%import: ('a, 'pp) Pure.Goals.t] [@@deriving yojson]
+  (* type ('a, 'pp) t = [%import: ('a, 'pp) Pure.Goals.reified] [@@deriving yojson] *)
+end
+
+module Ast = struct
+  type t = Pure.Ast.t
+
+  let to_yojson x = Obj.magic x
+  let of_yojson x = Obj.magic x
+
+end
+
+(*
   module Goals_ = struct
     type ('a, 'pp) t =
       { goals : 'a list
@@ -114,3 +125,5 @@ module State = struct
     end
   end
 end
+
+*)

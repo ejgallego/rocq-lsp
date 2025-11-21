@@ -40,14 +40,14 @@ module M = Fleche.Memo
 
 let caches () =
   [ ("interp", M.Interp.all_freqs ())
-  ; ("admit", M.Admit.all_freqs ())
-  ; ("init", M.Init.all_freqs ())
-  ; ("require", M.Require.all_freqs ())
+  (* ; ("admit", M.Admit.all_freqs ()) *)
+  (* ; ("init", M.Init.all_freqs ()) *)
+  (* ; ("require", M.Require.all_freqs ()) *)
   ]
 
 let firstn n l =
   let num = min n (List.length l) in
-  CList.firstn num l
+  Stdlib.List.take num l
 
 let pp_cache fmt (name, freqs) =
   let zsum = List.filter (Int.equal 0) freqs in
@@ -65,11 +65,11 @@ let build_message fmt () =
     caches
 
 let cache_trim () =
-  let () = M.Intern.clear () in
+  (* let () = M.Intern.clear () in *)
   let () = M.Interp.clear () in
-  let () = M.Admit.clear () in
-  let () = M.Init.clear () in
-  let () = M.Require.clear () in
+  (* let () = M.Admit.clear () in *)
+  (* let () = M.Init.clear () in *)
+  (* let () = M.Require.clear () in *)
   ()
 
 let gc_stats ~io hd msg =

@@ -5,6 +5,7 @@
 (* Written by: Emilio J. Gallego Arias                                  *)
 (************************************************************************)
 
+(*
 module SM = Lang.Compat.String.Map
 open Fleche_lsp.Core
 
@@ -98,8 +99,9 @@ let request ~token ~(doc : Fleche.Doc.t) ~point =
     (ok None) idp
   |> Coq.Protect.E.map ~f:(Result.map (Option.cata Location.to_yojson `Null))
 
-let request ~token ~doc ~point =
+*)
+let request ~token:_ ~doc ~point:_ =
   let name = "textDocument/definition" in
   let lines = Fleche.Doc.lines doc in
-  let f () = request ~token ~doc ~point in
+  let f () = Pure.Protect.E.ok (Ok `Null) in
   Request.R.of_execution ~lines ~name ~f ()

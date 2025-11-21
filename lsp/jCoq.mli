@@ -14,17 +14,17 @@ end
 
 module Goals : sig
   type ('a, 'pp) t = ('a, 'pp) Pure.Goals.t [@@deriving yojson]
-  type ('a, 'pp) reified = ('a, 'pp) Pure.Goals.reified [@@deriving yojson]
+  (* type ('a, 'pp) reified = ('a, 'pp) Pure.Goals.reified [@@deriving yojson] *)
 end
 
 module Ast : sig
   type t = Pure.Ast.t [@@deriving yojson]
 end
 
-module State : sig
-  module Proof : sig
-    module Program : sig
-      type t = Pure.State.Proof.Program.t [@@deriving yojson]
-    end
-  end
-end
+(* module State : sig *)
+(*   module Proof : sig *)
+(*     module Program : sig *)
+(*       type t = Pure.State.Proof.Program.t [@@deriving yojson] *)
+(*     end *)
+(*   end *)
+(* end *)

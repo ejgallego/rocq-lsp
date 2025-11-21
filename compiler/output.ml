@@ -1,7 +1,7 @@
 module Lsp = Fleche_lsp
 
-let pp_diag fmt (d : Pp.t Lang.Diagnostic.t) =
-  let pp msg = `String (Coq.Pp_t.to_string msg) in
+let pp_diag fmt (d : Pure.Pp_t.t Lang.Diagnostic.t) =
+  let pp msg = `String (Pure.Pp_t.to_string msg) in
   Format.fprintf fmt "@[%a@]"
     (Yojson.Safe.pretty_print ~std:true)
     (Lsp.JLang.Diagnostic.to_yojson pp d)

@@ -76,10 +76,6 @@ module Env : sig
   (* val inject_requires : extra_requires:Pure.Workspace.Require.t list -> t -> t *)
 end
 
-module CString : sig
-  module Map : Map.S with type key = string
-end
-
 (** A Flèche document is basically a [node list], which is a crude form of a
     meta-data map [Range.t -> data], where for now [data] is the contents of
     [Node.t]. *)

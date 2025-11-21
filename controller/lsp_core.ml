@@ -33,6 +33,8 @@ module Lsp = Fleche_lsp
 module L = Fleche.Io.Log
 
 module Helpers = struct
+  exception InvalidUri of string
+
   (* XXX helpers; fix to have better errors on wrong protocol code *)
   (* Also note that rely sometimes on "subtyping" of fields, that's something to
      think about better and fix, see #547 *)
@@ -49,7 +51,7 @@ module Helpers = struct
            need to reflect this on the type just to undo it later; as this
            message morally doesn't belong here *)
         let message = Format.asprintf "json parsing failed: %s" err in
-        CErrors.user_err (Coq.Pp_t.str message)
+        raise (InvalidUri message)
     in
     let Lsp.Doc.TextDocumentIdentifier.{ uri } = document in
     uri
@@ -99,10 +101,10 @@ end
     dune-based ones declare dependencies on other workspaces. *)
 module State = struct
   type t =
-    { cmdline : Coq.Workspace.CmdLine.t
-    ; root_state : Coq.State.t
-    ; workspaces : (string * (Coq.Workspace.t, string) Result.t) list
-    ; default_workspace : Coq.Workspace.t (* fail safe *)
+    { cmdline : Pure.Workspace.CmdLine.t
+    ; root_state : Pure.State.t
+    ; workspaces : (string * (Pure.Workspace.t, string) Result.t) list
+    ; default_workspace : Pure.Workspace.t (* fail safe *)
     }
 
   open Lsp.Workspace
@@ -110,7 +112,7 @@ module State = struct
   let add_workspace ~token state { WorkspaceFolder.uri; _ } =
     let dir = Lang.LUri.File.to_string_file uri in
     let { cmdline; workspaces; _ } = state in
-    let ws = Coq.Workspace.guess ~token ~debug:false ~cmdline ~dir in
+    let ws = Pure.Workspace.guess ~token ~debug:false ~cmdline ~dir in
     { state with workspaces = (dir, ws) :: workspaces }
 
   let del_workspace state { WorkspaceFolder.uri; _ } =
@@ -166,7 +168,7 @@ module Rq : sig
 
   val serve :
        ofn_rq:(Lsp.Base.Response.t -> unit)
-    -> token:Coq.Limits.Token.t
+    -> token:Pure.Limits.Token.t
     -> id:int
     -> Action.t
     -> unit
@@ -180,14 +182,14 @@ module Rq : sig
 
   val serve_postponed :
        ofn_rq:(Lsp.Base.Response.t -> unit)
-    -> token:Coq.Limits.Token.t
+    -> token:Pure.Limits.Token.t
     -> doc:Fleche.Doc.t
     -> IS.t
     -> unit
 end = struct
   let feedback_to_message fb =
     Lsp.JFleche.Message.(
-      of_coq_message fb |> map ~f:Coq.Pp_t.to_string
+      of_coq_message fb |> map ~f:Pure.Pp_t.to_string
       |> to_yojson (fun s -> `String s))
 
   let feedback_to_data fbs =
@@ -286,7 +288,7 @@ let do_open ~io ~token ~(state : State.t) params =
   in
   let Lsp.Doc.TextDocumentItem.{ uri; version; text; languageId } = document in
   let init, workspace = State.workspace_of_uri ~io ~uri ~state in
-  let files = Coq.Files.make () in
+  let files = Pure.Files.make () in
   let env = Fleche.Doc.Env.make ~init ~workspace ~files in
   Fleche.Theory.open_ ~io ~token ~env ~uri ~languageId ~raw:text ~version
 
@@ -381,8 +383,7 @@ let get_pp_format params =
     get_pp_format_from_config ()
   | None -> get_pp_format_from_config ()
 
-let get_pretac params =
-  Option.append (ostring_field "command" params) (ostring_field "pretac" params)
+let get_pretac params = ostring_field "command" params
 
 let get_goals_mode_from_config () =
   if !Fleche.Config.v.goal_after_tactic then Fleche.Info.PrevIfEmpty
@@ -490,7 +491,8 @@ let do_changeConfiguration ~io params =
    other downsides)
 
    The only real solution is to wait for OCaml 5.x support, so we can server
-   read-only queries without interrupting the main Coq thread. *)
+   read-only queries without interrupting the main Pure thread. *)
+(*
 let petanque_handle ~token =
   let open Petanque_json in
   function
@@ -514,6 +516,7 @@ let do_petanque ~token method_ params =
     Rq.Action.error (code, message)
   in
   Interp.handle_request ~do_handle ~unhandled ~token ~method_ ~params
+*)
 
 (***********************************************************************)
 
@@ -521,7 +524,7 @@ let do_petanque ~token method_ params =
 exception Lsp_exit
 
 let log_workspace ~io (dir, w) =
-  let message, verbose = Coq.Workspace.describe_guess w in
+  let message, verbose = Pure.Workspace.describe_guess w in
   L.trace "workspace" ~verbose "initialized %s" dir;
   Fleche.Io.Report.msg ~io ~lvl:Info "%s" message
 
@@ -531,18 +534,18 @@ let version () =
     | None -> "N/A"
     | Some bi -> Build_info.V1.Version.to_string bi
   in
-  Format.asprintf "version %s, dev: %s, Coq version: %s, OS: %s"
-    Fleche.Version.server dev_version Coq_config.version Sys.os_type
+  Format.asprintf "version %s, dev: %s, Pure version: %s, OS: %s"
+    Fleche.Version.server dev_version Pure.version Sys.os_type
 
 module Init_effect = struct
   type t =
-    | Success of (string * (Coq.Workspace.t, string) Result.t) list
+    | Success of (string * (Pure.Workspace.t, string) Result.t) list
     | Loop
     | Exit
 end
 
 let serverInfo =
-  let coq = Coq_config.version in
+  let coq = Pure.version in
   let ocaml = Sys.ocaml_version in
   let coq_lsp = Fleche.Version.server in
   Fleche.ServerInfo.Version.{ coq; ocaml; coq_lsp }
@@ -555,19 +558,19 @@ let lsp_init_process ~ofn ~io ~cmdline ~debug msg : Init_effect.t =
     (* At this point logging is allowed per LSP spec *)
     Fleche.Io.Report.msg ~io ~lvl:Info "Initializing coq-lsp server %s"
       (version ());
-    let token = Coq.Limits.Token.create () in
+    let token = Pure.Limits.Token.create () in
     let result, dirs = Rq_init.do_initialize ~io ~params in
     Rq.Action.now (Ok result) |> Rq.serve ~ofn_rq ~token ~id;
     Lsp.JFleche.mk_serverVersion serverInfo |> ofn_nt;
-    Fleche.Io.Report.msg ~io ~lvl:Info "Rocq features: %s"
-      Coq.Version.quirks_message;
-    Fleche.Io.Report.msg ~io ~lvl:Info "Server initializing (int_backend: %s)"
-      (Coq.Limits.name ());
+    (* Fleche.Io.Report.msg ~io ~lvl:Info "Rocq features: %s" *)
+    (*   Pure.Version.quirks_message; *)
+    (* Fleche.Io.Report.msg ~io ~lvl:Info "Server initializing (int_backend: %s)" *)
+    (*   (Pure.Limits.name ()); *)
     (* Workspace initialization *)
     let debug = debug || !Fleche.Config.v.debug in
     let workspaces =
       List.map
-        (fun dir -> (dir, Coq.Workspace.guess ~token ~cmdline ~debug ~dir))
+        (fun dir -> (dir, Pure.Workspace.guess ~token ~cmdline ~debug ~dir))
         dirs
     in
     List.iter (log_workspace ~io) workspaces;
@@ -620,7 +623,7 @@ let dispatch_state_notification ~io ~ofn ~token ~state ~method_ ~params :
     dispatch_notification ~io ~ofn ~token ~state ~method_ ~params;
     state
 
-let dispatch_request ~token ~method_ ~params : Rq.Action.t =
+let dispatch_request ~token:_ ~method_ ~params : Rq.Action.t =
   match method_ with
   (* Lifecyle *)
   | "initialize" ->
@@ -640,11 +643,11 @@ let dispatch_request ~token ~method_ ~params : Rq.Action.t =
   | "proof/goals" -> do_goals ~params
   (* Proof-specific stuff *)
   | "coq/saveVo" -> do_save_vo ~params
-  (* Coq specific stuff *)
+  (* Pure specific stuff *)
   | "coq/getDocument" -> do_document ~params
   (* Petanque embedding *)
-  | msg when Coq.Compat.Ocaml_413.String.starts_with ~prefix:"petanque/" msg ->
-    do_petanque msg ~token params
+  (* | msg when Pure.Compat.Ocaml_413.String.starts_with ~prefix:"petanque/" msg -> *)
+  (*   do_petanque msg ~token params *)
   (* Generic handler *)
   | msg ->
     L.trace "no_handler" "%s" msg;
@@ -680,7 +683,7 @@ let dispatch_message ~io ~ofn ~token ~state (com : Lsp.Base.Message.t) : State.t
 let current_token = ref None
 
 let token_factory () =
-  let token = Coq.Limits.Token.create () in
+  let token = Pure.Limits.Token.create () in
   current_token := Some token;
   token
 
@@ -689,7 +692,7 @@ let set_current_token () =
   | None -> ()
   | Some tok ->
     current_token := None;
-    Coq.Limits.Token.set tok
+    Pure.Limits.Token.set tok
 
 type 'a cont =
   | Cont of 'a
@@ -783,16 +786,16 @@ let dispatch_or_resume_check ~io ~ofn ~state =
     None
   | exn ->
     (* Note: We should never arrive here from Coq, as every call to Coq should
-       be wrapper in Coq.Protect. So hitting this codepath, is effectively a
+       be wrapper in Pure.Protect. So hitting this codepath, is effectively a
        coq-lsp internal error and should be fixed *)
     let bt = Printexc.get_backtrace () in
-    let iexn = Exninfo.capture exn in
+    (* let iexn = Exninfo.capture exn in *)
     L.trace "process_queue" "%s"
       (if Printexc.backtrace_status () then "bt=true" else "bt=false");
     (* let method_name = Lsp.Base.Message.method_ com in *)
     (* L.trace "process_queue" "exn in method: %s" method_name; *)
     L.trace "print_exn [OCaml]" "%s" (Printexc.to_string exn);
-    L.trace "print_exn [Coq  ]" "%a" Coq.Pp_t.pp_with CErrors.(iprint iexn);
+    (* L.trace "print_exn [Pure ]" "%a" Pure.Pp_t.pp_with CErrors.(iprint iexn); *)
     L.trace "print_bt  [OCaml]" "%s" bt;
     Some (Yield state)
 
@@ -819,7 +822,7 @@ struct
 
   let diagnostics ~uri ~version diags =
     (* For LSP, diagnostic messages should be string *)
-    let pp msg = `String (Coq.Pp_t.to_string msg) in
+    let pp msg = `String (Pure.Pp_t.to_string msg) in
     Lsp.Core.mk_diagnostics ~uri ~version ~pp diags |> ofn
 
   let fileProgress ~uri ~version progress =

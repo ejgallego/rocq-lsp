@@ -7,6 +7,7 @@
 
 module JFleche = Fleche_lsp.JFleche
 
+(*
 let mk_messages ~messages =
   List.map Fleche_lsp.JFleche.Message.of_coq_message messages
 
@@ -81,3 +82,7 @@ let request ~ast ~goals () ~token ~doc =
     { spans; completed }
     |> to_yojson (fun x -> x) (fun x -> Fleche_lsp.JCoq.Pp_t.to_yojson x))
   |> Result.ok
+*)
+
+let request ~ast:_ ~goals:_ () ~token:_ ~doc:_ =
+  Result.ok `Null

@@ -17,11 +17,11 @@ module Util = struct
     | [] -> None
     | h :: _ -> Some h
 
-  let rec last l =
+  let rec _last l =
     match l with
     | [] -> None
     | [ x ] -> Some x
-    | _ :: xs -> last xs
+    | _ :: xs -> _last xs
 
   let build_span start_loc end_loc =
     Pure.Loc_t.
@@ -181,20 +181,19 @@ end = struct
     Lang.Diagnostic.{ range; severity; message; data }
 
   (* ast-dependent error diagnostic generation *)
-  let extra_diagnostics_of_ast quickFix stm_range ast =
+  let extra_diagnostics_of_ast quickFix stm_range _ast =
     let sentenceRange = Some stm_range in
-    let failedRequire =
-      match
-        Option.bind ast (fun (ast : Node.Ast.t) ->
-            Pure.Ast.Require.extract ast.v)
-      with
-      | Some _ ->
-        Some []
-        (* | Some { Pure.Ast.Require.from; mods; _ } -> *)
-        (* let refs = List.map fst mods in *)
-        (* Some [ { Lang.Diagnostic.FailedRequire.prefix = from; refs } ] *)
-      | _ -> None
-    in
+    let failedRequire = None in
+      (* match *)
+      (*   Option.bind ast (fun (ast : Node.Ast.t) -> *)
+      (*       Pure.Ast.Require.extract ast.v) *)
+      (* with *)
+      (* | Some _ -> *)
+      (*   Some [] *)
+      (*   (\* | Some { Pure.Ast.Require.from; mods; _ } -> *\) *)
+      (*   (\* let refs = List.map fst mods in *\) *)
+      (*   (\* Some [ { Lang.Diagnostic.FailedRequire.prefix = from; refs } ] *\) *)
+      (* | _ -> None *)
     Some { Lang.Diagnostic.Data.sentenceRange; failedRequire; quickFix }
 
   (* XXX: This needs rework, as of today we gotta be careful. *)
@@ -289,8 +288,8 @@ module Env = struct
 
   let make ~init ~workspace ~files = { init; workspace; files }
 
-  let inject_requires ~extra_requires { init; workspace; files } =
-    let workspace = Pure.Workspace.inject_requires ~extra_requires workspace in
+  let _inject_requires ~extra_requires: { init; workspace; files } =
+    (* let workspace = Pure.Workspace.inject_requires ~extra_requires workspace in *)
     { init; workspace; files }
 end
 
@@ -369,8 +368,9 @@ let process_init_feedback ~lines ~stats ~global_stats state feedback =
   else []
 
 (* Memoized call to [Pure.Init.doc_init] *)
-let mk_doc ~token ~env ~uri =
-  Memo.Init.evalS ~token (env.Env.init, env.workspace, uri)
+let mk_doc ~token:_ ~env ~uri:_ =
+  Pure.Protect.E.ok (env.Env.init), Memo.Stats.zero
+  (* Memo.Init.evalS ~token (env.Env.init, env.workspace, uri) *)
 
 (* Create empty doc, in state [~completed] *)
 let empty_doc ~uri ~languageId ~contents ~version ~env ~root ~nodes ~completed =
@@ -609,7 +609,8 @@ module Recovery : sig
       node that contains the start of the proof, and [pnode] is the previous
       node, if exists. [nodes] is the list of document nodes, in _reverse
       order_. *)
-  val find_proof_start : Node.t list -> (Node.t * Node.t option) option
+
+  (* val find_proof_start : Node.t list -> (Node.t * Node.t option) option *)
   (* This is useful in meta-commands, and other plugins actually! *)
 
   val handle :
@@ -620,8 +621,9 @@ module Recovery : sig
 end = struct
   (* Returns node before / after, will be replaced by the right structure, we
      can also do dynamic by looking at proof state *)
+
+  (*
   let rec find_proof_start _nodes = None
-    (*
     match nodes with
     | [] -> None
     | { Node.ast = None; _ } :: ns -> find_proof_start ns
@@ -631,7 +633,6 @@ end = struct
       | VernacSynPure (VernacDefinition (_, _, ProveBody _)) ->
         Some (n, Util.hd_opt ns)
       | _ -> find_proof_start ns)
-       *)
 
   let recovery_for_failed_qed ~token ~default nodes =
     match find_proof_start nodes with
@@ -717,9 +718,17 @@ end = struct
     | Interrupted -> st
     | Completed (Ok st) -> st
     | Completed (Error _) -> st
+
+  *)
+  let handle ~token:_ ~context:_ ~st = st
+
 end
 (* end [module Recovery = struct...] *)
 
+let interp_and_info ~token ~st ~files:_ ~doc:_ ast =
+  Memo.Interp.evalS ~token (st, ast)
+
+(*
 let interp_and_info ~token ~st ~files ast =
   match Pure.Ast.Require.extract ast with
   | None -> Memo.Interp.evalS ~token (st, ast)
@@ -776,6 +785,7 @@ let interp_and_info ~token ~st ~files ~doc ast =
        actually at some point too. In this case, maybe we could recover the
        cache hit from the original node? *)
     search_node ~command ~doc ~st
+*)
 
 let interp_and_info ~token ~parsing_time ~st ~files ~doc ast =
   let res, stats = interp_and_info ~token ~st ~files ~doc ast in
@@ -1124,6 +1134,8 @@ let check ~io ~token ~target ~doc () =
     log_doc_completion doc.completed;
     Util.print_stats ();
     doc
+
+let save ~token:_ ~doc:_ = Pure.Protect.E.ok ()
 
 (*
 let save ~token ~doc =
