@@ -114,7 +114,10 @@ let rec ly_hunks unp args bl =
     let kind = BM.Lam in
     let { notation_subentry; _ } = ntn_entry_r_lvl in
     let b, bl = (List.hd bl, List.tl bl) in
-    let name = Ppconstr.pr_cases_pattern_expr ~flags:(Ppconstr.current_flags()) (fst b) |> Pp.string_of_ppcmds in
+    let name =
+      Ppconstr.pr_cases_pattern_expr ~flags:(Ppconstr.current_flags ()) (fst b)
+      |> Pp.string_of_ppcmds
+    in
     let typ = None in
     let b_var = BM.Variable { name; typ } in
     b_var :: ly_hunks l args bl
@@ -164,7 +167,11 @@ and ly_binder_expr (b : local_binder_expr) =
 and layout t =
   if !_debug then
     Feedback.msg_warning
-      Pp.(str "ly [->]: " ++ Ppconstr.pr_constr_expr ~flags:(Ppconstr.current_flags()) !env !sigma t);
+      Pp.(
+        str "ly [->]: "
+        ++ Ppconstr.pr_constr_expr
+             ~flags:(Ppconstr.current_flags ())
+             !env !sigma t);
 
   let res =
     match t.CAst.v with
@@ -320,7 +327,11 @@ and layout t =
 
   if !_debug then
     Feedback.msg_warning
-      Pp.(str "ly [<-]: " ++ Ppconstr.pr_constr_expr ~flags:(Ppconstr.current_flags()) !env !sigma t);
+      Pp.(
+        str "ly [<-]: "
+        ++ Ppconstr.pr_constr_expr
+             ~flags:(Ppconstr.current_flags ())
+             !env !sigma t);
 
   res
 

@@ -23,11 +23,10 @@ let intern_reference qid =
 (* From a term to its representation with notations *)
 let recover_notation env sigma t =
   let gt = Constrintern.intern_constr env sigma t in
-  let flags = PrintingFlags.Extern.current() in
+  let flags = PrintingFlags.Extern.current () in
   let flags = { flags with notations = true } in
-  let eenv = Constrextern.extern_env  ~flags env sigma in
-  Constrextern.extern_glob_type eenv gt
-  |> fun t ->
+  let eenv = Constrextern.extern_env ~flags env sigma in
+  Constrextern.extern_glob_type eenv gt |> fun t ->
   match t.CAst.v with
   | CNotation _ -> Some t
   | _ -> None
@@ -44,7 +43,11 @@ let _recover_notation env sigma t =
 let notation_raw env sigma t =
   if !debug then
     Feedback.msg_warning
-      Pp.(str "nr [<-] " ++ Ppconstr.pr_constr_expr ~flags:(Ppconstr.current_flags()) env sigma t);
+      Pp.(
+        str "nr [<-] "
+        ++ Ppconstr.pr_constr_expr
+             ~flags:(Ppconstr.current_flags ())
+             env sigma t);
   (* Wish: In place of full internalization + notation-free extern, we could have an operation
    *
    * [expand_notation : constr_expr -> constr_expr]
@@ -53,14 +56,18 @@ let notation_raw env sigma t =
    *)
   let gt = Constrintern.intern_constr env sigma t in
   let r =
-    let flags = PrintingFlags.Extern.current() in
+    let flags = PrintingFlags.Extern.current () in
     let flags = { flags with notations = false } in
     let eenv = Constrextern.extern_env ~flags env sigma in
     Constrextern.extern_glob_type eenv gt
   in
   if !debug then
     Feedback.msg_warning
-      Pp.(str "nr [->] " ++ Ppconstr.pr_constr_expr ~flags:(Ppconstr.current_flags()) env sigma r);
+      Pp.(
+        str "nr [->] "
+        ++ Ppconstr.pr_constr_expr
+             ~flags:(Ppconstr.current_flags ())
+             env sigma r);
   r
 
 let notation_raw env sigma t =
@@ -91,7 +98,8 @@ module Id = struct
         None
     in
     let sigma = Evd.from_ctx (UState.of_names bl) in
-    Constrextern.extern_type ~flags:(PrintingFlags.current()) env sigma (EConstr.of_constr typ)
+    Constrextern.extern_type ~flags:(PrintingFlags.current ()) env sigma
+      (EConstr.of_constr typ)
 
   let type_of_global gref = try Some (type_of_global gref) with _ -> None
 

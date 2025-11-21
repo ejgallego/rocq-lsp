@@ -39,7 +39,7 @@ let layout_term ~flags env sigma t =
   Format.asprintf "@[%a@]" (Tyxml.Html.pp_elt ()) html
 
 let layout_term env sigma t =
-  let flags = PrintingFlags.current() in
+  let flags = PrintingFlags.current () in
   let flags = { flags with extern = { flags.extern with notations = true } } in
   layout_term ~flags env sigma t
 
