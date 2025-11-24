@@ -696,6 +696,7 @@ export interface CoqLspServerConfig {
   show_loc_info_on_hover: boolean;
   show_universes_on_hover: boolean;
   show_state_hash_on_hover: boolean;
+  show_comments_on_hover: boolean;
   check_only_on_request: boolean;
   send_perf_data: boolean;
   send_execinfo: boolean;
@@ -709,6 +710,7 @@ client.
 <!-- TOC --><a name="changelog-5"></a>
 #### Changelog
 
+- v0.2.5: New option `show_comments_on_hover`
 - v0.2.4:
   + Deprecate `unicode_completion` in favor of new `completion:
     CompletionConfig` configuration record.

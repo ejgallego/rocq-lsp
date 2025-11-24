@@ -102,6 +102,8 @@ type t =
         (** Show universe data on hover *)
   ; show_state_hash_on_hover : bool [@default false]
         (** Show state hash on hover, useful for debugging *)
+  ; show_comments_on_hover : bool [@default false]
+        (** Show comments on hover, useful for debugging *)
   ; pp_json : bool [@default false]
         (** Whether to pretty print the protocol JSON on the wire *)
   ; send_perf_data : bool [@default true]
@@ -140,6 +142,7 @@ let default =
   ; show_loc_info_on_hover = false
   ; show_universes_on_hover = false
   ; show_state_hash_on_hover = false
+  ; show_comments_on_hover = false
   ; verbosity = 2
   ; pp_json = false
   ; send_perf_data = true
