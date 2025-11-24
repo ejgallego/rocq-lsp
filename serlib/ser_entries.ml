@@ -26,6 +26,7 @@ module UVars        = Ser_uvars
 module Constr       = Ser_constr
 module Declarations = Ser_declarations
 module CPrimitives  = Ser_cPrimitives
+module PConstraints = Ser_pConstraints
 
 (* type local_entry =
  *   [%import: Entries.local_entry]

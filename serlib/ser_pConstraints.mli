@@ -16,45 +16,15 @@
 (* Written by: Emilio J. Gallego Arias and others                       *)
 (************************************************************************)
 
-open Sexplib.Std
+open Sexplib
 
-module Stdlib  = Ser_stdlib
-module Loc     = Ser_loc
-module Names   = Ser_names
-module Constr  = Ser_constr
-module Environ = Ser_environ
-module Sorts   = Ser_sorts
-module Univ    = Ser_univ
-module UVars   = Ser_uvars
-module Context = Ser_context
-module CPrimitives = Ser_cPrimitives
-module PConstraints = Ser_pConstraints
+type t = PConstraints.t [@@deriving sexp,yojson,hash,compare]
 
-type 'constr pfix_guard_error =
-  [%import: 'constr Type_errors.pfix_guard_error]
-  [@@deriving sexp]
+val t_of_sexp : Sexp.t -> t
+val sexp_of_t : t -> Sexp.t
 
-type 'constr pcofix_guard_error =
-  [%import: 'constr Type_errors.pcofix_guard_error]
-  [@@deriving sexp]
+module ContextSet : SerType.SJHC with type t = PConstraints.ContextSet.t
 
-type 'constr pguard_error =
-  [%import: 'constr Type_errors.pguard_error]
-  [@@deriving sexp]
-
-type guard_error =
-  [%import: Type_errors.guard_error]
-  [@@deriving sexp]
-
-type ('constr, 'types) pcant_apply_bad_type =
-  [%import: ('constr, 'types) Type_errors.pcant_apply_bad_type]
-  [@@deriving sexp]
-
-type ('constr, 'types, 'r) ptype_error =
-  [%import: ('constr, 'types, 'r) Type_errors.ptype_error]
-  [@@deriving sexp]
-
-type type_error =
-  [%import: Type_errors.type_error]
-  [@@deriving sexp]
-
+type 'a in_poly_context_set = 'a PConstraints.in_poly_context_set
+val in_poly_context_set_of_sexp : (Sexp.t -> 'a) -> Sexp.t -> 'a in_poly_context_set
+val sexp_of_in_poly_context_set : ('a -> Sexp.t) -> 'a in_poly_context_set -> Sexp.t

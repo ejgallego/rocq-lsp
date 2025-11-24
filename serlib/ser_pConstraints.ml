@@ -16,45 +16,23 @@
 (* Written by: Emilio J. Gallego Arias and others                       *)
 (************************************************************************)
 
-open Sexplib.Std
+module Univ = Ser_univ
+module Sorts = Ser_sorts
 
-module Stdlib  = Ser_stdlib
-module Loc     = Ser_loc
-module Names   = Ser_names
-module Constr  = Ser_constr
-module Environ = Ser_environ
-module Sorts   = Ser_sorts
-module Univ    = Ser_univ
-module UVars   = Ser_uvars
-module Context = Ser_context
-module CPrimitives = Ser_cPrimitives
-module PConstraints = Ser_pConstraints
+type t =
+  [%import: PConstraints.t]
+  [@@deriving sexp,yojson,hash,compare]
 
-type 'constr pfix_guard_error =
-  [%import: 'constr Type_errors.pfix_guard_error]
+type 'a constrained =
+  [%import: 'a PConstraints.constrained]
+  [@@deriving sexp,yojson,hash,compare]
+
+module ContextSet = struct
+  type t =
+    [%import: PConstraints.ContextSet.t]
+    [@@deriving sexp, yojson, hash, compare]
+end
+
+type 'a in_poly_context_set =
+  [%import: 'a PConstraints.in_poly_context_set]
   [@@deriving sexp]
-
-type 'constr pcofix_guard_error =
-  [%import: 'constr Type_errors.pcofix_guard_error]
-  [@@deriving sexp]
-
-type 'constr pguard_error =
-  [%import: 'constr Type_errors.pguard_error]
-  [@@deriving sexp]
-
-type guard_error =
-  [%import: Type_errors.guard_error]
-  [@@deriving sexp]
-
-type ('constr, 'types) pcant_apply_bad_type =
-  [%import: ('constr, 'types) Type_errors.pcant_apply_bad_type]
-  [@@deriving sexp]
-
-type ('constr, 'types, 'r) ptype_error =
-  [%import: ('constr, 'types, 'r) Type_errors.ptype_error]
-  [@@deriving sexp]
-
-type type_error =
-  [%import: Type_errors.type_error]
-  [@@deriving sexp]
-

@@ -16,25 +16,16 @@
 (* Written by: Emilio J. Gallego Arias and others                       *)
 (************************************************************************)
 
-open Sexplib
-
 module Level : sig
   include SerType.SJHC with type t = Univ.Level.t
   module Set : SerType.SJHC with type t = Univ.Level.Set.t
 end
 module Universe : SerType.SJHC with type t = Univ.Universe.t
 
-type constraint_type = Univ.constraint_type [@@deriving sexp,yojson,hash,compare]
+module UnivConstraint : sig
+  type kind = Univ.UnivConstraint.kind [@@deriving sexp,yojson,hash,compare]
 
-type univ_constraint = Univ.univ_constraint
+  include SerType.SJHC with type t = Univ.UnivConstraint.t
+end
 
-val univ_constraint_of_sexp : Sexp.t -> univ_constraint
-val sexp_of_univ_constraint : univ_constraint -> Sexp.t
-
-module Constraints : SerType.SJHC with type t = Univ.Constraints.t
-
-module ContextSet : SerType.SJHC with type t = Univ.ContextSet.t
-
-type 'a in_universe_context_set = 'a Univ.in_universe_context_set
-val in_universe_context_set_of_sexp : (Sexp.t -> 'a) -> Sexp.t -> 'a in_universe_context_set
-val sexp_of_in_universe_context_set : ('a -> Sexp.t) -> 'a in_universe_context_set -> Sexp.t
+module UnivConstraints : SerType.SJHC with type t = Univ.UnivConstraints.t

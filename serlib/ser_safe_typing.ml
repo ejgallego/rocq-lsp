@@ -30,18 +30,19 @@ module Entries = Ser_entries
 module Cooking = Ser_cooking
 module Univ = Ser_univ
 module Vmemitcodes = Ser_vmemitcodes
+module PConstraints = Ser_pConstraints
 
 (* Side_effects *)
 type certificate = {
   certif_struc : Mod_declarations.structure_body;
-  certif_univs : Univ.ContextSet.t;
+  certif_univs : PConstraints.ContextSet.t;
 } [@@deriving sexp,yojson,hash,compare]
 
 type side_effect = {
   seff_certif : certificate CEphemeron.key;
   seff_constant : Names.Constant.t;
   seff_body : (Constr.t, Vmemitcodes.body_code option) Declarations.pconstant_body;
-  seff_univs : Univ.ContextSet.t;
+  seff_univs : PConstraints.ContextSet.t;
 } [@@deriving sexp,yojson,hash,compare]
 
 module SeffOrd = struct
