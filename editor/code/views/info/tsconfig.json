@@ -7,5 +7,5 @@
     "esModuleInterop": true,
     "jsx": "react-jsx"
   },
-  "include": ["**/*.ts", "**/*.tsx", "../../lib/**/*"]
+  "include": ["**/*.ts", "**/*.tsx", "../../lib/**/*", "../../src/configManager.ts"]
 }

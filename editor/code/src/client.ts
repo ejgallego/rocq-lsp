@@ -53,6 +53,7 @@ import {
   rocqExecInfo,
 } from "./status";
 import { CoqLspClientConfig, CoqLspServerConfig, CoqSelector } from "./config";
+import { configManager } from "./configManager";
 import { InfoPanel, goalReq } from "./goals";
 import { FileProgressManager } from "./progress";
 import { coqPerfData, PerfDataView } from "./perf";
@@ -133,6 +134,10 @@ export function activateCoqLSP(
   // Update config on client and server
   function configDidChange(wsConfig: any): CoqLspServerConfig {
     config = CoqLspClientConfig.create(wsConfig);
+
+    // Notify the config manager (it will propagate changes as necessary)
+    configManager.updateConfig(config);
+
     let client_version = context.extension.packageJSON.version;
     let settings = CoqLspServerConfig.create(client_version, wsConfig);
     let params: DidChangeConfigurationParams = { settings };
