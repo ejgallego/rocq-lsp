@@ -13,6 +13,7 @@ import {
   CoqMessagePayload,
   ErrorData,
 } from "../lib/types";
+import { configManager } from "./configManager";
 
 import {
   URI,
@@ -64,6 +65,12 @@ export class InfoPanel {
       { preserveFocus: true, viewColumn: ViewColumn.Two },
       webviewOpts
     );
+
+    /**
+     * Register the panel with the config manager:
+     * Essentially, the goals panel needs to be apprised of all config changes so its children can receive config messages
+     */
+    configManager.registerWebview(this.panel);
 
     const styleUri = this.panel.webview.asWebviewUri(
       Uri.joinPath(this.extensionUri, "out", "views", "info", "index.css")

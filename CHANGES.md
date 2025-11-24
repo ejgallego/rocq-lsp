@@ -82,8 +82,12 @@
    visualizing with perfetto.dev (@ejgallego, AlexJ, Gaëtan Gilbert,
    #1076)
  - [fcc] New options `--save_vof` and `--load_vof` that can save a
-   Fleche version of a document to a `.vof` file, thus avoiding
-   `.vo` recompilation for example when calling `fcc --plugin=...` for a given file (@ejgallego, Alexj, #, )
+   Fleche version of a document to a `.vof` file, thus avoiding `.vo`
+   recompilation for example when calling `fcc --plugin=...` for a
+   given file (@ejgallego, Alexj, #1077)
+ - [vscode] Add config manager for handling client configuration
+   changes in the infoview. Add configuration option for number of
+   messages displayed (@Durbatuluk1701, #1067)
 
 # coq-lsp 0.2.4: (W)Activation
 ------------------------------
