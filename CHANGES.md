@@ -44,10 +44,13 @@
    goals without the compacted context. See protocol docs for more
    information. (@ejgallego, alexJ, #1065, cc #1043)
  - [fleche] [rocq] New options and data fields to expose document
-   comments.  This is experimental, pass the `--record_comments` flags
+   comments. This is experimental, pass the `--record_comments` flags
    to `rocq-lsp`, `fcc`, or `pet-server` to enable it. Once this flag
    is passed, comments for a document will be stored in the new
    `doc.comments` field. (@ejgallego, alexJ, #1069, fixes #353)
+ - [hover] New debug option `show_pr_vernac_on_hover`, that will
+   re-print the sentence under point using the Rocq printer
+   (@ejgallego, alexJ, #1070)
 
 # coq-lsp 0.2.4: (W)Activation
 ------------------------------

@@ -265,6 +265,11 @@
             "default": false,
             "description": "Show universe information and diff for a sentence on hover."
           },
+          "coq-lsp.show_pr_vernac_on_hover": {
+            "type": "boolean",
+            "default": false,
+            "description": "Print sentence at point using Rocq's printer."
+          },
           "coq-lsp.show_state_hash_on_hover": {
             "type": "boolean",
             "default": false,
