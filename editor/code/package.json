@@ -53,7 +53,8 @@
           "gallina"
         ],
         "extensions": [
-          ".v"
+          ".v",
+          ".lp"
         ],
         "configuration": "./coq.configuration.json"
       },

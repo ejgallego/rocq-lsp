@@ -1083,6 +1083,8 @@ let debug_loc_after line (r : Lang.Range.t) =
 
 let loc_after ~lines ~uri (r : Lang.Range.t) =
   let line_nb_last = r.end_.line + 1 in
+  Format.eprintf "resume range: %a%!@\n" Lang.Range.pp r;
+  Format.eprintf "debug: @[%s@]%!@\n" (String.concat "" (Array.to_list lines));
   let end_index =
     let line = Array.get lines r.end_.line in
     debug_loc_after line r;
@@ -1113,9 +1115,7 @@ let resume_check ~io ~token ~(last_tok : Lang.Range.t) ~doc ~target =
     set_completion ~completed doc
   | Some processed_content ->
     let handle =
-      Pure.Parsing.(
-        Parsable.make ~loc:resume_loc
-          Stream.(of_string ~offset processed_content))
+      Pure.Parsing.(Parsable.make ~loc:resume_loc processed_content)
     in
     process_and_parse ~io ~token ~target ~uri ~version doc last_tok handle
 
