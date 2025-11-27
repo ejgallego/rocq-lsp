@@ -59,6 +59,9 @@
    (@JulesViennotFranca, @ejgallego, #1017)
  - [tools] New tool `rocq-checkdecls` for Rocq blueprints, inspired by
    the Lean version (#785, @ejgallego, Andrej Bauer)
+ - [plugins] New demo plugin "baseline", that tries to proof existing
+   lemmas using a set of pre-fixed tactics (@ejgallego, Shachar
+   Itzhaky, Eytan Singher, #799)
 
 # coq-lsp 0.2.4: (W)Activation
 ------------------------------
