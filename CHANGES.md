@@ -57,6 +57,8 @@
  - [petanque] New method `list_notations_in_statement` which returns
    an analysis of notations appearing inside a Rocq statement
    (@JulesViennotFranca, @ejgallego, #1017)
+ - [tools] New tool `rocq-checkdecls` for Rocq blueprints, inspired by
+   the Lean version (#785, @ejgallego, Andrej Bauer)
 
 # coq-lsp 0.2.4: (W)Activation
 ------------------------------
