@@ -1,3 +1,13 @@
+(************************************************************************)
+(* Copyright 2019 MINES ParisTech -- Dual License LGPL 2.1+ / GPL3+     *)
+(* Copyright 2019-2024 Inria      -- Dual License LGPL 2.1+ / GPL3+     *)
+(* Copyright 2024-2025 Emilio J. Gallego Arias -- LGPL 2.1+ / GPL3+     *)
+(* Copyright 2025      CNRS                    -- LGPL 2.1+ / GPL3+     *)
+(* Written by: Emilio J. Gallego Arias & rocq-lsp contributors          *)
+(************************************************************************)
+(* Flèche => RL agent: petanque                                         *)
+(************************************************************************)
+
 open Petanque_json
 open Petanque_shell
 
@@ -91,6 +101,25 @@ let run (ic, oc) =
     let command = "About rev_snoc_cons." in
     S.run_at_pos { textDocument; opts = None; position; command }
   in
+  (* Check proof_info_at_pos *)
+  let* pi =
+    (* harcoded in shell.ml *)
+    let version = 0 in
+    let textDocument =
+      { Fleche_lsp.Doc.VersionedTextDocumentIdentifier.uri; version }
+    in
+    let position = Lang.Point.{ line = 17; character = 0; offset = -1 } in
+    S.proof_info_at_pos { textDocument; position }
+  in
+  assert (not (Option.is_empty pi));
+  let pi_debug = false in
+  if pi_debug then (
+    Format.eprintf "proof_info: %s@\n%!" (Option.get pi).name;
+    Format.(
+      eprintf "proof_info: @[%a@]@\n%!"
+        (pp_print_list pp_print_string)
+        (Option.get pi).statements));
+  assert (String.equal (Option.get pi).name "rev_snoc_cons");
   (* Petanque + start tests *)
   let* { st; _ } =
     S.start { uri; opts = None; pre_commands = None; thm = "rev_snoc_cons" }

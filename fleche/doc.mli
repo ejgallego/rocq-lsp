@@ -3,7 +3,7 @@
 (* Copyright 2019-2024 Inria      -- Dual License LGPL 2.1+ / GPL3+     *)
 (* Copyright 2024-2025 Emilio J. Gallego Arias -- LGPL 2.1+ / GPL3+     *)
 (* Copyright 2025      CNRS                    -- LGPL 2.1+ / GPL3+     *)
-(* Written by: Emilio J. Gallego Arias & coq-lsp contributors           *)
+(* Written by: Emilio J. Gallego Arias & rocq-lsp contributors          *)
 (************************************************************************)
 (* Flèche => document manager: document                                 *)
 (************************************************************************)
@@ -110,6 +110,14 @@ val lines : t -> string Array.t
 
 (** Return the list of all diags in the doc *)
 val diags : t -> Coq.Pp_t.t Lang.Diagnostic.t list
+
+(** Helper functions to analyze documents *)
+module Analysis : sig
+  (** [find_proof_start node] returns [Some pnode] where [pnode] is the node
+      that contains the start of the proof. [node] is the node to start the
+      search from, which will proceed using the [prev] field. *)
+  val find_proof_start : Node.t -> Node.t option
+end
 
 (** Create a new Coq document, this is cached! Note that this operation always
     suceeds, but the document could be created in a `Failed` state if problems

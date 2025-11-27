@@ -3,7 +3,7 @@
 (* Copyright 2019-2024 Inria      -- Dual License LGPL 2.1+ / GPL3+     *)
 (* Copyright 2024-2025 Emilio J. Gallego Arias -- LGPL 2.1+ / GPL3+     *)
 (* Copyright 2025      CNRS                    -- LGPL 2.1+ / GPL3+     *)
-(* Written by: Emilio J. Gallego Arias & coq-lsp contributors           *)
+(* Written by: Emilio J. Gallego Arias & rocq-lsp contributors          *)
 (************************************************************************)
 (* Flèche => document manager: document                                 *)
 (************************************************************************)
@@ -634,39 +634,50 @@ module Recovery_context = struct
     { contents; last_tok; nodes; ast }
 end
 
+module Analysis : sig
+  (** [find_proof_start node] returns [Some pnode] where [pnode] is the node
+      that contains the start of the proof. [node] is the node to start the
+      search from, which will proceed using the [prev] field. *)
+  val find_proof_start : Node.t -> Node.t option
+  (* This is useful in meta-commands, and other plugins actually! *)
+
+  (** Version of [find_proof_start] that takes a list of nodes (for
+      convenience), and will start the search from the first node in the list. *)
+  val find_proof_start_nodes : Node.t list -> Node.t option
+end = struct
+  (* Returns node before / after, will be replaced by the right structure, we
+     can also do dynamic by looking at proof state *)
+  let rec find_proof_start (node : Node.t option) =
+    match node with
+    | None -> None
+    | Some ({ Node.ast = None; _ } as node) -> find_proof_start node.prev
+    | Some ({ ast = Some ast; _ } as node) -> (
+      match (Node.Ast.to_coq ast).CAst.v.Vernacexpr.expr with
+      | Vernacexpr.VernacSynPure (VernacStartTheoremProof _)
+      | VernacSynPure (VernacDefinition (_, _, ProveBody _)) -> Some node
+      | _ -> find_proof_start node.prev)
+
+  let find_proof_start node = find_proof_start (Some node)
+
+  let find_proof_start_nodes nodes =
+    match nodes with
+    | [] -> None
+    | n :: _ -> find_proof_start n
+end
+
 (* This is not in its own module because we don't want to move the definition of
    [Node.t] out (yet) *)
 module Recovery : sig
-  (** [find_proof_start nodes] returns [Some (node, pnode)] where [node] is the
-      node that contains the start of the proof, and [pnode] is the previous
-      node, if exists. [nodes] is the list of document nodes, in _reverse
-      order_. *)
-  val find_proof_start : Node.t list -> (Node.t * Node.t option) option
-  (* This is useful in meta-commands, and other plugins actually! *)
-
   val handle :
        token:Coq.Limits.Token.t
     -> context:Recovery_context.t
     -> st:Coq.State.t
     -> Coq.State.t
 end = struct
-  (* Returns node before / after, will be replaced by the right structure, we
-     can also do dynamic by looking at proof state *)
-  let rec find_proof_start nodes =
-    match nodes with
-    | [] -> None
-    | { Node.ast = None; _ } :: ns -> find_proof_start ns
-    | ({ ast = Some ast; _ } as n) :: ns -> (
-      match (Node.Ast.to_coq ast).CAst.v.Vernacexpr.expr with
-      | Vernacexpr.VernacSynPure (VernacStartTheoremProof _)
-      | VernacSynPure (VernacDefinition (_, _, ProveBody _)) ->
-        Some (n, Util.hd_opt ns)
-      | _ -> find_proof_start ns)
-
   let recovery_for_failed_qed ~token ~default nodes =
-    match find_proof_start nodes with
+    match Analysis.find_proof_start_nodes nodes with
     | None -> Coq.Protect.E.ok (default, None)
-    | Some ({ range; state; _ }, prev) -> (
+    | Some { range; state; prev; _ } -> (
       if !Config.v.admit_on_bad_qed then
         Memo.Admit.eval ~token state
         |> Coq.Protect.E.map ~f:(fun state -> (state, Some range))
@@ -771,10 +782,10 @@ let search_node ~command ~doc ~st =
       (Coq.Protect.E.error message, nstats None)
     | Some node -> (Coq.Protect.E.ok node.state, nstats (Some node)))
   | Restart -> (
-    match Recovery.find_proof_start doc.nodes with
+    match Analysis.find_proof_start_nodes doc.nodes with
     | None ->
       (Coq.Protect.E.error Coq.Pp_t.(str "no proof to restart"), Memo.Stats.zero)
-    | Some (node, _) -> (Coq.Protect.E.ok node.state, nstats None))
+    | Some node -> (Coq.Protect.E.ok node.state, nstats None))
   | ResetName id -> (
     let toc = doc.toc in
     let id = Names.Id.to_string id.v in

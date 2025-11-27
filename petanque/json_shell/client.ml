@@ -1,3 +1,13 @@
+(************************************************************************)
+(* Copyright 2019 MINES ParisTech -- Dual License LGPL 2.1+ / GPL3+     *)
+(* Copyright 2019-2024 Inria      -- Dual License LGPL 2.1+ / GPL3+     *)
+(* Copyright 2024-2025 Emilio J. Gallego Arias -- LGPL 2.1+ / GPL3+     *)
+(* Copyright 2025      CNRS                    -- LGPL 2.1+ / GPL3+     *)
+(* Written by: Emilio J. Gallego Arias & rocq-lsp contributors          *)
+(************************************************************************)
+(* Flèche => RL agent: petanque                                         *)
+(************************************************************************)
+
 module Lsp = Fleche_lsp
 open Petanque_json
 
@@ -132,5 +142,13 @@ module S (C : Chans) = struct
 
   let ast_at_pos =
     let module M = Wrap (AstAtPos) (C) in
+    M.call
+
+  let proof_info =
+    let module M = Wrap (ProofInfo) (C) in
+    M.call
+
+  let proof_info_at_pos =
+    let module M = Wrap (ProofInfoAtPos) (C) in
     M.call
 end

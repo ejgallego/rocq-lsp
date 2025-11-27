@@ -1,3 +1,13 @@
+(************************************************************************)
+(* Copyright 2019 MINES ParisTech -- Dual License LGPL 2.1+ / GPL3+     *)
+(* Copyright 2019-2024 Inria      -- Dual License LGPL 2.1+ / GPL3+     *)
+(* Copyright 2024-2025 Emilio J. Gallego Arias -- LGPL 2.1+ / GPL3+     *)
+(* Copyright 2025      CNRS                    -- LGPL 2.1+ / GPL3+     *)
+(* Written by: Emilio J. Gallego Arias & rocq-lsp contributors          *)
+(************************************************************************)
+(* Flèche => RL agent: petanque                                         *)
+(************************************************************************)
+
 open Petanque_json
 
 module type Chans = sig
@@ -42,4 +52,8 @@ module S (C : Chans) : sig
 
   val ast : PetAst.Params.t -> (PetAst.Response.t, string) result
   val ast_at_pos : AstAtPos.Params.t -> (AstAtPos.Response.t, string) result
+  val proof_info : ProofInfo.Params.t -> (ProofInfo.Response.t, string) result
+
+  val proof_info_at_pos :
+    ProofInfoAtPos.Params.t -> (ProofInfoAtPos.Response.t, string) result
 end

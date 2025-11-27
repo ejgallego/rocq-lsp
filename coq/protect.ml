@@ -3,7 +3,7 @@
 (* Copyright 2019-2024 Inria           -- Dual License LGPL 2.1+ / GPL3+ *)
 (* Copyright 2024-2025 Emilio J. Gallego Arias  -- LGPL 2.1+ / GPL3+     *)
 (* Copyright 2025      CNRS                     -- LGPL 2.1+ / GPL3+     *)
-(* Written by: Emilio J. Gallego Arias & coq-lsp contributors            *)
+(* Written by: Emilio J. Gallego Arias & rocq-lsp contributors           *)
 (*************************************************************************)
 (* Rocq Language Server Protocol: Rocq Effect Handling                   *)
 (*************************************************************************)
@@ -117,6 +117,15 @@ module E = struct
     let ( let+ ) x f = map ~f x
     let ( let* ) x f = bind ~f x
   end
+
+  let rec mapM ~f il =
+    let open O in
+    match il with
+    | [] -> ok []
+    | x :: xl ->
+      let* r = f x in
+      let* rl = mapM ~f xl in
+      ok (r :: rl)
 end
 
 (* Eval with reified exceptions and feedback *)
