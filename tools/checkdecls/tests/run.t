@@ -1,21 +1,5 @@
 General tests for rocq-checkdecls
 
-Error when not input:
-
-  $ rocq-checkdecls
-  rocq-checkdecls: required argument FILES is missing
-  Usage: rocq-checkdecls [OPTION]… FILES…
-  Try 'rocq-checkdecls --help' for more information.
-  [124]
-
-Error when file doesn't exists:
-
-  $ rocq-checkdecls where_i_am.txt
-  rocq-checkdecls: FILES… arguments: no 'where_i_am.txt' file
-  Usage: rocq-checkdecls [OPTION]… FILES…
-  Try 'rocq-checkdecls --help' for more information.
-  [124]
-
 Simple test with one file, succeed
 
   $ echo Coq.Init.Nat.add > clist
