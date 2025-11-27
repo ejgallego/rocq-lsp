@@ -76,6 +76,8 @@
    it. Documentation is treated as Markdown. This feature is
    experimental and limited to documentation comments on the same file.
    (@ejgallego, #590)
+ - [plugins] New plugin to dump document data (@ejgallego, Stefania
+   Dumbrava, #1075)
 
 # coq-lsp 0.2.4: (W)Activation
 ------------------------------
