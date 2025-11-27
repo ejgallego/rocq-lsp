@@ -189,6 +189,15 @@ end
     course possible. *)
 val premises : token:Coq.Limits.Token.t -> st:State.t -> Premise.t list R.t
 
+(** List all notations present is some lemma statement [statement], parsed at
+    state [st]. Returns [[]] on EOF. *)
+val list_notations_in_statement :
+     token:Coq.Limits.Token.t
+  -> st:State.t
+  -> statement:string
+  -> unit
+  -> Coq.Notation_analysis.Info.t list Run_result.t R.t
+
 (** Return the ast of a string [text], parsed at state [st] . Returns [None] on
     EOF *)
 val ast :

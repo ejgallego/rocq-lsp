@@ -60,3 +60,5 @@ end
 module Proof_info = struct
   type t = [%import: Petanque.Agent.Proof_info.t] [@@deriving yojson]
 end
+
+module Notation_analysis = Fleche_lsp.JCoq.Notation_analysis

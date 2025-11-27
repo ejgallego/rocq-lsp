@@ -1126,3 +1126,23 @@ using the document.
 ```typescript
 interface Params = { uri : string, position : Position }
 ```
+
+<!-- TOC --><a name="petanquenotations"></a>
+### `petanque/list_notations_in_statement`
+
+`petanque/list_notations_in_statement` will provide information about
+which notations appear in `statement`.
+
+```typescript
+interface Params = { st : number, statement : string }
+
+interface Notation_info =
+  { locations : Loc.t[]
+  ; path : string
+  ; secpath : string
+  ; notation : string
+  ; scope : Option<string>
+  }
+
+interface Response = Run_result<Notation_info[]>
+```
