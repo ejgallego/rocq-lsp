@@ -70,6 +70,12 @@
    (@ejgallego, #1074)
  - [doc] Example typescript client connecting to the WASM-based lsp
    server (@ejgallego, #626)
+ - [hover] When the `show_doc_on_hover` option is enabled, hover will
+   show coqdoc documentation when hovering on identifiers, using some
+   heuristics to infer it from the comment just before
+   it. Documentation is treated as Markdown. This feature is
+   experimental and limited to documentation comments on the same file.
+   (@ejgallego, #590)
 
 # coq-lsp 0.2.4: (W)Activation
 ------------------------------

@@ -104,6 +104,8 @@ type t =
         (** Show state hash on hover, useful for debugging *)
   ; show_comments_on_hover : bool [@default false]
         (** Show comments on hover, useful for debugging *)
+  ; show_doc_on_hover : bool [@default false]
+        (** Show documentation on hover *)
   ; show_pr_vernac_on_hover : bool [@default false]
         (** Print sentence on hover using Rocq's, useful for debugging *)
   ; pp_json : bool [@default false]
@@ -145,6 +147,7 @@ let default =
   ; show_universes_on_hover = false
   ; show_state_hash_on_hover = false
   ; show_comments_on_hover = false
+  ; show_doc_on_hover = false
   ; show_pr_vernac_on_hover = false
   ; verbosity = 2
   ; pp_json = false
