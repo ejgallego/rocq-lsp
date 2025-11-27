@@ -95,7 +95,7 @@ let get_goal_type (ppx : EConstr.t -> 'pc) (env : Environ.env)
   ppx concl
 
 let build_info sigma g =
-  { Reified_goal.evar = g; name = Evd.evar_ident g sigma }
+  { Reified_goal.evar = g; name = Option.map Libnames.basename @@ Evd.evar_ident g sigma }
 
 (** Generic processor *)
 let process_goal_gen ~ppx ~compact sigma g : 'a Reified_goal.t =
