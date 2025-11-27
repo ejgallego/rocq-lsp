@@ -68,6 +68,8 @@
    infra (@ejgallego, @jim-portegies, @DikieDick, #1058)
  - [lsp controller] Log internal errors to user-facing log
    (@ejgallego, #1074)
+ - [doc] Example typescript client connecting to the WASM-based lsp
+   server (@ejgallego, #626)
 
 # coq-lsp 0.2.4: (W)Activation
 ------------------------------
