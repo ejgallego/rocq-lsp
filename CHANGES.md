@@ -66,6 +66,8 @@
    Lean version (#785, @ejgallego, Andrej Bauer)
  - [lsp] [rocq] Example of Ltac2 AST analysis using serlib's Analzyer
    infra (@ejgallego, @jim-portegies, @DikieDick, #1058)
+ - [lsp controller] Log internal errors to user-facing log
+   (@ejgallego, #1074)
 
 # coq-lsp 0.2.4: (W)Activation
 ------------------------------
