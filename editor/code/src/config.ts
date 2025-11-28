@@ -76,6 +76,7 @@ export interface CoqLspClientConfig {
   pp_format: "Str" | "Pp" | "Box";
   compact_hypotheses: boolean;
   check_on_scroll: boolean;
+  messages_limit: number;
 }
 
 function pp_type_to_pp_format(pp_type: 0 | 1 | 2): "Str" | "Pp" | "Box" {
@@ -96,6 +97,7 @@ export namespace CoqLspClientConfig {
       pp_format: pp_type_to_pp_format(wsConfig.pp_type),
       check_on_scroll: wsConfig.check_on_scroll,
       compact_hypotheses: wsConfig.compact_hypotheses,
+      messages_limit: wsConfig.messages_limit,
     };
     return obj;
   }

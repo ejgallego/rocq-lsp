@@ -327,6 +327,11 @@
             "type": "boolean",
             "default": false,
             "description": "If enabled, errors and messages will be shown using the `goal_after_tactic` setting, otherwise, they always correspond to the requested position"
+          },
+          "coq-lsp.messages_limit": {
+            "type": "number",
+            "default": 100,
+            "description": "Maximum number of messages to display in the Goals/Info panel. Set to 0 to disable the limit."
           }
         }
       },

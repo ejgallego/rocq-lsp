@@ -3,6 +3,7 @@ import {
   Position,
   Range,
 } from "vscode-languageserver-types";
+import { CoqLspClientConfig } from "../src/config";
 
 export interface Hyp<Pp> {
   names: Pp[];
@@ -167,7 +168,22 @@ export interface InfoError {
   params: ErrorData;
 }
 
-export type CoqMessagePayload = RenderGoals | WaitingForInfo | InfoError;
+export interface ConfigChangeEvent {
+  field: keyof CoqLspClientConfig;
+  oldValue: any;
+  newValue: any;
+}
+
+export interface ConfigChanged {
+  method: "configChanged";
+  params: { changes: ConfigChangeEvent[] };
+}
+
+export type CoqMessagePayload =
+  | RenderGoals
+  | WaitingForInfo
+  | InfoError
+  | ConfigChanged;
 
 export interface CoqMessageEvent extends MessageEvent {
   data: CoqMessagePayload;
