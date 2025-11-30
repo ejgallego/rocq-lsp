@@ -7,6 +7,7 @@ import {
   CoqMessageEvent,
   ErrorData,
 } from "../../lib/types";
+import { useConfigValue } from "./configManager";
 
 // Main panel components
 import { FileInfo } from "./FileInfo";
@@ -39,6 +40,8 @@ export function InfoPanel() {
   let [error, setError] = useState<ErrorData | null>();
   let [goals, setGoals] = useState<GoalAnswer<BoxString, PpString>>();
 
+  const messagesLimit = useConfigValue<number>("messages_limit", 100);
+
   function infoViewDispatch(event: CoqMessageEvent) {
     switch (event.data.method) {
       case "renderGoals":
@@ -51,6 +54,9 @@ export function InfoPanel() {
       case "infoError":
         setError(event.data.params);
         doInfoError(event.data.params);
+        break;
+      case "configChanged":
+        // Config changes handled by useConfigValue hook
         break;
       default:
         console.log("rocq infoview [Info.tsx]: unknown method", event.data);
@@ -80,9 +86,10 @@ export function InfoPanel() {
 
   if (!goals) return null;
 
-  // We limit the number of messages as to workaround slow rendering
-  // in pretty print mode, to be fixed.
-  let messages = goals.messages.slice(0, 100);
+  let messages =
+    messagesLimit === 0
+      ? goals.messages
+      : goals.messages.slice(0, messagesLimit);
 
   // Normal goal display otherwise
   return (

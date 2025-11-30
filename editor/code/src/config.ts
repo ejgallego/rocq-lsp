@@ -1,4 +1,5 @@
 import { TextDocumentFilter } from "vscode-languageclient";
+import { CoqLspClientConfig } from "../lib/types";
 
 export interface UnicodeCompletionConfig {
   enabled: "off" | "normal" | "extended";
@@ -64,20 +65,6 @@ export namespace CoqLspServerConfig {
   }
 }
 
-export enum ShowGoalsOnCursorChange {
-  Never = 0,
-  OnMouse = 1,
-  OnMouseAndKeyboard = 2,
-  OnMouseKeyboardCommand = 3,
-}
-
-export interface CoqLspClientConfig {
-  show_goals_on: ShowGoalsOnCursorChange;
-  pp_format: "Str" | "Pp" | "Box";
-  compact_hypotheses: boolean;
-  check_on_scroll: boolean;
-}
-
 function pp_type_to_pp_format(pp_type: 0 | 1 | 2): "Str" | "Pp" | "Box" {
   switch (pp_type) {
     case 0:
@@ -89,13 +76,14 @@ function pp_type_to_pp_format(pp_type: 0 | 1 | 2): "Str" | "Pp" | "Box" {
   }
 }
 
-export namespace CoqLspClientConfig {
+export namespace ClientConfig {
   export function create(wsConfig: any): CoqLspClientConfig {
     let obj: CoqLspClientConfig = {
       show_goals_on: wsConfig.show_goals_on,
       pp_format: pp_type_to_pp_format(wsConfig.pp_type),
       check_on_scroll: wsConfig.check_on_scroll,
       compact_hypotheses: wsConfig.compact_hypotheses,
+      messages_limit: wsConfig.messages_limit,
     };
     return obj;
   }
