@@ -213,6 +213,8 @@ module type EvalType = sig
 
   type output
 
+  val name : string
+
   val eval :
     token:Coq.Limits.Token.t -> t -> (output, Coq.Loc_t.t) Coq.Protect.E.t
 
@@ -279,6 +281,10 @@ module SEval (E : EvalType) :
       let () = HC.add_execution cache i (res, stats) in
       (res, Stats.make ~stats ~cache_hit:false ~time_hash ())
 
+  let evalS ~token i =
+    let name = "Memo." ^ E.name in
+    NewProfile.profile name (fun () -> evalS ~token i) ()
+
   let eval ~token i = evalS ~token i |> fst
 end
 
@@ -330,10 +336,16 @@ module CEval (E : LocEvalType) = struct
       let () = HC.add_execution_loc cache i (stm_loc, res, stats) in
       (res, Stats.make ~stats ~cache_hit:false ~time_hash ())
 
+  let evalS ~token i =
+    let name = "Memo." ^ E.name in
+    NewProfile.profile name (fun () -> evalS ~token i) ()
+
   let eval ~token i = evalS ~token i |> fst
 end
 
 module VernacEval = struct
+  let name = "Interp"
+
   type t = Coq.State.t * Coq.Ast.t
 
   (* This crutially relies on our ppx to ignore the CAst location *)
@@ -356,6 +368,8 @@ end
 module Interp = CEval (VernacEval)
 
 module RequireEval = struct
+  let name = "Require"
+
   type t = Coq.State.t * Coq.Files.t * Coq.Ast.Require.t
 
   (* This crutially relies on our ppx to ignore the CAst location *)
@@ -387,6 +401,8 @@ module Require = CEval (RequireEval)
 module Admit = SEval (struct
   include Coq.State
 
+  let name = "Admit"
+
   type output = Coq.State.t
 
   let input_info st = Format.asprintf "st %d" (Hashtbl.hash st)
@@ -394,6 +410,8 @@ module Admit = SEval (struct
 end)
 
 module InitEval = struct
+  let name = "Init"
+
   type t = Coq.State.t * Coq.Workspace.t * Coq.Files.t * Lang.LUri.File.t
 
   let equal (s1, w1, f1, u1) (s2, w2, f2, u2) : bool =
