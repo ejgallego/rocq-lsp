@@ -1219,7 +1219,8 @@ let doc_to_disk ~doc ~in_file : unit =
 
 let doc_of_disk ~in_file : t =
   let out_vof = Filename.(remove_extension in_file) ^ ".vof" in
-  Stdlib.In_channel.with_open_bin out_vof (fun ic -> Marshal.from_channel ic)
+  Coq.Compat.Ocaml_414.In_channel.with_open_bin out_vof (fun ic ->
+      Marshal.from_channel ic)
 
 let save_vof ~token ~doc =
   match doc.completed with
