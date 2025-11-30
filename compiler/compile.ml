@@ -49,8 +49,22 @@ let guess_languageId file =
   | ".v.tex" -> "latex"
   | _ -> "rocq"
 
+let do_save_vof ~io ~token ~doc =
+  match Doc.save_vof ~token ~doc with
+  | Coq.Protect.E.{ r = Coq.Protect.R.Completed (Ok ()); feedback } ->
+    Io.Log.feedback "vof safe" feedback;
+    Io.Report.msg ~io ~lvl:Info "vof file saved"
+  | Coq.Protect.E.{ r = Completed (Error (User msg)); feedback }
+  | Coq.Protect.E.{ r = Completed (Error (Anomaly msg)); feedback } ->
+    Io.Log.feedback "vof safe" feedback;
+    Io.Report.msg ~io ~lvl:Error "error saving vof file %a" Coq.Pp_t.pp_with
+      msg.msg
+  | Coq.Protect.E.{ r = Interrupted; feedback } ->
+    Io.Log.feedback "vof safe" feedback;
+    Io.Report.msg ~io ~lvl:Error "saving vof file interrupted"
+
 let compile_file ~cc file : int =
-  let { Cc.io; root_state; workspaces; default; token } = cc in
+  let { Cc.io; root_state; workspaces; default; token; save_vof } = cc in
   Io.Report.msg ~io ~lvl:Info "compiling file %s" file;
   match Lang.LUri.(File.of_uri (of_string file)) with
   | Error _ -> 222
@@ -67,6 +81,7 @@ let compile_file ~cc file : int =
       save_diags_file ~doc;
       (* Vo file saving is now done by a plugin *)
       Theory.close ~uri;
+      if save_vof then do_save_vof ~io ~token ~doc;
       status_of_doc doc)
 
 let compile_file ~cc file : int =

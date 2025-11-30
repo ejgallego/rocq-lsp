@@ -92,5 +92,6 @@ module Register : sig
     type t = io:Io.CallBack.t -> token:Coq.Limits.Token.t -> doc:Doc.t -> unit
 
     val add : t -> unit
+    val fire : io:Io.CallBack.t -> token:Coq.Limits.Token.t -> doc:Doc.t -> unit
   end
 end

@@ -81,6 +81,9 @@
  - [fcc] New option `--trace-file` that will generate trace data for
    visualizing with perfetto.dev (@ejgallego, AlexJ, Gaëtan Gilbert,
    #1076)
+ - [fcc] New options `--save_vof` and `--load_vof` that can save a
+   Fleche version of a document to a `.vof` file, thus avoiding
+   `.vo` recompilation for example when calling `fcc --plugin=...` for a given file (@ejgallego, Alexj, #, )
 
 # coq-lsp 0.2.4: (W)Activation
 ------------------------------

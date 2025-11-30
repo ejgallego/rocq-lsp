@@ -170,6 +170,13 @@ val check :
 val save :
   token:Coq.Limits.Token.t -> doc:t -> (unit, Coq.Loc_t.t) Coq.Protect.E.t
 
+(** [save_vof ~doc ... *)
+val save_vof :
+  token:Coq.Limits.Token.t -> doc:t -> (unit, Coq.Loc_t.t) Coq.Protect.E.t
+
+(** Pass .v file *)
+val doc_of_disk : in_file:string -> t
+
 (** [run ~token ?loc ?memo ~st cmds] run commands [cmds] starting on state [st],
     without commiting changes to the document. [loc] can be used to seed an
     initial location if desired, if not the locations will be considered
