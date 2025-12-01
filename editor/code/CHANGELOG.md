@@ -1,3 +1,10 @@
+# coq-lsp 0.2.5: New epoch
+--------------------------
+
+ - Several bugfixes and improvements.
+ - Notably new config option `limit_messages` to configure the
+   infoview
+
 # coq-lsp 0.2.4: (W)Activation
 ------------------------------
 

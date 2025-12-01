@@ -235,6 +235,7 @@ ifndef VENDORED_SETUP
 	git clone --depth=1 https://github.com/coq/coq.git -b $(COQ_BRANCH) $(COQ_SRC_DIR)
 endif
 	cd $(COQ_SRC_DIR) && git apply $(PATCH_DIR)/0001-coq-lsp-patch.patch
+	# cd $(COQ_SRC_DIR) && git apply $(PATCH_DIR)/0001-jscoq-Interrupt-and-timeout-Rocq-patch.patch
 	cd $(COQ_SRC_DIR) && git apply $(PATCH_DIR)/0001-jscoq-lib-system.ml-de-unix-stat.patch
 	cd $(COQ_SRC_DIR) && git apply $(PATCH_DIR)/0001-engine-trampoline.patch
 	# cd $(COQ_SRC_DIR) && git apply $(PATCH_DIR)/0001-ocaml-4-12.patch
