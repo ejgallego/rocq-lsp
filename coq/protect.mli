@@ -3,12 +3,12 @@
 (* Copyright 2019-2024 Inria           -- Dual License LGPL 2.1+ / GPL3+ *)
 (* Copyright 2024-2025 Emilio J. Gallego Arias  -- LGPL 2.1+ / GPL3+     *)
 (* Copyright 2025      CNRS                     -- LGPL 2.1+ / GPL3+     *)
-(* Written by: Emilio J. Gallego Arias & coq-lsp contributors            *)
+(* Written by: Emilio J. Gallego Arias & rocq-lsp contributors           *)
 (*************************************************************************)
 (* Rocq Language Server Protocol: Rocq Effect Handling                   *)
 (*************************************************************************)
 
-(** This module reifies Coq side effects into an algebraic structure.
+(** This module reifies Rocq side effects into an algebraic structure.
 
     This is very convenient for upper layer programming.
 
@@ -44,6 +44,7 @@ module E : sig
     }
 
   val map : f:('a -> 'b) -> ('a, 'l) t -> ('b, 'l) t
+  val mapM : f:('a -> ('b, 'l) t) -> 'a list -> ('b list, 'l) t
   val map_loc : f:('l -> 'm) -> ('a, 'l) t -> ('a, 'm) t
   val bind : f:('a -> ('b, 'l) t) -> ('a, 'l) t -> ('b, 'l) t
   val ok : 'a -> ('a, 'l) t

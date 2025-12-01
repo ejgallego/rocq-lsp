@@ -10,7 +10,11 @@ val message_ref : (lvl:Fleche.Io.Level.t -> message:string -> unit) ref
 
 (** Start the shell, must be called only once. *)
 val init_agent :
-  token:Coq.Limits.Token.t -> debug:bool -> roots:string list -> unit Agent.R.t
+     token:Coq.Limits.Token.t
+  -> debug:bool
+  -> record_comments:bool
+  -> roots:string list
+  -> unit Agent.R.t
 
 (** [set_workspace ~root] Sets project and workspace settings from [root].
     [root] needs to be in URI format. If called repeteadly, overrides the

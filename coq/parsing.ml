@@ -29,6 +29,9 @@ let parse ~token ~st ps =
   (* This runs already inside Coq.protect *)
   State.in_state ~token ~st ~f:(parse ~st) ps
 
+let parse ~token ~st ps =
+  NewProfile.profile "Coq.parse" (fun () -> parse ~token ~st ps) ()
+
 (* Read the input stream until a dot or a "end of proof" token is encountered *)
 let parse_to_terminator : unit Pcoq.Entry.t =
   (* type 'a parser_fun = { parser_fun : te LStream.t -> 'a } *)

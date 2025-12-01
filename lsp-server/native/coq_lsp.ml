@@ -55,11 +55,12 @@ let concise_cb ofn =
     }
 
 (* Main loop *)
-let coq_init ~debug =
+let coq_init ~debug ~record_comments =
   let load_module = Dynlink.loadfile in
   let load_plugin = Coq.Loader.plugin_handler None in
   let vm, warnings = (true, None) in
-  Coq.Init.(coq_init { debug; load_module; load_plugin; vm; warnings })
+  Coq.Init.(
+    coq_init { debug; record_comments; load_module; load_plugin; vm; warnings })
 
 let exit_notification =
   Lsp.Base.Message.(Notification { method_ = "exit"; params = [] })
@@ -112,7 +113,7 @@ end = struct
 end
 
 let lsp_main bt coqlib findlib_config ocamlpath vo_load_path require_libraries
-    delay int_backend lsp_trace lsp_trace_file =
+    delay int_backend lsp_trace lsp_trace_file record_comments =
   Coq.Limits.select_best int_backend;
   Coq.Limits.start ();
 
@@ -141,7 +142,7 @@ let lsp_main bt coqlib findlib_config ocamlpath vo_load_path require_libraries
 
   (* Core Coq initialization *)
   let debug = bt || Fleche.Debug.backtraces in
-  let root_state = coq_init ~debug in
+  let root_state = coq_init ~debug ~record_comments in
   let cmdline =
     { Coq.Workspace.CmdLine.coqlib
     ; findlib_config
@@ -243,7 +244,8 @@ let lsp_cmd : unit Cmd.t =
       (Cmd.info "coq-lsp" ~version:Fleche.Version.server ~doc ~man)
       Term.(
         const lsp_main $ bt $ coqlib $ findlib_config $ ocamlpath $ vo_load_path
-        $ ri_from $ delay $ int_backend $ lsp_trace $ lsp_trace_file))
+        $ ri_from $ delay $ int_backend $ lsp_trace $ lsp_trace_file
+        $ record_comments))
 
 let main () =
   let ecode = Cmd.eval lsp_cmd in

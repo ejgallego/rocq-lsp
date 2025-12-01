@@ -1,0 +1,6 @@
+(library
+ (name Metanejo_plugin)
+ (public_name coq-lsp.plugin.metanejo)
+ (preprocess
+  (pps ppx_deriving_yojson))
+ (libraries coq-lsp.fleche coq-lsp.lsp))

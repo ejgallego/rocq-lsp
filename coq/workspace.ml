@@ -180,8 +180,7 @@ let make ~add_dir ~cmdline ~implicit ~kind ~debug =
     List.map mk_require_from rq_list
   in
   let add_path unix_path =
-    mk_lp ~coq_path:Names.DirPath.empty ~unix_path ~implicit:true
-      ~has_ml:false
+    mk_lp ~coq_path:Names.DirPath.empty ~unix_path ~implicit:true ~has_ml:false
   in
   let vo_load_path = dft_vo_load_path @ vo_load_path in
   let vo_load_path =

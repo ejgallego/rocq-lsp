@@ -3,7 +3,7 @@
 (* Copyright 2019-2024 Inria      -- Dual License LGPL 2.1+ / GPL3+     *)
 (* Copyright 2024-2025 Emilio J. Gallego Arias -- LGPL 2.1+ / GPL3+     *)
 (* Copyright 2025      CNRS                    -- LGPL 2.1+ / GPL3+     *)
-(* Written by: Emilio J. Gallego Arias & coq-lsp contributors           *)
+(* Written by: Emilio J. Gallego Arias & rocq-lsp contributors          *)
 (************************************************************************)
 (* Flèche => document manager: document                                 *)
 (************************************************************************)
@@ -307,6 +307,8 @@ type t =
   ; version : int  (** [version] of the document *)
   ; contents : Contents.t  (** [contents] of the document *)
   ; nodes : Node.t list  (** List of document nodes *)
+  ; comments : ((int * int) * string) list
+        (** List of all comments found up to [completed] *)
   ; completed : Completion.t
         (** Status of the document, usually either completed, suspended, or
             waiting for some IO / external event *)
@@ -382,6 +384,7 @@ let empty_doc ~uri ~languageId ~contents ~version ~env ~root ~nodes ~completed =
   let lines = contents.Contents.lines in
   let init_loc = init_loc ~uri in
   let init_range = Coq.Utils.to_range ~lines init_loc in
+  let comments = [] in
   let toc = SM.empty in
   let diags_dirty = not (Lang.Compat.List.is_empty nodes) in
   let completed = completed init_range in
@@ -393,6 +396,7 @@ let empty_doc ~uri ~languageId ~contents ~version ~env ~root ~nodes ~completed =
   ; env
   ; root
   ; nodes
+  ; comments
   ; diags_dirty
   ; completed
   }
@@ -475,6 +479,11 @@ let create ~token ~env ~uri ~languageId ~version ~raw =
   handle_contents_creation ~env ~uri ~version ~languageId ~raw
     (handle_doc_creation_exec ~token)
 
+let create ~token ~env ~uri ~languageId ~version ~raw =
+  NewProfile.profile "Doc.create"
+    (fun () -> create ~token ~env ~uri ~languageId ~version ~raw)
+    ()
+
 (* Used in bump, we should consolidate with create *)
 let recreate ~token ~doc ~version ~contents =
   let env, uri, languageId = (doc.env, doc.uri, doc.languageId) in
@@ -493,6 +502,13 @@ let recover_up_to_offset ~init_range doc offset =
   in
   find [] init_range doc.nodes
 
+(* Simple commment filter, we drop the comments before the start of the last
+   valid token *)
+let filter_comments comments (range : Lang.Range.t) =
+  let cutoff = range.start.offset in
+  (* We could optimize this, also verify what the math is here *)
+  List.filter (fun ((_, e), _) -> e <= cutoff) comments
+
 let compute_common_prefix ~init_range ~contents (prev : t) =
   let s1 = prev.contents.raw in
   let l1 = prev.contents.last.offset in
@@ -505,14 +521,17 @@ let compute_common_prefix ~init_range ~contents (prev : t) =
   in
   let common_idx = match_or_stop 0 in
   let nodes, range = recover_up_to_offset ~init_range prev common_idx in
+  let comments = filter_comments prev.comments range in
   let toc = rebuild_toc nodes in
   Io.Log.trace "prefix" "resuming from %a" Lang.Range.pp range;
   let completed = Completion.Stopped range in
-  (nodes, completed, toc)
+  (nodes, comments, completed, toc)
 
 let bump_version ~init_range ~version ~contents doc =
   (* When a new document, we resume checking from a common prefix *)
-  let nodes, completed, toc = compute_common_prefix ~init_range ~contents doc in
+  let nodes, comments, completed, toc =
+    compute_common_prefix ~init_range ~contents doc
+  in
   (* Important: uri, root remain the same *)
   let uri = doc.uri in
   let languageId = doc.languageId in
@@ -523,6 +542,7 @@ let bump_version ~init_range ~version ~contents doc =
   ; version
   ; root
   ; nodes
+  ; comments
   ; contents
   ; toc
   ; diags_dirty = true (* EJGA: Is it worth to optimize this? *)
@@ -548,6 +568,11 @@ let bump_version ~token ~version ~raw doc =
     conv_error_doc ~raw ~uri ~languageId ~version ~env:doc.env ~root:doc.root e
   | Contents.R.Ok contents -> bump_version ~token ~version ~contents doc
 
+let bump_version ~token ~version ~raw doc =
+  NewProfile.profile "Doc.bump_version"
+    (fun () -> bump_version ~token ~version ~raw doc)
+    ()
+
 let update_env ~doc ~env =
   let range = Completion.range doc.completed in
   { doc with completed = WorkspaceUpdated range; env }
@@ -567,7 +592,15 @@ let send_eager_diagnostics ~io ~uri ~version ~doc =
     { doc with diags_dirty = false })
   else doc
 
-let set_completion ~completed doc = { doc with completed }
+let set_completion ~completed pa doc =
+  let new_comments = List.rev (Coq.Parsing.Parsable.comments pa) in
+  let loc = Coq.Parsing.Parsable.loc pa in
+  Io.Log.trace "set_completion" "setting new comments %d"
+    (List.length new_comments);
+  Io.Log.trace "set_completion" "parsable at position %a" Coq.Pp_t.pp_with
+    (Coq.Loc_t.pp loc);
+  let comments = List.append doc.comments new_comments in
+  { doc with comments; completed }
 
 (* We approximate the remnants of the document. It would be easier if instead of
    reporting what is missing, we would report what is done, but for now we are
@@ -611,39 +644,50 @@ module Recovery_context = struct
     { contents; last_tok; nodes; ast }
 end
 
+module Analysis : sig
+  (** [find_proof_start node] returns [Some pnode] where [pnode] is the node
+      that contains the start of the proof. [node] is the node to start the
+      search from, which will proceed using the [prev] field. *)
+  val find_proof_start : Node.t -> Node.t option
+  (* This is useful in meta-commands, and other plugins actually! *)
+
+  (** Version of [find_proof_start] that takes a list of nodes (for
+      convenience), and will start the search from the first node in the list. *)
+  val find_proof_start_nodes : Node.t list -> Node.t option
+end = struct
+  (* Returns node before / after, will be replaced by the right structure, we
+     can also do dynamic by looking at proof state *)
+  let rec find_proof_start (node : Node.t option) =
+    match node with
+    | None -> None
+    | Some ({ Node.ast = None; _ } as node) -> find_proof_start node.prev
+    | Some ({ ast = Some ast; _ } as node) -> (
+      match (Node.Ast.to_coq ast).CAst.v.Vernacexpr.expr with
+      | Vernacexpr.VernacSynPure (VernacStartTheoremProof _)
+      | VernacSynPure (VernacDefinition (_, _, ProveBody _)) -> Some node
+      | _ -> find_proof_start node.prev)
+
+  let find_proof_start node = find_proof_start (Some node)
+
+  let find_proof_start_nodes nodes =
+    match nodes with
+    | [] -> None
+    | n :: _ -> find_proof_start n
+end
+
 (* This is not in its own module because we don't want to move the definition of
    [Node.t] out (yet) *)
 module Recovery : sig
-  (** [find_proof_start nodes] returns [Some (node, pnode)] where [node] is the
-      node that contains the start of the proof, and [pnode] is the previous
-      node, if exists. [nodes] is the list of document nodes, in _reverse
-      order_. *)
-  val find_proof_start : Node.t list -> (Node.t * Node.t option) option
-  (* This is useful in meta-commands, and other plugins actually! *)
-
   val handle :
        token:Coq.Limits.Token.t
     -> context:Recovery_context.t
     -> st:Coq.State.t
     -> Coq.State.t
 end = struct
-  (* Returns node before / after, will be replaced by the right structure, we
-     can also do dynamic by looking at proof state *)
-  let rec find_proof_start nodes =
-    match nodes with
-    | [] -> None
-    | { Node.ast = None; _ } :: ns -> find_proof_start ns
-    | ({ ast = Some ast; _ } as n) :: ns -> (
-      match (Node.Ast.to_coq ast).CAst.v.Vernacexpr.expr with
-      | Vernacexpr.VernacSynPure (VernacStartTheoremProof _)
-      | VernacSynPure (VernacDefinition (_, _, ProveBody _)) ->
-        Some (n, Util.hd_opt ns)
-      | _ -> find_proof_start ns)
-
   let recovery_for_failed_qed ~token ~default nodes =
-    match find_proof_start nodes with
+    match Analysis.find_proof_start_nodes nodes with
     | None -> Coq.Protect.E.ok (default, None)
-    | Some ({ range; state; _ }, prev) -> (
+    | Some { range; state; prev; _ } -> (
       if !Config.v.admit_on_bad_qed then
         Memo.Admit.eval ~token state
         |> Coq.Protect.E.map ~f:(fun state -> (state, Some range))
@@ -748,10 +792,10 @@ let search_node ~command ~doc ~st =
       (Coq.Protect.E.error message, nstats None)
     | Some node -> (Coq.Protect.E.ok node.state, nstats (Some node)))
   | Restart -> (
-    match Recovery.find_proof_start doc.nodes with
+    match Analysis.find_proof_start_nodes doc.nodes with
     | None ->
       (Coq.Protect.E.error Coq.Pp_t.(str "no proof to restart"), Memo.Stats.zero)
-    | Some (node, _) -> (Coq.Protect.E.ok node.state, nstats None))
+    | Some node -> (Coq.Protect.E.ok node.state, nstats None))
   | ResetName id -> (
     let toc = doc.toc in
     let id = Names.Id.to_string id.v in
@@ -831,6 +875,11 @@ let parse_action ~token ~lines ~st last_tok doc_handle =
         [ Diags.error ~err_range ~quickFix ~msg ~stm_range:span_range () ]
       in
       (Skip (span_range, last_tok_range), parse_diags, feedback, time))
+
+let parse_action ~token ~lines ~st last_tok doc_handle =
+  NewProfile.profile "Doc.parse_action"
+    (fun () -> parse_action ~token ~lines ~st last_tok doc_handle)
+    ()
 
 (* Result of node-building action *)
 type document_action =
@@ -949,6 +998,14 @@ let document_action ~token ~io ~st ~parsing_diags ~parsing_feedback
       node_of_coq_result ~token ~doc ~range:ast_range ~prev ~ast ~st
         ~parsing_diags ~parsing_feedback ~feedback ~info last_tok_new res)
 
+let document_action ~token ~io ~st ~parsing_diags ~parsing_feedback
+    ~parsing_time ~prev ~doc last_tok doc_handle action =
+  NewProfile.profile "Doc.document_action"
+    (fun () ->
+      document_action ~token ~io ~st ~parsing_diags ~parsing_feedback
+        ~parsing_time ~prev ~doc last_tok doc_handle action)
+    ()
+
 module Target = struct
   type t =
     | End
@@ -1002,7 +1059,7 @@ let process_and_parse ~io ~token ~target ~uri ~version doc last_tok doc_handle =
       let completed = Completion.Failed last_tok in
       let node = max_errors_node ~state:st ~range:last_tok ~prev in
       let doc = add_node ~node doc in
-      set_completion ~completed doc
+      set_completion ~completed doc_handle doc
     | Target ->
       let () = log_beyond_target last_tok target in
       (* We set to Completed.Yes when we have reached the EOI *)
@@ -1011,7 +1068,7 @@ let process_and_parse ~io ~token ~target ~uri ~version doc last_tok doc_handle =
           Completion.Yes last_tok
         else Completion.Stopped last_tok
       in
-      set_completion ~completed doc
+      set_completion ~completed doc_handle doc
     | Continue -> (
       (* Parsing *)
       if Debug.parsing then Io.Log.trace "coq" "parsing sentence";
@@ -1025,12 +1082,13 @@ let process_and_parse ~io ~token ~target ~uri ~version doc last_tok doc_handle =
           ~parsing_time ~prev ~doc last_tok doc_handle action
       in
       match action with
-      | Interrupted last_tok -> set_completion ~completed:(Stopped last_tok) doc
+      | Interrupted last_tok ->
+        set_completion ~completed:(Stopped last_tok) doc_handle doc
       | Stop (completed, node) ->
         let doc = add_node ~node doc in
         (* See #445 *)
         report_progress ~io ~doc (Completion.range completed);
-        set_completion ~completed doc
+        set_completion ~completed doc_handle doc
       | Continue { state; last_tok; node } ->
         let n_errors =
           Lang.Compat.List.count Lang.Diagnostic.is_error node.Node.diags
@@ -1055,6 +1113,12 @@ let process_and_parse ~io ~token ~target ~uri ~version doc last_tok doc_handle =
   (* Set the document to "finished" mode: reverse the node list *)
   let doc = { doc with nodes = List.rev doc.nodes } in
   doc
+
+let process_and_parse ~io ~token ~target ~uri ~version doc last_tok doc_handle =
+  NewProfile.profile "Doc.process_and_parse"
+    (fun () ->
+      process_and_parse ~io ~token ~target ~uri ~version doc last_tok doc_handle)
+    ()
 
 let log_doc_completion (completed : Completion.t) =
   let timestamp = Unix.gettimeofday () in
@@ -1099,7 +1163,8 @@ let resume_check ~io ~token ~(last_tok : Lang.Range.t) ~doc ~target =
   | None ->
     (* Guard against internal tricky eof errors *)
     let completed = Completion.Failed last_tok in
-    set_completion ~completed doc
+    let fake_pa = Coq.Parsing.(Parsable.make (Stream.of_string "")) in
+    set_completion ~completed fake_pa doc
   | Some processed_content ->
     let handle =
       Coq.Parsing.(
@@ -1128,6 +1193,9 @@ let check ~io ~token ~target ~doc () =
     Util.print_stats ();
     doc
 
+let check ~io ~token ~target ~doc () =
+  NewProfile.profile "Doc.check" (fun () -> check ~io ~token ~target ~doc ()) ()
+
 let save ~token ~doc =
   match doc.completed with
   | Yes _ ->
@@ -1140,6 +1208,29 @@ let save ~token ~doc =
     Coq.State.in_stateM ~token ~st
       ~f:(fun () -> Coq.Save.save_vo ~token ~st ~ldir ~in_file)
       ()
+  | _ ->
+    let error = Coq.Pp_t.(str "Can't save document that failed to check") in
+    Coq.Protect.E.error error
+
+let doc_to_disk ~doc ~in_file : unit =
+  let out_vof = Filename.(remove_extension in_file) ^ ".vof" in
+  Coq.Compat.Ocaml_414.Out_channel.with_open_bin out_vof (fun oc ->
+      Marshal.to_channel oc doc [])
+
+let doc_of_disk ~in_file : t =
+  let out_vof = Filename.(remove_extension in_file) ^ ".vof" in
+  Coq.Compat.Ocaml_414.In_channel.with_open_bin out_vof (fun ic ->
+      Marshal.from_channel ic)
+
+let save_vof ~token ~doc =
+  match doc.completed with
+  | Yes _ ->
+    let st =
+      Util.last doc.nodes |> Stdlib.Option.fold ~some:Node.state ~none:doc.root
+    in
+    let uri = doc.uri in
+    let in_file = Lang.LUri.File.to_string_file uri in
+    Coq.State.in_state ~token ~st ~f:(fun () -> doc_to_disk ~doc ~in_file) ()
   | _ ->
     let error = Coq.Pp_t.(str "Can't save document that failed to check") in
     Coq.Protect.E.error error

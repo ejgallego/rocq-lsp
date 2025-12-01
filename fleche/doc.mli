@@ -3,7 +3,7 @@
 (* Copyright 2019-2024 Inria      -- Dual License LGPL 2.1+ / GPL3+     *)
 (* Copyright 2024-2025 Emilio J. Gallego Arias -- LGPL 2.1+ / GPL3+     *)
 (* Copyright 2025      CNRS                    -- LGPL 2.1+ / GPL3+     *)
-(* Written by: Emilio J. Gallego Arias & coq-lsp contributors           *)
+(* Written by: Emilio J. Gallego Arias & rocq-lsp contributors          *)
 (************************************************************************)
 (* Flèche => document manager: document                                 *)
 (************************************************************************)
@@ -89,6 +89,8 @@ type t = private
   ; version : int  (** [version] of the document *)
   ; contents : Contents.t  (** [contents] of the document *)
   ; nodes : Node.t list  (** List of document nodes *)
+  ; comments : ((int * int) * string) list
+        (** List of all comments found up to [completed] *)
   ; completed : Completion.t
         (** Status of the document, usually either completed, suspended, or
             waiting for some IO / external event *)
@@ -108,6 +110,14 @@ val lines : t -> string Array.t
 
 (** Return the list of all diags in the doc *)
 val diags : t -> Coq.Pp_t.t Lang.Diagnostic.t list
+
+(** Helper functions to analyze documents *)
+module Analysis : sig
+  (** [find_proof_start node] returns [Some pnode] where [pnode] is the node
+      that contains the start of the proof. [node] is the node to start the
+      search from, which will proceed using the [prev] field. *)
+  val find_proof_start : Node.t -> Node.t option
+end
 
 (** Create a new Coq document, this is cached! Note that this operation always
     suceeds, but the document could be created in a `Failed` state if problems
@@ -159,6 +169,13 @@ val check :
     the document completion status is not [Yes] *)
 val save :
   token:Coq.Limits.Token.t -> doc:t -> (unit, Coq.Loc_t.t) Coq.Protect.E.t
+
+(** [save_vof ~doc ... *)
+val save_vof :
+  token:Coq.Limits.Token.t -> doc:t -> (unit, Coq.Loc_t.t) Coq.Protect.E.t
+
+(** Pass .v file *)
+val doc_of_disk : in_file:string -> t
 
 (** [run ~token ?loc ?memo ~st cmds] run commands [cmds] starting on state [st],
     without commiting changes to the document. [loc] can be used to seed an

@@ -125,13 +125,14 @@ let loadfile file =
     Format.eprintf "loadfile [dynlink]: %s%!" file;
     time Dynlink.loadfile file)
 
-let coq_init ~debug =
+let coq_init ~debug ~record_comments =
   let loader = Fl_dynload.load_packages ~debug:false ~loadfile in
   let load_module = loadfile in
   let load_plugin = Coq.Loader.plugin_handler (Some loader) in
   (* XXX: Fixme at some point? *)
   let vm, warnings = (false, Some "-vm-compute-disabled") in
-  Coq.Init.(coq_init { debug; load_module; load_plugin; vm; warnings })
+  Coq.Init.(
+    coq_init { debug; record_comments; load_module; load_plugin; vm; warnings })
 
 external rocq_vm_trap : unit -> unit = "coq_vm_trap"
 
@@ -188,7 +189,8 @@ let main () =
   in
 
   let debug = true in
-  let root_state = coq_init ~debug in
+  let record_comments = false in
+  let root_state = coq_init ~debug ~record_comments in
   Worker.set_onmessage (on_init ~io ~root_state ~cmdline ~debug);
   ()
 

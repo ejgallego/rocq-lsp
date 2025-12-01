@@ -1,8 +1,11 @@
 (************************************************************************)
+(* Copyright 2019 MINES ParisTech -- Dual License LGPL 2.1+ / GPL3+     *)
+(* Copyright 2019-2024 Inria      -- Dual License LGPL 2.1+ / GPL3+     *)
+(* Copyright 2024-2025 Emilio J. Gallego Arias -- LGPL 2.1+ / GPL3+     *)
+(* Copyright 2025      CNRS                    -- LGPL 2.1+ / GPL3+     *)
+(* Written by: Emilio J. Gallego Arias & rocq-lsp contributors          *)
+(************************************************************************)
 (* Flèche => RL agent: petanque                                         *)
-(* Copyright 2019 MINES ParisTech -- Dual License LGPL 2.1 / GPL3+      *)
-(* Copyright 2019-2024 Inria      -- Dual License LGPL 2.1 / GPL3+      *)
-(* Written by: Emilio J. Gallego Arias & coq-lsp contributors           *)
 (************************************************************************)
 
 (** Petanque.Agent *)
@@ -150,10 +153,16 @@ val run_at_pos :
   -> unit
   -> unit Run_result.t R.t
 
+module Goal_opts : sig
+  type t = { compact : bool }
+end
+
 (** [goals ~token ~st] return the list of goals for a given [st] *)
 val goals :
      token:Coq.Limits.Token.t
   -> st:State.t
+  -> ?opts:Goal_opts.t
+  -> unit
   -> (string, string) Coq.Goals.reified option R.t
 
 module Premise : sig
@@ -180,6 +189,15 @@ end
     course possible. *)
 val premises : token:Coq.Limits.Token.t -> st:State.t -> Premise.t list R.t
 
+(** List all notations present is some lemma statement [statement], parsed at
+    state [st]. Returns [[]] on EOF. *)
+val list_notations_in_statement :
+     token:Coq.Limits.Token.t
+  -> st:State.t
+  -> statement:string
+  -> unit
+  -> Coq.Notation_analysis.Info.t list Run_result.t R.t
+
 (** Return the ast of a string [text], parsed at state [st] . Returns [None] on
     EOF *)
 val ast :
@@ -194,6 +212,32 @@ val ast :
     position, but the ast is not available, for example due to parsing error *)
 val ast_at_pos :
   doc:Fleche.Doc.t -> point:int * int -> unit -> Coq.Ast.t option R.t
+
+module Proof_info : sig
+  type t =
+    { name : string  (** The name of the current proof *)
+    ; statements : string list
+          (** Original statements, either pretty-printed, or raw if the document
+              is available to petanque *)
+    ; range : Lang.Range.t option
+          (** Range where the statements are, if the document is available to
+              petanque *)
+    }
+end
+
+(** Returns the proof name for a given [st], if a proof is open. If no proof is
+    open, returns [None]. *)
+val proof_info :
+  token:Coq.Limits.Token.t -> st:State.t -> unit -> Proof_info.t option R.t
+
+(** Returns the proof name for a given [point], in document [doc] if a proof is
+    open. If no proof is open, returns [None]. *)
+val proof_info_at_pos :
+     token:Coq.Limits.Token.t
+  -> doc:Fleche.Doc.t
+  -> point:int * int
+  -> unit
+  -> Proof_info.t option R.t
 
 (** Petanque version *)
 val version : int

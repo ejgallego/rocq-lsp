@@ -8,6 +8,10 @@
 
 (** This module contains the serialization functions for some Rocq's types *)
 
+module Loc_t : sig
+  type t = Coq.Loc_t.t [@@deriving yojson]
+end
+
 module Pp_t : sig
   type t = Coq.Pp_t.t [@@deriving yojson]
 end
@@ -26,5 +30,11 @@ module State : sig
     module Program : sig
       type t = Coq.State.Proof.Program.t [@@deriving yojson]
     end
+  end
+end
+
+module Notation_analysis : sig
+  module Info : sig
+    type t = Coq.Notation_analysis.Info.t [@@deriving yojson]
   end
 end

@@ -25,8 +25,8 @@
    #1050)
  - [layout-engine] Add background color for each box kind (@ejgallego,
    #1050)
- - [compiler] Fix handling of literate files (@ejgallego, #, reported
-   by @jim-portegies)
+ - [compiler] Fix handling of literate files (@ejgallego, #1056,
+   reported by @jim-portegies)
  - [rocq] Create output directory on .vo file save if it doesn't
    exists. This is very useful in the web context where we don't yet
    have a proper virtual FS setup, thus making the "Save .vo file"
@@ -40,6 +40,54 @@
    checking of Rocq's `Require`s when needed. The algorithm is not
    smart at all yet, as it invalidates all the requires for all open
    files. (@ejgallego, @helguo, #1059)
+ - [goals] New option (LSP, petanque, API) to display and retrieve
+   goals without the compacted context. See protocol docs for more
+   information. (@ejgallego, alexJ, #1065, cc #1043)
+ - [fleche] [rocq] New options and data fields to expose document
+   comments. This is experimental, pass the `--record_comments` flags
+   to `rocq-lsp`, `fcc`, or `pet-server` to enable it. Once this flag
+   is passed, comments for a document will be stored in the new
+   `doc.comments` field. (@ejgallego, alexJ, #1069, fixes #353)
+ - [hover] New debug option `show_pr_vernac_on_hover`, that will
+   re-print the sentence under point using the Rocq printer
+   (@ejgallego, alexJ, #1070)
+ - [petanque] New methods `proof_info` and `proof_info_at_pos` that
+   return information about the current proof. As of today they return
+   the proof name, text, range, ... (@DikieDick, @ejgallego, #1051)
+ - [petanque] New method `list_notations_in_statement` which returns
+   an analysis of notations appearing inside a Rocq statement
+   (@JulesViennotFranca, @ejgallego, #1017)
+ - [tools] New tool `rocq-checkdecls` for Rocq blueprints, inspired by
+   the Lean version (#785, @ejgallego, Andrej Bauer)
+ - [plugins] New demo plugin "baseline", that tries to proof existing
+   lemmas using a set of pre-fixed tactics (@ejgallego, Shachar
+   Itzhaky, Eytan Singher, #799)
+ - [tools] New tool `checkdecls` for Coq blueprint, inspired by the
+   Lean version (#785, @ejgallego, Andrej Bauer)
+ - [lsp] [rocq] Example of Ltac2 AST analysis using serlib's Analzyer
+   infra (@ejgallego, @jim-portegies, @DikieDick, #1058)
+ - [lsp controller] Log internal errors to user-facing log
+   (@ejgallego, #1074)
+ - [doc] Example typescript client connecting to the WASM-based lsp
+   server (@ejgallego, #626)
+ - [hover] When the `show_doc_on_hover` option is enabled, hover will
+   show coqdoc documentation when hovering on identifiers, using some
+   heuristics to infer it from the comment just before
+   it. Documentation is treated as Markdown. This feature is
+   experimental and limited to documentation comments on the same file.
+   (@ejgallego, #590)
+ - [plugins] New plugin to dump document data (@ejgallego, Stefania
+   Dumbrava, #1075)
+ - [fcc] New option `--trace-file` that will generate trace data for
+   visualizing with perfetto.dev (@ejgallego, AlexJ, Gaëtan Gilbert,
+   #1076)
+ - [fcc] New options `--save_vof` and `--load_vof` that can save a
+   Fleche version of a document to a `.vof` file, thus avoiding `.vo`
+   recompilation for example when calling `fcc --plugin=...` for a
+   given file (@ejgallego, Alexj, #1077)
+ - [vscode] Add config manager for handling client configuration
+   changes in the infoview. Add configuration option for number of
+   messages displayed (@Durbatuluk1701, #1067)
 
 # coq-lsp 0.2.4: (W)Activation
 ------------------------------

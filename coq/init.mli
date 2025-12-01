@@ -23,6 +23,7 @@ type coq_opts =
   ; load_plugin : Mltop.PluginSpec.t -> unit
         (** callback to load findlib packages *)
   ; debug : bool  (** Enable Coq Debug mode *)
+  ; record_comments : bool  (** Enable Comment Recording *)
   ; vm : bool  (** Enable Coq's VM *)
   ; warnings : string option  (** Coq's Warnings *)
   }
@@ -36,3 +37,6 @@ val doc_init :
   -> workspace:Workspace.t
   -> uri:Lang.LUri.File.t
   -> (State.t, Loc.t) Protect.E.t
+
+val mk_fb_handler :
+  (int * Loc.t Message.Payload.t) list ref -> Feedback.feedback -> unit

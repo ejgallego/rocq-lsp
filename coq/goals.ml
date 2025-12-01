@@ -62,7 +62,6 @@ let map ~f ~g { goals; stack; bullet; shelf; given_up } =
 type ('goals, 'pp) reified = ('goals Reified_goal.t, 'pp) t
 
 (** XXX: Do we need to perform evar normalization? *)
-
 module CDC = Context.Compacted.Declaration
 
 type cdcl = EConstr.compacted_declaration
@@ -99,13 +98,17 @@ let build_info sigma g =
   { Reified_goal.evar = g; name = Evd.evar_ident g sigma }
 
 (** Generic processor *)
-let process_goal_gen ppx sigma g : 'a Reified_goal.t =
+let process_goal_gen ~ppx ~compact sigma g : 'a Reified_goal.t =
   (* XXX This looks cumbersome *)
   let env = Global.env () in
   let (EvarInfo evi) = Evd.find sigma g in
   let env = Evd.evar_filtered_env env evi in
   (* why is compaction neccesary... ? [eg for better display] *)
-  let ctx = Termops.compact_named_context sigma (EConstr.named_context env) in
+  let ctx =
+    if compact then
+      Termops.compact_named_context sigma (EConstr.named_context env)
+    else List.map CDC.of_named_decl (EConstr.named_context env)
+  in
   let ppx = ppx env sigma in
   let hyps = List.map (get_hyp ppx sigma) ctx |> List.rev in
   let info = build_info sigma g in
@@ -114,14 +117,14 @@ let process_goal_gen ppx sigma g : 'a Reified_goal.t =
 let if_not_empty (pp : Pp.t) =
   if Pp.(repr pp = Ppcmd_empty) then None else Some pp
 
-let reify ~ppx lemmas =
+let reify ~ppx ~compact lemmas =
   let lemmas = State.Proof.to_coq lemmas in
   let proof =
     Vernacstate.LemmaStack.with_top lemmas ~f:(fun pstate ->
         Declare.Proof.get pstate)
   in
   let { Proof.goals; stack; sigma; _ } = Proof.data proof in
-  let ppx = List.map (process_goal_gen ppx sigma) in
+  let ppx = List.map (process_goal_gen ~ppx ~compact sigma) in
   { goals = ppx goals
   ; stack = List.map (fun (g1, g2) -> (ppx g1, ppx g2)) stack
   ; bullet = if_not_empty @@ Proof_bullet.suggest proof
@@ -141,7 +144,8 @@ module Equality = struct
 
   let equal_goals st1 st2 =
     let ppx env evd c = (env, evd, c) in
-    let g1 = reify ~ppx st1 in
-    let g2 = reify ~ppx st2 in
+    let compact = false in
+    let g1 = reify ~ppx ~compact st1 in
+    let g2 = reify ~ppx ~compact st2 in
     equal eq_rgoal eq_pp g1 g2
 end
