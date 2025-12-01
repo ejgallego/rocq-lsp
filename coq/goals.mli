@@ -10,7 +10,7 @@
 
 module Reified_goal : sig
   type 'a hyp =
-    { names : string list  (** This will become [Names.Id.t list] in 0.2.0 *)
+    { names : string list
     ; def : 'a option
     ; ty : 'a
     }
@@ -49,9 +49,10 @@ val map : f:('a -> 'b) -> g:('pp -> 'pp') -> ('a, 'pp) t -> ('b, 'pp') t
 
 type ('goals, 'pp) reified = ('goals Reified_goal.t, 'pp) t
 
-(** Stm-independent goal processor *)
+(** Goal processing, [compact] will determine whether we group the hypotheses *)
 val reify :
      ppx:(Environ.env -> Evd.evar_map -> EConstr.t -> 'goals)
+  -> compact:bool
   -> State.Proof.t
   -> ('goals, Pp.t) reified
 

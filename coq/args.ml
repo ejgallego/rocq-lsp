@@ -71,6 +71,10 @@ let bt =
   let doc = "Enable backtraces" in
   Cmdliner.Arg.(value & flag & info [ "bt" ] ~doc)
 
+let record_comments =
+  let doc = "Record document comments (experimental)" in
+  Cmdliner.Arg.(value & flag & info [ "record_comments" ] ~doc)
+
 let ri_from : (string option * string) list Term.t =
   let doc =
     "FROM Require Import LIBRARY before creating the document, à la From Coq \

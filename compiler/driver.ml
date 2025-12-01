@@ -1,9 +1,10 @@
 (* Duplicated with coq_lsp *)
-let coq_init ~debug =
+let coq_init ~debug ~record_comments =
   let load_module = Dynlink.loadfile in
   let load_plugin = Coq.Loader.plugin_handler None in
   let vm, warnings = (true, None) in
-  Coq.Init.(coq_init { debug; load_module; load_plugin; vm; warnings })
+  Coq.Init.(
+    coq_init { debug; record_comments; load_module; load_plugin; vm; warnings })
 
 let replace_test_path exp message =
   let home_re = Str.regexp (exp ^ ".*$") in
@@ -42,8 +43,12 @@ let go ~int_backend args =
       ; debug
       ; files
       ; plugins
+      ; trace_file
       ; max_errors
       ; coq_diags_level
+      ; record_comments
+      ; save_vof
+      ; load_vof = _
       } =
     args
   in
@@ -52,7 +57,7 @@ let go ~int_backend args =
   let io = Output.init ~display ~perfData ~coq_diags_level in
   (* Initialize Coq *)
   let debug = debug || Fleche.Debug.backtraces || !Fleche.Config.v.debug in
-  let root_state = coq_init ~debug in
+  let root_state = coq_init ~debug ~record_comments in
   let roots = if List.length roots < 1 then [ Sys.getcwd () ] else roots in
   let default = Coq.Workspace.default ~debug ~cmdline in
   let () = Coq.Limits.select_best int_backend in
@@ -62,7 +67,44 @@ let go ~int_backend args =
   let workspaces = List.map make_ws roots in
   List.iter (log_workspace ~io) workspaces;
   let () = apply_config ~max_errors in
-  let cc = Cc.{ root_state; workspaces; default; io; token } in
+  let cc = Cc.{ root_state; workspaces; default; io; token; save_vof } in
   (* Initialize plugins *)
   plugin_init plugins;
-  Compile.compile ~cc files
+  Compile.compile ~cc ~trace_file files
+
+let go_vof args =
+  let { Args.cmdline = _
+      ; roots = _
+      ; display
+      ; debug = _
+      ; files
+      ; plugins
+      ; trace_file = _
+      ; max_errors = _
+      ; coq_diags_level
+      ; record_comments = _
+      ; save_vof = _
+      ; load_vof = _
+      } =
+    args
+  in
+  let open Fleche in
+  (* Initialize logging; we skip Rocq's init *)
+  let fb_handler = Coq.Init.mk_fb_handler Coq.Protect.fb_queue in
+  ignore (Feedback.add_feeder fb_handler);
+  plugin_init plugins;
+  let perfData = Option.is_empty fcc_test in
+  let io = Output.init ~display ~perfData ~coq_diags_level in
+  let in_file = List.nth files 0 in
+  let in_vof = Filename.(remove_extension in_file) ^ ".vof" in
+  let doc = Doc.doc_of_disk ~in_file:in_vof in
+  Io.Report.msg ~io ~lvl:Info "vof file loaded";
+  Io.Report.msg ~io ~lvl:Info "document has %d nodes" (List.length doc.nodes);
+  Io.Report.msg ~io ~lvl:Info "calling plugins for [Theory.Register.Completed]";
+  (* Call plugins for the .vof file *)
+  let token = Coq.Limits.Token.create () in
+  Theory.Register.Completed.fire ~io ~token ~doc;
+  0
+
+let go ~int_backend (args : Args.t) =
+  if args.load_vof then go_vof args else go ~int_backend args

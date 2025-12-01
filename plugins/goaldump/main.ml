@@ -37,8 +37,9 @@ module AstGoals = struct
     let ast = Option.map (fun n -> n.Doc.Node.Ast.v) node.ast in
     let st = node.state in
     let pr = Info.Goals.to_pp in
+    let compact = true in
     let goals =
-      of_execution ~io ~what:"goals" (Info.Goals.goals ~token ~pr ~st)
+      of_execution ~io ~what:"goals" (Info.Goals.goals ~token ~pr ~compact ~st)
     in
     { raw; range; ast; goals }
 end

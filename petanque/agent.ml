@@ -1,8 +1,11 @@
 (************************************************************************)
+(* Copyright 2019 MINES ParisTech -- Dual License LGPL 2.1+ / GPL3+     *)
+(* Copyright 2019-2024 Inria      -- Dual License LGPL 2.1+ / GPL3+     *)
+(* Copyright 2024-2025 Emilio J. Gallego Arias -- LGPL 2.1+ / GPL3+     *)
+(* Copyright 2025      CNRS                    -- LGPL 2.1+ / GPL3+     *)
+(* Written by: Emilio J. Gallego Arias & rocq-lsp contributors          *)
+(************************************************************************)
 (* Flèche => RL agent: petanque                                         *)
-(* Copyright 2019 MINES ParisTech -- Dual License LGPL 2.1 / GPL3+      *)
-(* Copyright 2019-2024 Inria      -- Dual License LGPL 2.1 / GPL3+      *)
-(* Written by: Emilio J. Gallego Arias & coq-lsp contributors           *)
 (************************************************************************)
 
 module SM = Lang.Compat.String.Map
@@ -185,7 +188,7 @@ let fb_print_string (lvl, { Coq.Message.Payload.msg; _ }) =
 
 let analyze_after_run ~hash st feedback =
   let proof_finished =
-    let goals = Fleche.Info.Goals.get_goals_unit ~st in
+    let goals = Fleche.Info.Goals.get_goals_unit ~compact:false ~st in
     match goals with
     | None -> true
     | Some goals when proof_finished goals -> true
@@ -251,7 +254,13 @@ let run_at_pos ~token ?opts ~doc ~point ~command () :
     Run_result.map ~f:(fun _ -> ()) res
   | None -> Error (Error.make_request No_node_at_point)
 
-let goals ~token ~st =
+module Goal_opts = struct
+  type t = { compact : bool }
+
+  let default = { compact = true }
+end
+
+let goals ~token ~st ?(opts = Goal_opts.default) () =
   let f goals =
     let f = Coq.Goals.Reified_goal.map ~f:Coq.Pp_t.to_string in
     let g = Coq.Pp_t.to_string in
@@ -259,7 +268,8 @@ let goals ~token ~st =
     fun _feedback -> Option.map (Coq.Goals.map ~f ~g) goals
   in
   let pr = Fleche.Info.Goals.to_pp in
-  Coq.Protect.E.map ~f (Fleche.Info.Goals.goals ~token ~pr ~st)
+  let { Goal_opts.compact } = opts in
+  Coq.Protect.E.map ~f (Fleche.Info.Goals.goals ~token ~compact ~pr ~st)
   |> protect_to_result
 
 module Premise = struct
@@ -366,6 +376,21 @@ let simple_run_result res feedback =
   let feedback = List.map fb_print_string feedback in
   Run_result.{ st = res; hash; proof_finished; feedback }
 
+let list_notations_in_statement ~token ~st ~statement () :
+    Coq.Notation_analysis.Info.t list Run_result.t R.t =
+  (let open Coq.Protect.E.O in
+   let pa = Coq.Parsing.Parsable.make Gramlib.Stream.(of_string statement) in
+   let* ast = Coq.Parsing.parse ~token ~st pa in
+   let+ ntnl =
+     match ast with
+     | Some ast ->
+       let intern = Vernacinterp.fs_intern in
+       Coq.Notation_analysis.notations_in_statement ~token ~intern ~st ast
+     | None -> Coq.Protect.E.ok []
+   in
+   simple_run_result ntnl)
+  |> protect_to_result
+
 let ast ~token ~st ~text () : Coq.Ast.t option Run_result.t R.t =
   (let open Coq.Protect.E.O in
    let pa = Coq.Parsing.(Parsable.make Stream.(of_string text)) in
@@ -379,5 +404,50 @@ let ast_at_pos ~doc ~point () =
     Ok (Option.map (fun ast -> ast.Fleche.Doc.Node.Ast.v) ast)
   | None -> Error (Error.make_request No_node_at_point)
 
+module Proof_info = struct
+  (** Take into account that there may be a mutual proof open. *)
+  type t =
+    { name : string
+    ; statements : string list
+    ; range : Lang.Range.t option
+    }
+end
+
+let proof_info ~token ~st () : Proof_info.t option R.t =
+  Format.eprintf "pi path2@\n%!";
+  match Coq.State.lemmas ~st with
+  | Some pst ->
+    let name = Coq.State.Proof.name pst in
+    let execution =
+      let open Coq.Protect.E.O in
+      let+ statements = Coq.State.Proof.statements ~token pst in
+      fun _feedback -> Some { Proof_info.name; statements; range = None }
+    in
+    protect_to_result execution
+  | None -> Ok None
+
+let proof_info_from_ast_node ~token (node : Fleche.Doc.Node.t) =
+  match Coq.State.lemmas ~st:node.state with
+  | None -> Ok None
+  | Some pst ->
+    let name = Coq.State.Proof.name pst in
+    let range = Some node.range in
+    let execution =
+      let open Coq.Protect.E.O in
+      let+ statements = Coq.State.Proof.statements ~token pst in
+      fun _feedback -> Some { Proof_info.name; statements; range }
+    in
+    protect_to_result execution
+
+(* Flèche / petanque invariant, when this function is called, [doc] has the
+   metadata ready for [point] *)
+let proof_info_at_pos ~token ~doc ~point () =
+  match Fleche.Info.(LC.node ~doc ~point PrevIfEmpty) with
+  | Some node -> (
+    match Fleche.Doc.Analysis.find_proof_start node with
+    | None -> proof_info ~token ~st:node.state ()
+    | Some node -> proof_info_from_ast_node ~token node)
+  | None -> Error (Error.make_request No_node_at_point)
+
 (* See PROTOCOL.md for details on versioning *)
-let version = 2
+let version = 3

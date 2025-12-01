@@ -221,7 +221,7 @@ end = struct
       Hashtbl.remove _rtable id;
       f pr |> answer ~ofn_rq ~id
     | None ->
-      L.trace "consuem" "can't consume cancelled request: %d" id;
+      L.trace "consume" "can't consume cancelled request: %d" id;
       ()
 
   let cancel ~ofn_rq ~code ~message id : unit =
@@ -381,6 +381,8 @@ let get_pp_format params =
     get_pp_format_from_config ()
   | None -> get_pp_format_from_config ()
 
+let get_compact params = Option.default true (obool_field "compact" params)
+
 let get_pretac params =
   Option.append (ostring_field "command" params) (ostring_field "pretac" params)
 
@@ -399,9 +401,10 @@ let get_goals_mode params =
 
 let do_goals ~params =
   let pp_format = get_pp_format params in
+  let compact = get_compact params in
   let mode = get_goals_mode params in
   let pretac = get_pretac params in
-  let handler = Rq_goals.goals ~pp_format ~mode ~pretac () in
+  let handler = Rq_goals.goals ~pp_format ~compact ~mode ~pretac () in
   do_position_request ~postpone:true ~handler ~params
 
 let do_definition =
@@ -614,7 +617,7 @@ let dispatch_notification ~io ~ofn ~token ~state ~method_ ~params : unit =
   (* NOOPs *)
   | "initialized" -> ()
   (* Generic handler *)
-  | msg -> L.trace "no_handler" "%s" msg
+  | msg -> L.trace "no_handler for notification" "%s" msg
 
 let dispatch_state_notification ~io ~ofn ~token ~state ~method_ ~params :
     State.t =
@@ -781,6 +784,9 @@ let dispatch_or_resume_check ~io ~ofn ~state =
 let dispatch_or_resume_check ~io ~ofn ~state =
   try Some (dispatch_or_resume_check ~io ~ofn ~state) with
   | U.Type_error (msg, obj) ->
+    Fleche.Io.(Report.msg ~io ~lvl:Error)
+      "JSON Parsing Error when handling protocol input: %s\n\
+       see log for more details" msg;
     L.trace_object msg obj;
     Some (Yield state)
   | Lsp_exit ->
@@ -793,12 +799,17 @@ let dispatch_or_resume_check ~io ~ofn ~state =
        coq-lsp internal error and should be fixed *)
     let bt = Printexc.get_backtrace () in
     let iexn = Exninfo.capture exn in
-    L.trace "process_queue" "%s"
+    let pp_msg = CErrors.(iprint iexn) in
+    Fleche.Io.(Report.msg ~io ~lvl:Error)
+      "Internal Error when handling command: %a\n\
+       See log for more details, please report to rocq-lsp developers"
+      Coq.Pp_t.pp pp_msg;
+    L.trace "dispatch_or_resume_check" "%s"
       (if Printexc.backtrace_status () then "bt=true" else "bt=false");
     (* let method_name = Lsp.Base.Message.method_ com in *)
     (* L.trace "process_queue" "exn in method: %s" method_name; *)
     L.trace "print_exn [OCaml]" "%s" (Printexc.to_string exn);
-    L.trace "print_exn [Coq  ]" "%a" Coq.Pp_t.pp_with CErrors.(iprint iexn);
+    L.trace "print_exn [Coq  ]" "%a" Coq.Pp_t.pp pp_msg;
     L.trace "print_bt  [OCaml]" "%s" bt;
     Some (Yield state)
 

@@ -36,12 +36,13 @@ let post_message (msg : Fleche_lsp.Base.Message.t) =
 let findlib_conf = "\ndestdir=\"/static/lib\"path=\"/static/lib\""
 let findlib_path = "/lib/findlib.conf"
 
-let coq_init ~debug =
+let coq_init ~debug ~record_comments =
   let load_module = Dynlink.loadfile in
   let load_plugin = Coq.Loader.plugin_handler None in
   (* XXX: Fixme at some point? *)
   let vm, warnings = (false, Some "-vm-compute-disabled") in
-  Coq.Init.(coq_init { debug; load_module; load_plugin; vm; warnings })
+  Coq.Init.(
+    coq_init { debug; record_comments; load_module; load_plugin; vm; warnings })
 
 (* Start of controller core *)
 open Controller
@@ -168,7 +169,8 @@ let main () =
 
   let debug = false in
   e "boot: phase 4";
-  let root_state = coq_init ~debug in
+  let record_comments = false in
+  let root_state = coq_init ~debug ~record_comments in
 
   e "boot: phase 5";
   (* Specific to WASM, handle new string coming to the worker *)

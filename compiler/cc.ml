@@ -5,4 +5,5 @@ type t =
   ; default : Coq.Workspace.t
   ; io : Fleche.Io.CallBack.t
   ; token : Coq.Limits.Token.t
+  ; save_vof : bool
   }

@@ -45,12 +45,12 @@ type ('a,'b,'c) red_context =
   [%import: ('a,'b,'c) Genredexpr.red_context]
   [@@deriving sexp,yojson,hash,compare]
 
-type ('a,'b,'c,'d, 'e) red_expr_gen0 =
-  [%import: ('a,'b,'c,'d, 'e) Genredexpr.red_expr_gen0]
+type ('a,'b,'c,'d,'e,'f) red_expr_gen0 =
+  [%import: ('a,'b,'c,'d,'e,'f) Genredexpr.red_expr_gen0]
   [@@deriving sexp,yojson,hash,compare]
 
-type ('a,'b,'c,'d) red_expr_gen =
-  [%import: ('a,'b,'c,'d) Genredexpr.red_expr_gen]
+type ('a,'b,'c,'d,'e) red_expr_gen =
+  [%import: ('a,'b,'c,'d,'e) Genredexpr.red_expr_gen]
   [@@deriving sexp,yojson,hash,compare]
 
 (* Helpers for raw_red_expr *)
@@ -66,8 +66,8 @@ type r_pat =
   [%import: Genredexpr.r_pat]
   [@@deriving sexp,yojson,hash,compare]
 
-type raw_red_expr =
-  [%import: Genredexpr.raw_red_expr]
+type 'a raw_red_expr =
+  [%import: 'a Genredexpr.raw_red_expr]
   [@@deriving sexp,yojson,hash,compare]
 
 (* glob_red_expr *)
@@ -88,33 +88,6 @@ type g_pat =
   [%import: Genredexpr.g_pat]
   [@@deriving sexp,yojson,hash,compare]
 
-type glob_red_expr =
-  [%import: Genredexpr.glob_red_expr]
+type 'a glob_red_expr =
+  [%import: 'a Genredexpr.glob_red_expr]
   [@@deriving sexp,yojson,hash,compare]
-
-module A = struct
-
-  type raw =
-    [%import: Genredexpr.raw_red_expr]
-  [@@deriving sexp,yojson,hash,compare]
-
-  type glb =
-    [%import: Genredexpr.glob_red_expr]
-  [@@deriving sexp,yojson,hash,compare]
-
-  type top =
-    (Ser_eConstr.constr,
-     Ser_evaluable.t,
-     Ser_pattern.constr_pattern,
-     int) red_expr_gen
-  [@@deriving sexp,yojson,hash,compare]
-end
-
-let ser_wit_red_expr = let module M = Ser_genarg.GS(A) in M.genser
-
-let register () =
-    Ser_genarg.register_genser Redexpr.wit_red_expr ser_wit_red_expr;
-    ()
-
-let _ =
-  register ()

@@ -233,8 +233,17 @@ let mk_name ~lines (id : Names.lname) : Lang.Ast.Name.t Lang.With_range.t =
 let mk_id ~lines (id : Names.lident) =
   CAst.map (fun id -> Names.Name id) id |> mk_name ~lines
 
-let mk_string ~lines (id : Names.lstring) =
-  CAst.map (fun id -> Names.(Name (Id.of_string_soft id))) id |> mk_name ~lines
+(* Cleanup ntn_decl *)
+let mk_from_ntn_decl ~lines (id : Names.lstring) =
+  CAst.with_loc_val
+    (fun ?loc str ->
+      let loc = Option.get loc in
+      let range = Utils.to_range ~lines loc in
+      (* Notation cleanup *)
+      let strs = String.split_on_char '\'' str in
+      let v = Some (String.concat "" strs) in
+      Lang.With_range.{ range; v })
+    id
 
 let constructor_info ~lines ((_, (id, _typ)) : constructor_expr) =
   let range = Option.get id.loc in
@@ -348,7 +357,7 @@ let make_info ~st:_ ~lines CAst.{ loc; v } : Lang.Ast.Info.t list option =
       let detail = "Rewrite Rule" in
       Some [ Lang.Ast.Info.make ~range ~name ~kind ~detail () ]
     | VernacSynterp (VernacNotation (_infix, { ntn_decl_string; _ })) ->
-      let name = mk_string ~lines ntn_decl_string in
+      let name = mk_from_ntn_decl ~lines ntn_decl_string in
       let kind = Kinds.operator in
       let detail = "Notation" in
       Some [ Lang.Ast.Info.make ~range ~name ~kind ~detail () ]
