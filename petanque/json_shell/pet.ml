@@ -61,13 +61,14 @@ let log_error Request.Error.{ payload = err; _ } =
   let message = Petanque.Agent.Error.to_string err in
   message_notification ~lvl:Fleche.Io.Level.Error ~message
 
-let pet_main debug roots http_headers =
+let pet_main debug record_comments roots http_headers =
   Coq.Limits.start ();
   if trace_enabled then (
     Shell.trace_ref := trace_notification;
     Shell.message_ref := message_notification);
   let token = Coq.Limits.Token.create () in
-  Result.iter_error log_error (Shell.init_agent ~token ~debug ~roots);
+  Result.iter_error log_error
+    (Shell.init_agent ~token ~debug ~record_comments ~roots);
   use_http_headers := http_headers;
   loop ~token
 
@@ -94,7 +95,9 @@ let pet_cmd : unit Cmd.t =
   in
   let version = Fleche.Version.server in
   let pet_term =
-    Term.(const pet_main $ Coq.Args.debug $ Coq.Args.roots $ http_headers)
+    Term.(
+      const pet_main $ Coq.Args.debug $ Coq.Args.record_comments
+      $ Coq.Args.roots $ http_headers)
     (* const pet_main $ roots $ display $ debug $ plugins $ file $ coqlib *)
     (* $ coqcorelib $ ocamlpath $ rload_path $ load_path $ rifrom) *)
   in

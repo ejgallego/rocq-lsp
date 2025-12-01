@@ -1,3 +1,13 @@
+(************************************************************************)
+(* Copyright 2019 MINES ParisTech -- Dual License LGPL 2.1+ / GPL3+     *)
+(* Copyright 2019-2024 Inria      -- Dual License LGPL 2.1+ / GPL3+     *)
+(* Copyright 2024-2025 Emilio J. Gallego Arias -- LGPL 2.1+ / GPL3+     *)
+(* Copyright 2025      CNRS                    -- LGPL 2.1+ / GPL3+     *)
+(* Written by: Emilio J. Gallego Arias & rocq-lsp contributors          *)
+(************************************************************************)
+(* Flèche => RL agent: petanque                                         *)
+(************************************************************************)
+
 open Lang
 open Petanque
 
@@ -394,6 +404,39 @@ module StateProofHash = struct
   end
 end
 
+module ListNotations = struct
+  let method_ = "petanque/list_notations_in_statement"
+
+  module Params = struct
+    type t =
+      { st : int
+      ; statement : string
+      }
+    [@@deriving yojson]
+  end
+
+  module Response = struct
+    type t = Notation_analysis.Info.t list Run_result.t [@@deriving yojson]
+  end
+
+  module Handler = struct
+    module Params = struct
+      type t =
+        { st : State.t
+        ; statement : string
+        }
+      [@@deriving yojson]
+    end
+
+    module Response = Response
+
+    let handler =
+      HType.Immediate
+        (fun ~token { Params.st; statement } ->
+          Agent.list_notations_in_statement ~token ~st ~statement ())
+  end
+end
+
 module PetAst = struct
   let method_ = "petanque/ast"
 
@@ -455,6 +498,60 @@ module AstAtPos = struct
         ; handler =
             (fun ~token:_ ~doc ~point { uri = _; position = _ } ->
               Agent.ast_at_pos ~doc ~point ())
+        }
+  end
+end
+
+module ProofInfo = struct
+  let method_ = "petanque/proof_info"
+
+  module Params = struct
+    type t = { st : int } [@@deriving yojson]
+  end
+
+  module Response = struct
+    type t = JAgent.Proof_info.t option [@@deriving yojson]
+  end
+
+  module Handler = struct
+    module Params = struct
+      type t = { st : State.t } [@@deriving yojson]
+    end
+
+    module Response = Response
+
+    let handler =
+      HType.Immediate
+        (fun ~token { Params.st } -> Agent.proof_info ~token ~st ())
+  end
+end
+
+module ProofInfoAtPos = struct
+  let method_ = "petanque/proof_info_at_pos"
+
+  module Params = struct
+    type t =
+      { textDocument : Lsp.Doc.VersionedTextDocumentIdentifier.t
+      ; position : Lsp.JLang.Point.t
+      }
+    [@@deriving yojson]
+  end
+
+  module Response = struct
+    type t = JAgent.Proof_info.t option [@@deriving yojson]
+  end
+
+  module Handler = struct
+    module Params = Params
+    module Response = Response
+
+    let handler =
+      HType.PosInDoc
+        { uri_fn = (fun { Params.textDocument; _ } -> textDocument.uri)
+        ; pos_fn = (fun { position; _ } -> (position.line, position.character))
+        ; handler =
+            (fun ~token ~doc ~point { textDocument = _; position = _ } ->
+              Agent.proof_info_at_pos ~token ~doc ~point ())
         }
   end
 end

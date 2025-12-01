@@ -99,6 +99,27 @@ module Proof = struct
     let meaningful, total = (128, 256) in
     Hashtbl.hash_param meaningful total x
 
+  let name (pst : t) =
+    Vernacstate.LemmaStack.get_top pst
+    |> Declare.Proof.get_name |> Names.Id.to_string
+
+  let pp_st ~token env sigma
+      ( (_ctx : Environ.named_context_val)
+      , (_term : EConstr.constr)
+      , (typ : EConstr.types) ) =
+    let goal_concl_style = true in
+    let f t =
+      Printer.pr_letype_env ~goal_concl_style env sigma t |> Pp.string_of_ppcmds
+    in
+    Protect.eval ~token ~f typ
+
+  let statements ~token (pst : t) =
+    let pf = Vernacstate.LemmaStack.get_top pst |> Declare.Proof.get in
+    let { Proof.sigma; entry; _ } = Proof.data pf in
+    let _, env = Proof.get_proof_context pf in
+    let sl = Proofview.initial_goals entry in
+    Protect.E.mapM ~f:(pp_st ~token env sigma) sl
+
   module Program = struct
     module Obl = Declare.OblState.View.Obl
 

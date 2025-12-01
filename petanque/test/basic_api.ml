@@ -1,3 +1,13 @@
+(************************************************************************)
+(* Copyright 2019 MINES ParisTech -- Dual License LGPL 2.1+ / GPL3+     *)
+(* Copyright 2019-2024 Inria      -- Dual License LGPL 2.1+ / GPL3+     *)
+(* Copyright 2024-2025 Emilio J. Gallego Arias -- LGPL 2.1+ / GPL3+     *)
+(* Copyright 2025      CNRS                    -- LGPL 2.1+ / GPL3+     *)
+(* Written by: Emilio J. Gallego Arias & rocq-lsp contributors          *)
+(************************************************************************)
+(* Flèche => RL agent: petanque                                         *)
+(************************************************************************)
+
 open Petanque
 open Petanque_shell
 
@@ -19,11 +29,14 @@ let dump_msgs () = List.iter (Format.eprintf "%s@\n") (List.rev !msgs)
 
 let init ~token =
   let debug = false in
+  let record_comments = false in
   Shell.trace_ref := trace;
   Shell.message_ref := message;
   (* Will this work on Windows? *)
   let open Coq.Compat.Result.O in
-  let _ : _ Result.t = Shell.init_agent ~token ~debug ~roots:[] in
+  let _ : _ Result.t =
+    Shell.init_agent ~token ~debug ~record_comments ~roots:[]
+  in
   (* Twice to test for #766 *)
   let root, uri = prepare_paths () in
   let* () = Shell.set_workspace ~token ~debug ~root in
@@ -116,6 +129,14 @@ let run_at_pos_test ~token ~doc =
       (Agent.Error.make_request
          (System "unexpected feedback on run_at_pos test"))
 
+let get_proof_test ~token ~doc =
+  let open Coq.Compat.Result.O in
+  let point = (17, 0) in
+  let* pi = Agent.proof_info_at_pos ~token ~doc ~point () in
+  assert (not (Option.is_empty pi));
+  assert (String.equal (Option.get pi).name "rev_snoc_cons");
+  Ok None
+
 let main () =
   let open Coq.Compat.Result.O in
   let token = Coq.Limits.create_atomic () in
@@ -125,7 +146,8 @@ let main () =
   let* g3 = multi_shot_test ~token ~doc in
   let* g4 = fake_start_test ~token ~doc in
   let* g5 = run_at_pos_test ~token ~doc in
-  Ok [ g1; g2; g3; g4; g5 ]
+  let* g6 = get_proof_test ~token ~doc in
+  Ok [ g1; g2; g3; g4; g5; g6 ]
 
 let max = List.fold_left max min_int
 

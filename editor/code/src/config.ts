@@ -1,4 +1,5 @@
 import { TextDocumentFilter } from "vscode-languageclient";
+import { CoqLspClientConfig } from "../lib/types";
 
 export interface UnicodeCompletionConfig {
   enabled: "off" | "normal" | "extended";
@@ -24,6 +25,8 @@ export interface CoqLspServerConfig {
   show_loc_info_on_hover: boolean;
   show_universes_on_hover: boolean;
   show_state_hash_on_hover: boolean;
+  show_comments_on_hover: boolean;
+  show_pr_vernac_on_hover: boolean;
   check_only_on_request: boolean;
   send_perf_data: boolean;
   send_execinfo: boolean;
@@ -50,6 +53,8 @@ export namespace CoqLspServerConfig {
       show_loc_info_on_hover: wsConfig.show_loc_info_on_hover,
       show_universes_on_hover: wsConfig.show_universes_on_hover,
       show_state_hash_on_hover: wsConfig.show_state_hash_on_hover,
+      show_comments_on_hover: wsConfig.show_comments_on_hover,
+      show_pr_vernac_on_hover: wsConfig.show_pr_vernac_on_hover,
       check_only_on_request: wsConfig.check_only_on_request,
       send_perf_data: wsConfig.send_perf_data,
       send_execinfo: wsConfig.send_execinfo,
@@ -58,20 +63,6 @@ export namespace CoqLspServerConfig {
       completion: JSON.parse(JSON.stringify(wsConfig.completion)),
     };
   }
-}
-
-export enum ShowGoalsOnCursorChange {
-  Never = 0,
-  OnMouse = 1,
-  OnMouseAndKeyboard = 2,
-  OnMouseKeyboardCommand = 3,
-}
-
-export interface CoqLspClientConfig {
-  show_goals_on: ShowGoalsOnCursorChange;
-  pp_format: "Str" | "Pp" | "Box";
-  compact_hypotheses: boolean;
-  check_on_scroll: boolean;
 }
 
 function pp_type_to_pp_format(pp_type: 0 | 1 | 2): "Str" | "Pp" | "Box" {
@@ -85,13 +76,14 @@ function pp_type_to_pp_format(pp_type: 0 | 1 | 2): "Str" | "Pp" | "Box" {
   }
 }
 
-export namespace CoqLspClientConfig {
+export namespace ClientConfig {
   export function create(wsConfig: any): CoqLspClientConfig {
     let obj: CoqLspClientConfig = {
       show_goals_on: wsConfig.show_goals_on,
       pp_format: pp_type_to_pp_format(wsConfig.pp_type),
       check_on_scroll: wsConfig.check_on_scroll,
       compact_hypotheses: wsConfig.compact_hypotheses,
+      messages_limit: wsConfig.messages_limit,
     };
     return obj;
   }

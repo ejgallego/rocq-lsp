@@ -40,7 +40,9 @@
     * [`petanque/state/proof/equal`](#petanquestateproofequal)
     * [`petanque/state/proof/hash`](#petanquestateproofhash)
     * [`petanque/ast`](#petanqueast)
-    * [`petanque/ast_at_post`](#petanqueastatpos)
+    * [`petanque/ast_at_pos`](#petanqueastatpos)
+    * [`petanque/proof_info`](#petanqueproofinfo)
+    * [`petanque/proof_info_at_pos`](#petanqueproofinfoatpos)
 
 <!-- TOC end -->
 
@@ -440,6 +442,7 @@ utils for those interested in richer printing formats.
   + new method `petanque/run_at_pos`
   + new option `compact` in goal requests (both LSP and petanque) to
     display "non-compacted" contexts.
+  + new methods `petanque/proof_info` and `petanque/proof_info_at_pos`
 - v0.2.4:
   + behavior of `messages`, `error`, and `range` can now be
     controlled by the `messages_follow_goal` global setting
@@ -696,6 +699,7 @@ export interface CoqLspServerConfig {
   show_loc_info_on_hover: boolean;
   show_universes_on_hover: boolean;
   show_state_hash_on_hover: boolean;
+  show_comments_on_hover: boolean;
   check_only_on_request: boolean;
   send_perf_data: boolean;
   send_execinfo: boolean;
@@ -709,6 +713,7 @@ client.
 <!-- TOC --><a name="changelog-5"></a>
 #### Changelog
 
+- v0.2.5: New option `show_comments_on_hover`
 - v0.2.4:
   + Deprecate `unicode_completion` in favor of new `completion:
     CompletionConfig` configuration record.
@@ -820,6 +825,10 @@ Preliminary documentation for `pétanque` is provided below:
     [`petanque/ast`](#petanqueast) and
     [`petanque/ast_at_pos`](#petanqueastatpos) (@ejgallego, @JulesViennotFranca, #980)
   + **changed**: `No_state_at_point` error is now `No_node_at_point` (@JulesViennotFranca, #980)
+- v3 (`rocq-lsp` 0.2.5):
+  + **changed**: `petanque/get_state_at_pos` will not error if there is no node at point
+  + **added**: new method `petanque/run_at_pos`
+  + **added**: new methods `petanque/proof_info` and `petanque/proof_info_at_pos`
 
 ### Pétanque basics
 
@@ -942,7 +951,10 @@ interface Params =
 interface Response = Run_result<int>
 ```
 
-If the execution fails, the JSON-RPC request will fail.
+If the execution fails, the JSON-RPC request will fail. You can
+recover messages generated during the failed execution using
+[`rocq-lsp`'s specific error data
+field](#implementation-specific-data-error-field)
 
 <!-- TOC --><a name="petanquerunatpos"></a>
 ### `petanque/run_at_pos`
@@ -963,7 +975,10 @@ interface Params =
 interface Response = Run_result<unit>
 ```
 
-If the execution fails, the JSON-RPC request will fail.
+If the execution fails, the JSON-RPC request will fail. You can
+recover messages generated during the failed execution using
+[`rocq-lsp`'s specific error data
+field](#implementation-specific-data-error-field)
 
 If the position has no corresponding Rocq code attached (for example,
 empty space between two commands), the state returned will be the one
@@ -1083,4 +1098,51 @@ interface Params = { uri: string; position : Position }
 
 ```typescript
 interface Response = Option<Ast>
+```
+
+<!-- TOC --><a name="petanqueproofinfo"></a>
+### `petanque/proof_info`
+
+`petanque/proof_info` request will return some information for a given state, in particular the proof name and statement list (for mutual proofs). Use the `petanque/proof_info_pos` to get some Flèche specific metadata such as `range`.
+
+```typescript
+interface ProofInfo =
+  { name : string
+  , statements : string[]
+  , range : Option<Range>
+  }
+
+interface Params = { st : number }
+
+interface Response = Option<ProofInfo>
+```
+
+<!-- TOC --><a name="petanqueproofinfoatpos"></a>
+### `petanque/proof_info_at_pos`
+
+Version of `petanque/proof_info` that will try to infer some more data
+using the document.
+
+```typescript
+interface Params = { uri : string, position : Position }
+```
+
+<!-- TOC --><a name="petanquenotations"></a>
+### `petanque/list_notations_in_statement`
+
+`petanque/list_notations_in_statement` will provide information about
+which notations appear in `statement`.
+
+```typescript
+interface Params = { st : number, statement : string }
+
+interface Notation_info =
+  { locations : Loc.t[]
+  ; path : string
+  ; secpath : string
+  ; notation : string
+  ; scope : Option<string>
+  }
+
+interface Response = Run_result<Notation_info[]>
 ```
