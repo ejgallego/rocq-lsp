@@ -4,6 +4,23 @@ import {
   Range,
 } from "vscode-languageserver-types";
 
+export enum ShowGoalsOnCursorChange {
+  Never = 0,
+  OnMouse = 1,
+  OnMouseAndKeyboard = 2,
+  OnMouseKeyboardCommand = 3,
+}
+
+export interface CoqLspClientConfig {
+  show_goals_on: ShowGoalsOnCursorChange;
+  pp_format: "Str" | "Pp" | "Box";
+  compact_hypotheses: boolean;
+  check_on_scroll: boolean;
+  messages_limit: number;
+}
+
+export type ConfigFieldKey = keyof CoqLspClientConfig;
+
 export interface Hyp<Pp> {
   names: Pp[];
   def?: Pp;
@@ -71,6 +88,7 @@ export interface GoalRequest {
   textDocument: VersionedTextDocumentIdentifier;
   position: Position;
   pp_format?: "Box" | "Pp" | "Str";
+  compact?: boolean;
   pretac?: string;
   command?: string;
   mode?: "Prev" | "After";
@@ -166,7 +184,22 @@ export interface InfoError {
   params: ErrorData;
 }
 
-export type CoqMessagePayload = RenderGoals | WaitingForInfo | InfoError;
+export interface ConfigChangeEvent {
+  field: ConfigFieldKey;
+  oldValue: any;
+  newValue: any;
+}
+
+export interface ConfigChanged {
+  method: "configChanged";
+  params: { changes: ConfigChangeEvent[] };
+}
+
+export type CoqMessagePayload =
+  | RenderGoals
+  | WaitingForInfo
+  | InfoError
+  | ConfigChanged;
 
 export interface CoqMessageEvent extends MessageEvent {
   data: CoqMessagePayload;

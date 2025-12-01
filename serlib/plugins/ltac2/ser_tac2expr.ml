@@ -6,6 +6,61 @@
 (* Written by: Emilio J. Gallego Arias and others                       *)
 (************************************************************************)
 
+module KN = Names.KerName
+module NID = Names.Name
+
+(* Color info analyzer *)
+module CI = Serlib.Analysis_semtokens.Color_info
+module CIA = Serlib.Analysis_semtokens
+
+let drange = Loc.initial ToplevelInput
+
+let m range msg = CI.make range (Format.asprintf "ekind: %s" msg)
+
+let rec ltac2_expr_ci (e : Ltac2_plugin.Tac2expr.raw_tacexpr) : CI.t list =
+  let { CAst.v; loc = range } = e in
+  let range = Option.default drange range in
+  match v with
+  | CTacAtm _ -> [m range "atm"]
+  | CTacRef _ -> [m range "ref"]
+  | CTacCst _ -> [m range "cst"]
+  | CTacFun (_args, body) -> [m range "fun"] @ ltac2_expr_ci body
+  | CTacApp (fn, args) ->
+    [m range "app"] @ ltac2_expr_ci fn @ List.concat_map ltac2_expr_ci args
+  | CTacSyn (ll, kname) ->
+    let f (lname, expr) : CI.t list =
+      let msg = Format.asprintf "lname: %a" Pp.pp_with (NID.print lname.CAst.v) in
+      [CI.make drange msg] @ ltac2_expr_ci expr
+    in
+    let kname = KN.to_string kname in
+    CI.make drange kname :: List.concat_map f ll
+  | CTacLet (_, cases, expr) -> [m range "let"]
+                                @ List.concat_map (fun (_, er) -> ltac2_expr_ci er) cases
+                                @ ltac2_expr_ci expr
+  | CTacCnv (_, _) -> [m range "cnv"]
+  | CTacSeq (_, _) -> [m range "seq"]
+  | CTacIft (_, _, _) -> [m range "ift"]
+  | CTacCse (_, _) -> [m range "cse "]
+  | CTacRec (_, _) -> [m range "rec"]
+  | CTacPrj (_, _) -> [m range "prj"]
+  | CTacSet (_, _, _) -> [m range "set"]
+  | CTacExt (tag, _tag_val) ->
+    let tag_name = Ltac2_plugin.Tac2dyn.Arg.repr tag in
+    [m range ("ext: " ^ tag_name)]
+  | CTacGlb (_, _, _, _) -> [m range "glb"]
+
+let () =
+  let raw = ltac2_expr_ci in
+  let glb _ = [] in
+  let top _ = [] in
+  CIA.register Ltac2_plugin.G_ltac2.wit_ltac2_expr { raw; glb; top }
+
+(* assumptions: parsing was OK *)
+(* let orig_range = range_of_the_whole_sentence in *)
+(* let sub_ranges = get_color_info ast in *)
+(* let tac_ranges = orig_range - sub_ranges in *)
+(* (tac_ranges, "english-word") @ sub_ranges *)
+
 open Serlib
 
 module Loc = Ser_loc

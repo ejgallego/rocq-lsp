@@ -1,7 +1,11 @@
 (************************************************************************)
-(* Coq Petanque                                                         *)
-(* Copyright 2019 MINES ParisTech -- Dual License LGPL 2.1 / GPL3+      *)
-(* Copyright 2019-2024 Inria      -- Dual License LGPL 2.1 / GPL3+      *)
+(* Copyright 2019 MINES ParisTech -- Dual License LGPL 2.1+ / GPL3+     *)
+(* Copyright 2019-2024 Inria      -- Dual License LGPL 2.1+ / GPL3+     *)
+(* Copyright 2024-2025 Emilio J. Gallego Arias -- LGPL 2.1+ / GPL3+     *)
+(* Copyright 2025      CNRS                    -- LGPL 2.1+ / GPL3+     *)
+(* Written by: Emilio J. Gallego Arias & rocq-lsp contributors          *)
+(************************************************************************)
+(* Flèche => RL agent: petanque                                         *)
 (************************************************************************)
 
 module Req = Request
@@ -87,8 +91,14 @@ let handle_request ~(do_handle : 'a handle) ~unhandled ~token ~method_ ~params =
     do_handle ~token (do_request (module StateProofEqual) ~params)
   | s when String.equal StateProofHash.method_ s ->
     do_handle ~token (do_request (module StateProofHash) ~params)
+  | s when String.equal ListNotations.method_ s ->
+    do_handle ~token (do_request (module ListNotations) ~params)
   | s when String.equal PetAst.method_ s ->
     do_handle ~token (do_request (module PetAst) ~params)
   | s when String.equal AstAtPos.method_ s ->
     do_handle ~token (do_request (module AstAtPos) ~params)
+  | s when String.equal ProofInfo.method_ s ->
+    do_handle ~token (do_request (module ProofInfo) ~params)
+  | s when String.equal ProofInfoAtPos.method_ s ->
+    do_handle ~token (do_request (module ProofInfoAtPos) ~params)
   | _ -> unhandled ~token ~method_

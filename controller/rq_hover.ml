@@ -363,6 +363,83 @@ module State_hash : HoverProvider = struct
   let h = Handler.WithNode h
 end
 
+module Comment_info = struct
+  let pr_comment fmt ((start, end_), cm) =
+    Format.fprintf fmt "@[(%d,%d) %s@]" start end_ cm
+
+  let h ~token:_ ~(doc : Fleche.Doc.t) ~point:_ ~node:_ =
+    if !Fleche.Config.v.show_comments_on_hover then
+      Some
+        Format.(
+          asprintf "@[%d comments found@\n```@\n@[<v>%a@]@]@\n```"
+            (List.length doc.comments) (pp_print_list pr_comment) doc.comments)
+    else None
+
+  let h = Handler.WithDoc h
+end
+
+module Documentation : HoverProvider = struct
+  let extract s =
+    let r = Str.regexp ({|(\*\*?[ ]*\(\(.\||} ^ "\n" ^ {|\)*\)[ ]*\*)|}) in
+    (* "**[Docstring]**: \n" ^ *)
+    Str.replace_first r {|\1|} s
+
+  let extract lines line num =
+    let ll = List.init num (fun idx -> lines.(line - (num - idx))) in
+    String.concat "\n" ll |> extract
+
+  (* TODO: Stop when in node *)
+  let guess_start_line lines line =
+    let limit = 20 in
+    let rec back cur =
+      if cur > limit then None
+      else if CString.is_prefix "(*" lines.(line - cur) then Some cur
+      else back (cur + 1)
+    in
+    back 1
+
+  let process ~(contents : Contents.t) prev { Lang.Range.start; _ } =
+    (* XXX: Fix to use prev instead of the current hack *)
+    let _end_ = prev in
+    let { Lang.Point.line; _ } = start in
+    let lines = contents.lines in
+    Option.map (extract lines line) (guess_start_line lines line)
+
+  let h ~token:_ ~doc ~point ~node:_ =
+    let ( let* ) = Option.bind in
+    let { Doc.toc; contents; _ } = doc in
+    let* id_at_point = Rq_common.get_id_at_point ~contents ~point in
+    let* node = Doc.SM.find_opt id_at_point toc in
+    process ~contents node.prev node.range
+
+  let h ~token ~doc ~point ~node =
+    if !Config.v.show_doc_on_hover then h ~token ~doc ~point ~node else None
+
+  let h = Handler.WithDoc h
+end
+
+module Pr_vernac : HoverProvider = struct
+  let h ~token ~contents:_ ~point:_ ~(node : Fleche.Doc.Node.t) =
+    let f (ast : Fleche.Doc.Node.Ast.t) =
+      match Coq.Print.pr_vernac ~token ~st:node.state ast.v with
+      | Coq.Protect.{ E.r = R.Completed (Ok pr_ast); feedback = _ } ->
+        Some Coq.Pp_t.(to_string (str "pr_vernac: " ++ pr_ast))
+      | Coq.Protect.
+          { E.r = R.Completed (Error (User msg | Anomaly msg)); feedback = _ }
+        -> Some Coq.Pp_t.(to_string (str "Error in pr_vernac: " ++ msg.msg))
+      | _ -> None
+    in
+    if !Fleche.Config.v.show_pr_vernac_on_hover then Option.cata f None node.ast
+    else None
+
+  let h = Handler.WithNode h
+end
+
+module Color_info : HoverProvider = struct
+  let h ~token:_ ~contents:_ ~point:_ ~node:_ = None
+  let h = Handler.WithNode h
+end
+
 module Register = struct
   let handlers : Handler.t list ref = ref []
   let add fn = handlers := fn :: !handlers
@@ -383,12 +460,16 @@ end
 let () =
   List.iter Register.add
     [ Loc_info.h
+    ; Documentation.h
     ; Stats.h
     ; Type.h
     ; Notation.h
     ; InputHelp.h
     ; UniDiff.h
     ; State_hash.h
+    ; Comment_info.h
+    ; Pr_vernac.h
+    ; Color_info.h
     ]
 
 let hover ~token ~(doc : Fleche.Doc.t) ~point =

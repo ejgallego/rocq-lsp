@@ -14,6 +14,7 @@ type format =
     pre-processing and formatting using the provided parameters. *)
 val goals :
      pp_format:format
+  -> compact:bool
   -> mode:Fleche.Info.approx
   -> pretac:string option
   -> unit

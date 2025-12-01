@@ -121,14 +121,18 @@ module type RType = sig
   val fold_pair : a * a -> a
 end
 
-module Analyzer : sig
-  module Make (A : RType) : sig
-    type ('raw, 'glb, 'top) t =
-      { raw : 'raw -> A.a
-      ; glb : 'glb -> A.a
-      ; top : 'top -> A.a
-      }
-    val register : ('raw, 'glb, 'top) Genarg.genarg_type -> ('raw, 'glb, 'top) t -> unit
-    val analyze : 'a Genarg.generic_argument -> A.a
-  end
+module type S = sig
+  type a
+  type ('raw, 'glb, 'top) t =
+    { raw : 'raw -> a
+    ; glb : 'glb -> a
+    ; top : 'top -> a
+    }
+  val register : ('raw, 'glb, 'top) Genarg.genarg_type -> ('raw, 'glb, 'top) t -> unit
+  val analyze : 'a Genarg.generic_argument -> a
 end
+
+module Analyzer : sig
+  module Make (A : RType) : S with type a := A.a
+end
+

@@ -75,7 +75,7 @@ let run_pretac ~token ~loc ~st pretac =
   | None -> Coq.Protect.E.ok st
   | Some tac -> Fleche.Doc.run ~token ?loc ~st tac
 
-let get_goal_info ~pp_format ~token ~doc ~point ~mode ~pretac () =
+let get_goal_info ~pp_format ~compact ~token ~doc ~point ~mode ~pretac () =
   let open Fleche in
   let node = Info.LC.node ~doc ~point mode in
   match node with
@@ -87,7 +87,7 @@ let get_goal_info ~pp_format ~token ~doc ~point ~mode ~pretac () =
     let loc = None in
     let* st = run_pretac ~token ~loc ~st pretac in
     let pr = pp ~pp_format in
-    let+ goals = Info.Goals.goals ~token ~pr ~st in
+    let+ goals = Info.Goals.goals ~token ~pr ~compact ~st in
     let program = Info.Goals.program ~st in
     (goals, Some program)
 
@@ -102,7 +102,7 @@ let get_node_info ~doc ~point ~mode =
   let error = Option.bind node mk_error in
   (range, messages, error)
 
-let goals ~pp_format ~mode ~pretac () ~token ~doc ~point =
+let goals ~pp_format ~compact ~mode ~pretac () ~token ~doc ~point =
   let open Fleche in
   let uri, version = (doc.Doc.uri, doc.version) in
   let textDocument = Lsp.Doc.VersionedTextDocumentIdentifier.{ uri; version } in
@@ -111,7 +111,7 @@ let goals ~pp_format ~mode ~pretac () ~token ~doc ~point =
   in
   let open Coq.Protect.E.O in
   let+ goals, program =
-    get_goal_info ~pp_format ~token ~doc ~point ~mode ~pretac ()
+    get_goal_info ~pp_format ~compact ~token ~doc ~point ~mode ~pretac ()
   in
   let range, messages, error = get_node_info ~doc ~point ~mode in
   let pp_msg = pp_msgs ~pp_format in
@@ -122,7 +122,7 @@ let goals ~pp_format ~mode ~pretac () ~token ~doc ~point =
       { textDocument; position; range; goals; program; messages; error })
   |> Result.ok
 
-let goals ~pp_format ~mode ~pretac () ~token ~doc ~point =
+let goals ~pp_format ~compact ~mode ~pretac () ~token ~doc ~point =
   let lines = Fleche.Doc.lines doc in
-  let f () = goals ~pp_format ~mode ~pretac () ~token ~doc ~point in
+  let f () = goals ~pp_format ~compact ~mode ~pretac () ~token ~doc ~point in
   Request.R.of_execution ~lines ~name:"goals" ~f ()

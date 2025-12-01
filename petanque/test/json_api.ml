@@ -1,3 +1,13 @@
+(************************************************************************)
+(* Copyright 2019 MINES ParisTech -- Dual License LGPL 2.1+ / GPL3+     *)
+(* Copyright 2019-2024 Inria      -- Dual License LGPL 2.1+ / GPL3+     *)
+(* Copyright 2024-2025 Emilio J. Gallego Arias -- LGPL 2.1+ / GPL3+     *)
+(* Copyright 2025      CNRS                    -- LGPL 2.1+ / GPL3+     *)
+(* Written by: Emilio J. Gallego Arias & rocq-lsp contributors          *)
+(************************************************************************)
+(* Flèche => RL agent: petanque                                         *)
+(************************************************************************)
+
 open Petanque_json
 open Petanque_shell
 
@@ -80,7 +90,7 @@ let run (ic, oc) =
   (* Will this work on Windows? *)
   let root, uri = prepare_paths () in
   let* () = S.set_workspace { debug; root } in
-  (* Check run_at_pos *)
+  (* Test for run_at_pos *)
   let* { Petanque.Agent.Run_result.feedback; _ } =
     (* harcoded in shell.ml *)
     let version = 0 in
@@ -91,11 +101,44 @@ let run (ic, oc) =
     let command = "About rev_snoc_cons." in
     S.run_at_pos { textDocument; opts = None; position; command }
   in
+  let* _ = run_at_pos_test feedback in
+  (* Check proof_info_at_pos *)
+  let* pi =
+    (* harcoded in shell.ml *)
+    let version = 0 in
+    let textDocument =
+      { Fleche_lsp.Doc.VersionedTextDocumentIdentifier.uri; version }
+    in
+    let position = Lang.Point.{ line = 17; character = 0; offset = -1 } in
+    S.proof_info_at_pos { textDocument; position }
+  in
+  assert (not (Option.is_empty pi));
+  let pi_debug = false in
+  if pi_debug then (
+    Format.eprintf "proof_info: %s@\n%!" (Option.get pi).name;
+    Format.(
+      eprintf "proof_info: @[%a@]@\n%!"
+        (pp_print_list pp_print_string)
+        (Option.get pi).statements));
+  assert (String.equal (Option.get pi).name "rev_snoc_cons");
   (* Petanque + start tests *)
   let* { st; _ } =
     S.start { uri; opts = None; pre_commands = None; thm = "rev_snoc_cons" }
   in
-  let* _ = run_at_pos_test feedback in
+  (* List notations test *)
+  let* { Petanque.Agent.Run_result.st = not_analysis; _ } =
+    let statement = "Lemma ttt (n m : nat) : n + m = m + n." in
+    S.list_notations_in_statement { st; statement }
+  in
+  let debug_ln = false in
+  (if debug_ln then
+     let pp_not fmt { Coq.Notation_analysis.Info.notation; _ } =
+       Format.fprintf fmt "%s" notation
+     in
+     Format.(
+       eprintf "list_notations_in_statement: @[<v>%a@]@\n%!"
+         (pp_print_list pp_not) not_analysis));
+  assert (List.length not_analysis = 3);
   (* Check get_at_pos works, note that LSP positions start at 0 ! *)
   let position = Lang.Point.{ line = 13; character = 0; offset = -1 } in
   let* st' = S.get_state_at_pos { uri; opts = None; position } in
@@ -130,7 +173,7 @@ let run (ic, oc) =
   let* st = r ~st ~tac:"Search naat." in
   check_search st 6;
   (* No goals after qed *)
-  S.goals { st = extract_st st }
+  S.goals { st = extract_st st; opts = None }
 
 let main () =
   let server_out, server_in = Unix.open_process "pet" in

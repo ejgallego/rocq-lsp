@@ -1,10 +1,11 @@
 module SM = Lang.Compat.String.Map
 
-let init_coq ~debug =
+let init_coq ~debug ~record_comments =
   let load_module = Dynlink.loadfile in
   let load_plugin = Coq.Loader.plugin_handler None in
   let vm, warnings = (true, None) in
-  Coq.Init.(coq_init { debug; load_module; load_plugin; vm; warnings })
+  Coq.Init.(
+    coq_init { debug; record_comments; load_module; load_plugin; vm; warnings })
 
 let cmdline : Coq.Workspace.CmdLine.t =
   { coqlib = Coq.Args.coqlib_dyn
@@ -105,8 +106,8 @@ let set_roots ~token ~debug ~roots =
   let* root = uri_of_path root in
   set_workspace ~token ~debug ~root
 
-let init_agent ~token ~debug ~roots =
-  init_st := Some (init_coq ~debug);
+let init_agent ~token ~debug ~record_comments ~roots =
+  init_st := Some (init_coq ~debug ~record_comments);
   Fleche.Io.CallBack.set io;
   set_roots ~token ~debug ~roots
 

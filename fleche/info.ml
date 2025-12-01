@@ -138,13 +138,13 @@ module O = Make (Offset)
 
 (* Related to goal request *)
 module Goals = struct
-  let get_goals_unit ~st =
+  let get_goals_unit ~compact ~st =
     let ppx _env _sigma _x = () in
-    Coq.State.lemmas ~st |> Option.map (Coq.Goals.reify ~ppx)
+    Coq.State.lemmas ~st |> Option.map (Coq.Goals.reify ~ppx ~compact)
 
-  let get_goals ~st =
+  let get_goals ~compact ~st =
     let ppx env sigma x = (env, sigma, x) in
-    Coq.State.lemmas ~st |> Option.map (Coq.Goals.reify ~ppx)
+    Coq.State.lemmas ~st |> Option.map (Coq.Goals.reify ~ppx ~compact)
 
   type 'a printer =
     token:Coq.Limits.Token.t -> Environ.env -> Evd.evar_map -> EConstr.t -> 'a
@@ -161,14 +161,14 @@ module Goals = struct
     | Coq.Protect.R.Completed (Error _pr) -> Coq.Pp_t.str "printer failed!"
     | Interrupted -> Coq.Pp_t.str "printer interrupted!"
 
-  let pr_goal ~token ~pr st =
+  let pr_goal ~token ~compact ~pr st =
     let lemmas = Coq.State.lemmas ~st in
-    Option.map (Coq.Goals.reify ~ppx:(pr ~token)) lemmas
+    Option.map (Coq.Goals.reify ~compact ~ppx:(pr ~token)) lemmas
 
   (* We need to use [in_state] here due to printing not being pure, but we want
      a better design here eventually *)
-  let goals ~token ~pr ~st =
-    Coq.State.in_state ~token ~st ~f:(pr_goal ~token ~pr) st
+  let goals ~token ~pr ~compact ~st =
+    Coq.State.in_state ~token ~st ~f:(pr_goal ~token ~compact ~pr) st
 
   let program ~st = Coq.State.program ~st
 end

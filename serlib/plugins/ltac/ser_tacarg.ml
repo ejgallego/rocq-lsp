@@ -34,6 +34,7 @@ module EConstr      = Ser_eConstr
 module Hints        = Ser_hints
 module Ltac_pretype = Ser_ltac_pretype
 module Genredexpr   = Ser_genredexpr
+module Redexpr      = Ser_redexpr
 module Gentactic    = Ser_gentactic
 
 module Ltac_plugin = struct
@@ -407,7 +408,7 @@ let register () =
 
   Ser_genarg.register_genser G_auto.wit_auto_using ser_wit_auto_using;
   Ser_genarg.register_genser G_auto.wit_hintbases ser_wit_hintbases;
-  Ser_genarg.register_genser G_auto.wit_hints_path ser_wit_hintbases_path;
+  Ser_genarg.register_genser G_auto.wit_hints_path_entry ser_wit_hintbases_path;
   Ser_genarg.register_genser G_auto.wit_opthints ser_wit_opthints;
 
   Ser_genarg.register_genser G_rewrite.wit_binders G_rewrite.ser_wit_binders;

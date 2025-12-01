@@ -1,3 +1,13 @@
+(************************************************************************)
+(* Copyright 2019 MINES ParisTech -- Dual License LGPL 2.1+ / GPL3+     *)
+(* Copyright 2019-2024 Inria      -- Dual License LGPL 2.1+ / GPL3+     *)
+(* Copyright 2024-2025 Emilio J. Gallego Arias -- LGPL 2.1+ / GPL3+     *)
+(* Copyright 2025      CNRS                    -- LGPL 2.1+ / GPL3+     *)
+(* Written by: Emilio J. Gallego Arias & rocq-lsp contributors          *)
+(************************************************************************)
+(* Flèche => RL agent: petanque                                         *)
+(************************************************************************)
+
 (* Serialization for agent types *)
 module Lsp = Fleche_lsp
 
@@ -25,6 +35,10 @@ end
 module Stdlib = Lsp.JStdlib
 module Result = Stdlib.Result
 
+module Goal_opts = struct
+  type t = [%import: Petanque.Agent.Goal_opts.t] [@@deriving yojson]
+end
+
 module Goals = struct
   type t = (string, string) Lsp.JCoq.Goals.reified option [@@deriving yojson]
 end
@@ -42,3 +56,9 @@ module Premise = struct
 
   type t = [%import: Petanque.Agent.Premise.t] [@@deriving yojson]
 end
+
+module Proof_info = struct
+  type t = [%import: Petanque.Agent.Proof_info.t] [@@deriving yojson]
+end
+
+module Notation_analysis = Fleche_lsp.JCoq.Notation_analysis

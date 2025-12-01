@@ -1,0 +1,21 @@
+{
+  "name": "coq-lsp-browser-tests",
+  "version": "0.0.1",
+  "main": "index.js",
+  "scripts": {
+    "esbuild": "node esbuild.mjs && cp src/index.html out/",
+    "typecheck": "tsc -b .",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "Emilio J. Gallego Arias",
+  "license": "GPL3",
+  "description": "Server tests for coq-lsp (WASM)",
+  "dependencies": {
+    "esbuild": "^0.25.10",
+    "vscode-jsonrpc": "^8.2.1",
+    "vscode-languageserver-protocol": "^3.17.5",
+    "vscode-languageserver-types": "^3.17.5",
+    "typescript": "^5.9.3"
+  }
+}

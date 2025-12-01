@@ -20,7 +20,9 @@ let mk_error ~diags =
 let get_goal_info ~token ~pr ~st =
   let open Fleche in
   let open Coq.Protect.E.O in
-  let+ goals = Info.Goals.goals ~token ~pr ~st in
+  (* XXX Add an option if desired *)
+  let compact = true in
+  let+ goals = Info.Goals.goals ~token ~pr ~compact ~st in
   let program = Info.Goals.program ~st in
   (goals, Some program)
 
