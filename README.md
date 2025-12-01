@@ -2,6 +2,8 @@
 
 [![Github CI][ci-badge]][ci-link]
 
+**Note**: the rocq-lsp project is in search of a new maintainer. As of version 0.2.5, the development on this repository is not active anymore.
+
 `rocq-lsp` is a [Language Server](https://microsoft.github.io/language-server-protocol/) for the [Rocq Prover](https://rocq-prover.org/). It provides a single server that implements:
 
 - the [LSP](https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/)

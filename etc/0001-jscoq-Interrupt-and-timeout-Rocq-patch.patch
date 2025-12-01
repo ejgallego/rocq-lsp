@@ -1,0 +1,97 @@
+From d8ca76a4cc493a2fe89c53fd9e2c5fd38c9dc2fb Mon Sep 17 00:00:00 2001
+From: Emilio Jesus Gallego Arias <e+git@x80.org>
+Date: Mon, 1 Dec 2025 00:56:30 +0100
+Subject: [PATCH] [jscoq] Interrupt and timeout Rocq patch
+
+---
+ lib/control.ml     | 36 +++++++++++++++++++++++++++++++++---
+ lib/dune           |  4 ++++
+ lib/jscoq_extern.c |  4 ++++
+ 3 files changed, 41 insertions(+), 3 deletions(-)
+ create mode 100644 lib/jscoq_extern.c
+
+diff --git a/lib/control.ml b/lib/control.ml
+index 5321357a1c..513677565f 100644
+--- a/lib/control.ml
++++ b/lib/control.ml
+@@ -18,7 +18,19 @@ let enable_thread_delay = ref false
+ 
+ exception Timeout
+ 
++(* implemented in backend/jsoo/js_stub/interrupt.js *)
++external interrupt_pending : unit -> bool = "interrupt_pending"
++
++let timeout_deadline : (float * (unit -> unit)) option ref = ref None
++
++let jscoq_event_yield () =
++  if interrupt_pending() then interrupt := true;
++  match !timeout_deadline with
++  | Some (time, callback) -> if Unix.gettimeofday () > time then callback ();
++  | None -> ()
++
+ let check_for_interrupt () =
++  jscoq_event_yield ();
+   if !interrupt then begin interrupt := false; raise Sys.Break end;
+   if !enable_thread_delay then begin
+     incr steps;
+@@ -93,11 +105,29 @@ let windows_timeout n f x =
+     let () = killed := true in
+     Exninfo.iraise e
+ 
++let unwind ~(protect:unit -> unit) f =
++  try let y = f () in protect (); y
++  with e -> protect (); raise e
++
++let jscoq_timeout n f x =
++  let expired = ref false in
++  timeout_deadline := Some (Unix.gettimeofday () +. n,
++                            fun () -> expired := true; interrupt := true);
++  let protect () = jscoq_event_yield (); timeout_deadline := None;
++                   interrupt := false in
++  let res = try Ok (unwind ~protect (fun () -> f x))
++            with Sys.Break -> if !expired then Error Exninfo.null else raise Sys.Break in
++  if !expired then Error Exninfo.null
++  else res
++
+ type timeout = { timeout : 'a 'b. float -> ('a -> 'b) -> 'a -> ('b, Exninfo.info) result }
+ 
+-let timeout_fun = match Sys.os_type with
+-| "Unix" | "Cygwin" -> { timeout = unix_timeout }
+-| _ -> { timeout = windows_timeout }
++(* let timeout_fun = match Sys.os_type with *)
++(* | "Unix" | "Cygwin" -> { timeout = unix_timeout } *)
++(* | _ -> { timeout = windows_timeout } *)
++
++let _ = windows_timeout, unix_timeout
++let timeout_fun = { timeout = jscoq_timeout }
+ 
+ let timeout_fun_ref = ref timeout_fun
+ let set_timeout f = timeout_fun_ref := f
+diff --git a/lib/dune b/lib/dune
+index e86e9decb1..b3e2d070c9 100644
+--- a/lib/dune
++++ b/lib/dune
+@@ -4,6 +4,10 @@
+  (public_name rocq-runtime.lib)
+  (wrapped false)
+  (modules_without_implementation xml_datatype)
++ (foreign_stubs
++  (language c)
++  (names jscoq_extern)
++  (flags :standard (:include %{project_root}/config/dune.c_flags)))
+  (libraries
+   rocq-runtime.boot rocq-runtime.clib rocq-runtime.config
+   (select instr.ml from
+diff --git a/lib/jscoq_extern.c b/lib/jscoq_extern.c
+new file mode 100644
+index 0000000000..7d0bb8c8bc
+--- /dev/null
++++ b/lib/jscoq_extern.c
+@@ -0,0 +1,4 @@
++#include <caml/mlvalues.h>
++
++// jsCoq Stub; actual implementation is in backend/jsoo/js_stub/interrupt.js
++value interrupt_pending() { return Val_false; }
+-- 
+2.43.0
+
