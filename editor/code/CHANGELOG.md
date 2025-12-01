@@ -1,9 +1,17 @@
 # coq-lsp 0.2.5: New epoch
 --------------------------
 
- - Several bugfixes and improvements.
- - Notably new config option `limit_messages` to configure the
-   infoview
+ - **New**: work with multiple Rocq files from vscode.dev /
+   github.dev: in order to do so, first issue the "Save .vo files"
+   command, then do a "Workspace Refresh" command.
+
+ - **Important**: This is the latest version that will be managed by
+   E. J. Gallego Arias. Stop by Rocq's Zulip to find out more about
+   rocq-lsp maintenance status.
+
+ - Several bugfixes and improvements, but no big user-visible changes
+ - Notably new config option `coq-lsp.limit_messages` to configure the
+   infoview.
 
 # coq-lsp 0.2.4: (W)Activation
 ------------------------------
