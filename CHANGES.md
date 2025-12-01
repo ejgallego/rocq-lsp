@@ -1,5 +1,5 @@
-# unreleased
-------------------------------
+# coq-lsp 0.2.5: New epoch
+--------------------------
 
  - [build] [wasm] [code] bump esbuild from 0.16 to 0.25, miscellaneous
    npm dependencies bump (@ejgallego, #1033)
@@ -88,6 +88,8 @@
  - [vscode] Add config manager for handling client configuration
    changes in the infoview. Add configuration option for number of
    messages displayed (@Durbatuluk1701, #1067)
+ - [wasm] Update interrupt patch to account for timeouts (@ejgallego,
+   Shachar Itzhaky, #1078)
 
 # coq-lsp 0.2.4: (W)Activation
 ------------------------------
