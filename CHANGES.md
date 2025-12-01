@@ -1,5 +1,5 @@
-# unreleased
-------------------------------
+# coq-lsp 0.2.5: New epoch
+--------------------------
 
  - [build] [wasm] [code] bump esbuild from 0.16 to 0.25, miscellaneous
    npm dependencies bump (@ejgallego, #1033)
