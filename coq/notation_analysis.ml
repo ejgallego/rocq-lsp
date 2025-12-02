@@ -3612,7 +3612,7 @@ let list_notations_in_statement_lemma_com ~typing_flags ~program_mode thm =
   let env0 = Global.env () in
   let env0 = Environ.update_typing_flags ?typing_flags env0 in
   let udecls = List.map (fun ((_, univs), _) -> univs) [ thm ] in
-  let evd, _ = Constrintern.interp_mutual_univ_decl_opt env0 udecls in
+  let evd, _ = Constrintern.interp_mutual_sort_poly_decl_opt env0 udecls in
   list_notations_in_statement_lemma ~program_mode env0 evd thm
 
 let list_notations_in_statement_vernac_start_proof ~atts l =

@@ -69,11 +69,11 @@ module UContext = struct
 
   module I = struct
     type t = UVars.UContext.t
-    type _t = bound_names * (Instance.t * Constraints.t)
+    type _t = bound_names * (Instance.t * UnivConstraints.t)
     [@@deriving sexp,yojson,hash,compare]
 
-    let to_t (un, cs) = UVars.UContext.make un cs
-    let of_t uc = UVars.UContext.(names uc, (instance uc, constraints uc))
+    let to_t ((un, (inst, csts)) : _t) : t = UVars.UContext.make un (inst, PConstraints.of_univs csts)
+    let of_t (uc : t) : _t = UVars.UContext.(names uc, (instance uc, univ_constraints uc))
   end
 
   include SerType.Biject(I)
@@ -85,7 +85,7 @@ module AbstractContext = struct
   module ACPierceDef = struct
 
     type t = UVars.AbstractContext.t
-    type _t = bound_names * Constraints.t
+    type _t = bound_names * UnivConstraints.t
     [@@deriving sexp,yojson,hash,compare]
   end
 

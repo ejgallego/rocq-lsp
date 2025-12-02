@@ -84,8 +84,16 @@ type 'a or_by_notation =
   [%import: 'a Constrexpr.or_by_notation]
   [@@deriving sexp,yojson,hash,compare]
 
-type universe_decl_expr =
-  [%import: Constrexpr.universe_decl_expr]
+type elim_constraint_expr =
+  [%import: Constrexpr.elim_constraint_expr]
+  [@@deriving sexp,yojson,hash,compare]
+
+type sort_poly_constraint_expr =
+  [%import: Constrexpr.sort_poly_constraint_expr]
+  [@@deriving sexp,yojson,hash,compare]
+
+type sort_poly_decl_expr =
+  [%import: Constrexpr.sort_poly_decl_expr]
   [@@deriving sexp,yojson,hash,compare]
 
 type ident_decl =

@@ -99,3 +99,10 @@ module QCumulConstraint = struct
 end
 
 module QCumulConstraints = Ser_cSet.Make(Sorts.QCumulConstraints)(QCumulConstraint)
+
+module QUConstraints = struct
+  type t =
+    [%import: Sorts.QUConstraints.t]
+    [@@deriving sexp,yojson,hash,compare]
+end
+
